@@ -9,7 +9,7 @@ export default function PrizesSection() {
   ]
 
   return (
-    <section id="prizes" className="w-full bg-white py-20 lg:py-28 px-6 lg:px-8 border-b border-slate-200">
+    <section id="prizes" className="w-full bg-[#f5ede4] py-20 lg:py-28 px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-16">
         
         {/* Large Typography Prize Header */}
@@ -33,10 +33,10 @@ export default function PrizesSection() {
         {/* 4 Simple Award Blocks */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {prizes.map((p) => (
-            <div key={p.title} className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 text-center space-y-2">
+            <div key={p.title} className="bg-white border border-[#edebe6] rounded-xl p-6 text-center space-y-2 shadow-xs hover:border-[#2563eb] transition-colors">
               <span className="text-xs font-bold text-[#2563eb] block uppercase">{p.title}</span>
               <p className="text-xs text-slate-500 font-medium">{p.note}</p>
-              <span className="inline-block text-[11px] font-bold text-slate-600 bg-white px-3 py-1 rounded border border-slate-200 mt-2">
+              <span className="inline-block text-[11px] font-bold text-slate-600 bg-[#faf9f6] px-3 py-1 rounded border border-[#edebe6] mt-2">
                 {p.status}
               </span>
             </div>
@@ -44,7 +44,7 @@ export default function PrizesSection() {
         </div>
 
         {/* Integrated Countdown Section */}
-        <div className="pt-8 border-t border-slate-200">
+        <div className="pt-8 border-t border-[#e2d5c5]">
           <CountdownTimer />
         </div>
 

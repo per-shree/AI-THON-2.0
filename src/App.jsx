@@ -3,6 +3,7 @@ import { AdminProvider } from './context/AdminContext'
 
 // Public Pages
 import Home from './pages/Home'
+import Registration from './pages/Registration'
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin'
@@ -21,8 +22,9 @@ export default function App() {
     <AdminProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Routes - Single Page */}
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Registration />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

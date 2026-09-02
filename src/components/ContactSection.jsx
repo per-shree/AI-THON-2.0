@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function ContactSection() {
   return (
-    <section className="w-full bg-white py-16 lg:py-24 px-6 lg:px-8 border-b border-slate-200">
+    <section className="w-full bg-white py-16 lg:py-24 px-6 lg:px-8">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 justify-between items-start">
         
         <div className="flex-1 space-y-8">
@@ -44,13 +44,13 @@ export default function ContactSection() {
         <div className="flex flex-col gap-4 w-full md:w-auto min-w-[200px]">
           <a
             href="mailto:contact@aithon.com"
-            className="w-full px-8 py-4 bg-white border-2 border-[#062b59] text-[#062b59] font-bold text-sm uppercase tracking-wider text-center hover:bg-slate-50 transition-colors rounded-sm"
+            className="w-full px-8 py-4 bg-[#faf9f6] hover:bg-white border-2 border-[#062b59] text-[#062b59] font-bold text-sm uppercase tracking-wider text-center transition-colors rounded-lg shadow-xs"
           >
             CONTACT US
           </a>
           <Link
             to="/register"
-            className="w-full px-8 py-4 bg-[#062b59] border-2 border-[#062b59] text-white font-bold text-sm uppercase tracking-wider text-center hover:bg-[#2563eb] hover:border-[#2563eb] transition-colors shadow-sm rounded-sm"
+            className="w-full px-8 py-4 bg-[#062b59] border-2 border-[#062b59] text-white font-bold text-sm uppercase tracking-wider text-center hover:bg-[#2563eb] hover:border-[#2563eb] transition-colors shadow-sm rounded-lg"
           >
             REGISTER NOW
           </Link>

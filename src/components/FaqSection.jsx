@@ -39,7 +39,7 @@ export default function FaqSection() {
   ]
 
   return (
-    <section className="w-full bg-slate-50 py-16 lg:py-24 px-6 lg:px-8">
+    <section className="w-full bg-[#f5ede4] py-16 lg:py-24 px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-12">
         
         <div className="text-center space-y-4">
@@ -52,7 +52,7 @@ export default function FaqSection() {
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index
             return (
-              <div key={index} className="border-b border-slate-200">
+              <div key={index} className="border-b border-[#e2d5c5]">
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                   className="w-full py-5 flex items-center justify-between text-left focus:outline-none group"

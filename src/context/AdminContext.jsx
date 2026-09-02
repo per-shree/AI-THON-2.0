@@ -173,6 +173,75 @@ export function AdminProvider({ children }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
   }
 
+  // ─── PUBLIC REGISTRATION ACTION ──────────────────────────────────────────
+  const registerTeam = (registrationData) => {
+    const ts = nowTimestamp()
+    const teamId = `TEAM-${100 + teams.length + 1}`
+    const leadId = registrationData.registrationId || `AI25-${Math.floor(1000 + Math.random() * 9000)}`
+
+    const newLead = {
+      id: leadId,
+      name: registrationData.leadFullName,
+      email: registrationData.leadEmail,
+      phone: registrationData.leadPhone,
+      college: registrationData.leadCollege,
+      course: registrationData.leadCourse,
+      year: registrationData.leadYear,
+      city: registrationData.leadCity,
+      teamId: teamId,
+      teamName: registrationData.teamName,
+      role: 'Team Lead',
+      status: 'Pending',
+      registeredDate: new Date().toISOString().split('T')[0],
+      github: registrationData.github,
+      linkedin: registrationData.linkedin,
+      skills: registrationData.skills || [],
+    }
+
+    const membersList = (registrationData.members || [])
+      .slice(0, Math.max(0, parseInt(registrationData.teamSize || '3') - 1))
+      .map((m, idx) => ({
+        name: m.fullName || `Member ${idx + 2}`,
+        email: m.email || '',
+        role: `Member ${idx + 2}`,
+        college: m.college || registrationData.leadCollege,
+      }))
+
+    const newTeam = {
+      id: teamId,
+      name: registrationData.teamName,
+      track: registrationData.skills?.[0] || 'Artificial Intelligence',
+      status: 'pending',
+      college: registrationData.leadCollege,
+      membersCount: parseInt(registrationData.teamSize || '3'),
+      lead: {
+        name: registrationData.leadFullName,
+        email: registrationData.leadEmail,
+        phone: registrationData.leadPhone,
+      },
+      members: [
+        { name: registrationData.leadFullName, email: registrationData.leadEmail, role: 'Team Lead', college: registrationData.leadCollege },
+        ...membersList,
+      ],
+      registeredAt: ts,
+      reviewHistory: [],
+    }
+
+    setParticipants((prev) => [newLead, ...prev])
+    setTeams((prev) => [newTeam, ...prev])
+    setStats((prev) => ({
+      ...prev,
+      totalTeams: { ...prev.totalTeams, value: prev.totalTeams.value + 1 },
+      totalParticipants: { ...prev.totalParticipants, value: prev.totalParticipants.value + parseInt(registrationData.teamSize || '3') },
+      pendingReview: { ...prev.pendingReview, value: prev.pendingReview.value + 1 },
+    }))
+    setNotifications((prev) => [
+      { id: Date.now(), text: `New team registered: "${registrationData.teamName}"`, time: 'Just now', unread: true },
+      ...prev,
+    ])
+    return { teamId, leadId }
+  }
+
   // ─── COMPUTED TEAM STATS (always derived from live state) ────────────────
   const teamStats = {
     total: teams.length,
@@ -203,6 +272,7 @@ export function AdminProvider({ children }) {
         addAnnouncement,
         updateSettings,
         markAllNotificationsRead,
+        registerTeam,
       }}
     >
       {children}

@@ -35,7 +35,7 @@ export default function GuidelinesSection() {
   ]
 
   return (
-    <section className="w-full bg-blue-50/40 py-16 lg:py-24 px-6 lg:px-8">
+    <section className="w-full bg-[#f5ede4] py-16 lg:py-24 px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-16">
         
         <div className="space-y-4">

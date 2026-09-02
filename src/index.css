@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
 html {
   scroll-behavior: smooth;
@@ -9,7 +9,11 @@ html {
   --text: #334155;
   --text-h: #062b59;
   --bg: #ffffff;
+  --bg-warm: #faf9f6;
+  --bg-skin: #f5ede4;
+  --skin-bar: #c8a98b;
   --border: #e2e8f0;
+  --border-warm: #edebe6;
   --accent: #2563eb;
   --accent-orange: #ea580c;
 
@@ -73,10 +77,10 @@ p {
 
 @keyframes marquee {
   0% {
-    transform: translateX(0%);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 

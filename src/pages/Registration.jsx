@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import aithonLogo from '../assets/aithon-logo.png'
+import HeaderTop from '../components/HeaderTop'
 import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 import RegistrationProgress from '../components/RegistrationProgress'
 import RegistrationInfo from '../components/RegistrationInfo'
 import FormInput from '../components/FormInput'
+import { useAdmin } from '../context/AdminContext'
 import {
   UserIcon,
   MailIcon,
@@ -70,6 +72,7 @@ const POPULAR_SKILLS = [
 ]
 
 export default function Registration() {
+  const { registerTeam } = useAdmin()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -138,12 +141,12 @@ export default function Registration() {
   // Handle Member field change
   const handleMemberChange = (index, field, value) => {
     setFormData((prev) => {
-      const updatedMembers = [...prev.members]
-      updatedMembers[index] = {
-        ...updatedMembers[index],
+      const nextMembers = [...prev.members]
+      nextMembers[index] = {
+        ...nextMembers[index],
         [field]: value,
       }
-      return { ...prev, members: updatedMembers }
+      return { ...prev, members: nextMembers }
     })
 
     const errorKey = `member_${index}_${field}`
@@ -156,20 +159,18 @@ export default function Registration() {
     }
   }
 
-  // Toggle Technical Skill Tag
+  // Toggle predefined skill
   const toggleSkill = (skill) => {
     setFormData((prev) => {
       const exists = prev.skills.includes(skill)
       return {
         ...prev,
-        skills: exists
-          ? prev.skills.filter((s) => s !== skill)
-          : [...prev.skills, skill],
+        skills: exists ? prev.skills.filter((s) => s !== skill) : [...prev.skills, skill],
       }
     })
   }
 
-  // Add Custom Skill
+  // Add custom skill tag
   const handleAddCustomSkill = (e) => {
     if (e.key === 'Enter' || e.type === 'click') {
       e.preventDefault()
@@ -184,101 +185,71 @@ export default function Registration() {
     }
   }
 
-  // Validation functions
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-  }
-
-  const validatePhone = (phone) => {
-    // Validates 10-digit Indian phone, with optional +91 or 91 prefix
-    const cleanPhone = phone.replace(/[\s-]/g, '')
-    return /^(?:\+91|91)?[6-9]\d{9}$/.test(cleanPhone)
-  }
+  // Validation Functions
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const validatePhone = (phone) => /^[0-9+()-\s]{10,15}$/.test(phone.trim())
 
   const validateStep1 = () => {
-    const newErrors = {}
-
-    if (!formData.leadFullName.trim()) {
-      newErrors.leadFullName = 'This field is required.'
-    } else if (formData.leadFullName.trim().length < 2) {
-      newErrors.leadFullName = 'Please enter a valid full name.'
-    }
-
+    const errs = {}
+    if (!formData.leadFullName.trim()) errs.leadFullName = 'Full name is required'
     if (!formData.leadEmail.trim()) {
-      newErrors.leadEmail = 'This field is required.'
+      errs.leadEmail = 'Email address is required'
     } else if (!validateEmail(formData.leadEmail)) {
-      newErrors.leadEmail = 'Please enter a valid email address.'
+      errs.leadEmail = 'Enter a valid email address'
     }
-
     if (!formData.leadPhone.trim()) {
-      newErrors.leadPhone = 'This field is required.'
+      errs.leadPhone = 'Phone number is required'
     } else if (!validatePhone(formData.leadPhone)) {
-      newErrors.leadPhone = 'Please enter a valid 10-digit Indian mobile number.'
+      errs.leadPhone = 'Enter a valid phone number (10 digits)'
     }
+    if (!formData.leadCollege.trim()) errs.leadCollege = 'College / University name is required'
+    if (!formData.leadCourse.trim()) errs.leadCourse = 'Course or branch is required'
+    if (!formData.leadYear) errs.leadYear = 'Select your year of study'
+    if (!formData.leadCity.trim()) errs.leadCity = 'City is required'
 
-    if (!formData.leadCollege.trim()) {
-      newErrors.leadCollege = 'This field is required.'
-    }
-
-    if (!formData.leadCourse.trim()) {
-      newErrors.leadCourse = 'This field is required.'
-    }
-
-    if (!formData.leadYear) {
-      newErrors.leadYear = 'This field is required.'
-    }
-
-    if (!formData.leadCity.trim()) {
-      newErrors.leadCity = 'This field is required.'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
   const validateStep2 = () => {
-    const newErrors = {}
-
+    const errs = {}
     if (!formData.teamName.trim()) {
-      newErrors.teamName = 'This field is required.'
+      errs.teamName = 'Team name is required'
     } else if (formData.teamName.trim().length < 3) {
-      newErrors.teamName = 'Team name must be at least 3 characters.'
+      errs.teamName = 'Team name must be at least 3 characters'
     }
 
     const teamSizeNum = parseInt(formData.teamSize, 10) || 3
-    const additionalMembersCount = teamSizeNum - 1 // leader is member 1
+    const membersNeeded = teamSizeNum - 1
 
-    for (let i = 0; i < additionalMembersCount; i++) {
+    for (let i = 0; i < membersNeeded; i++) {
       const member = formData.members[i] || {}
-      if (!member.fullName || !member.fullName.trim()) {
-        newErrors[`member_${i}_fullName`] = 'This field is required.'
+      if (!member.fullName?.trim()) {
+        errs[`member_${i}_fullName`] = `Teammate ${i + 1} full name is required`
       }
-      if (!member.email || !member.email.trim()) {
-        newErrors[`member_${i}_email`] = 'This field is required.'
+      if (!member.email?.trim()) {
+        errs[`member_${i}_email`] = `Teammate ${i + 1} email is required`
       } else if (!validateEmail(member.email)) {
-        newErrors[`member_${i}_email`] = 'Please enter a valid email address.'
+        errs[`member_${i}_email`] = `Enter a valid email address for Teammate ${i + 1}`
       }
-      if (!member.college || !member.college.trim()) {
-        newErrors[`member_${i}_college`] = 'This field is required.'
+      if (!member.college?.trim()) {
+        errs[`member_${i}_college`] = `Teammate ${i + 1} college name is required`
       }
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
   const validateStep3 = () => {
-    const newErrors = {}
-
+    const errs = {}
     if (!formData.agreedToTerms) {
-      newErrors.agreedToTerms = 'You must agree to the hackathon rules and terms.'
+      errs.agreedToTerms = 'You must agree to the hackathon guidelines and code of conduct'
     }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
-  // Navigation handlers
   const handleNextStep = () => {
     if (currentStep === 1) {
       if (validateStep1()) {
@@ -307,14 +278,23 @@ export default function Registration() {
 
     setIsSubmitting(true)
 
-    // Simulate clean frontend submission state
     setTimeout(() => {
       const randomCode = Math.floor(1000 + Math.random() * 9000)
-      setRegistrationId(`AI25-${randomCode}`)
+      const generatedId = `AI25-${randomCode}`
+      setRegistrationId(generatedId)
+
+      // Sync to AdminContext
+      if (registerTeam) {
+        registerTeam({
+          ...formData,
+          registrationId: generatedId,
+        })
+      }
+
       setIsSubmitting(false)
       setIsSubmitted(true)
       window.scrollTo({ top: 100, behavior: 'smooth' })
-    }, 800)
+    }, 600)
   }
 
   const handleReset = () => {
@@ -351,59 +331,27 @@ export default function Registration() {
   const additionalMembersCount = teamSizeNum - 1
 
   return (
-    <div className="min-h-screen bg-[#05070e] text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-cyan-500 selection:text-black">
-      {/* Background Cyber Grid & Ambient Glows */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Futuristic Subtle Grid Pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(6, 182, 212, 0.25) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(6, 182, 212, 0.25) 1px, transparent 1px)
-            `,
-            backgroundSize: '40px 40px',
-          }}
-        />
+    <div className="min-h-screen bg-[#faf9f6] text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+      {/* 1. Top Utility Header */}
+      <HeaderTop />
 
-        {/* Ambient Top Cyan Glow */}
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-b from-cyan-500/20 via-blue-600/10 to-transparent rounded-full blur-3xl opacity-70" />
-
-        {/* Ambient Bottom Right Glow */}
-        <div className="absolute -bottom-40 right-10 w-[500px] h-[350px] bg-cyan-600/10 rounded-full blur-3xl opacity-50" />
-      </div>
-
-      {/* Website Navbar */}
+      {/* 2. Main Navigation */}
       <Navbar />
 
       {/* Main Page Content */}
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         {/* PAGE HERO */}
-        <section className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-          {/* AiTHON 2.0 Logo */}
-          <div className="flex justify-center mb-4">
-            <img
-              src={aithonLogo}
-              alt="AiTHON 2.0"
-              className="w-auto object-contain"
-              style={{ maxHeight: '90px', maxWidth: '320px', width: '100%' }}
-            />
-          </div>
+        <section className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+          <p className="text-xs font-bold text-[#2563eb] uppercase tracking-widest mb-3">
+            NATIONAL LEVEL AI HACKATHON
+          </p>
 
-          {/* Small Cyan Uppercase Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/70 border border-cyan-500/30 text-cyan-400 text-xs font-mono font-bold tracking-widest uppercase mb-4 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-            AI THON 2.0
-          </div>
-
-          {/* Main Heading */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-mono tracking-tight text-white mb-4">
-            TEAM <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(6,182,212,0.4)]">REGISTRATION</span>
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-[#062b59] tracking-tight mb-3">
+            TEAM <span className="text-[#2563eb]">REGISTRATION</span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto font-sans leading-relaxed">
-            Fill in the details below to register your team for the hackathon.
+          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            Fill in the details below to register your team for AITHON 2.0 at Amrutvahini College of Engineering, Sangamner.
           </p>
         </section>
 
@@ -412,53 +360,48 @@ export default function Registration() {
              SUCCESS STATE SCREEN
              ================================================== */
           <section className="max-w-2xl mx-auto">
-            <div className="relative rounded-3xl bg-[#090d1a]/95 border border-cyan-500/40 p-8 sm:p-12 backdrop-blur-2xl shadow-[0_0_50px_rgba(6,182,212,0.2)] text-center overflow-hidden">
-              {/* Glow accent */}
-              <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-cyan-400/20 rounded-full blur-3xl" />
-
+            <div className="rounded-xl bg-white border border-[#edebe6] p-8 sm:p-12 shadow-sm text-center">
               {/* Animated Checkmark Badge */}
-              <div className="relative mx-auto w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 p-0.5 shadow-[0_0_30px_rgba(6,182,212,0.6)] mb-6 animate-bounce">
-                <div className="w-full h-full rounded-full bg-[#070b18] flex items-center justify-center text-cyan-400">
-                  <CheckIcon className="w-10 h-10 stroke-[3]" />
-                </div>
+              <div className="mx-auto w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-6 shadow-xs">
+                <CheckIcon className="w-8 h-8 stroke-[3]" />
               </div>
 
               {/* Success Headings */}
-              <span className="inline-block px-3 py-1 rounded-md bg-cyan-950 border border-cyan-500/30 text-cyan-400 text-xs font-mono font-bold tracking-widest uppercase mb-2">
+              <span className="inline-block px-3 py-1 rounded bg-blue-50 text-[#2563eb] text-xs font-bold tracking-wider uppercase mb-2">
                 APPLICATION RECEIVED
               </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-wide mb-3">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#062b59] tracking-tight mb-3">
                 REGISTRATION SUCCESSFUL
               </h2>
-              <p className="text-slate-300 text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed">
-                Your team registration has been submitted successfully for AI THON 2.0.
+              <p className="text-slate-600 text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed">
+                Your team registration has been submitted successfully for AITHON 2.0. Our committee will review your application.
               </p>
 
               {/* Registration ID & Summary Card */}
-              <div className="p-6 rounded-2xl bg-[#0c1224]/80 border border-cyan-500/30 mb-8 text-left space-y-4 shadow-inner">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-cyan-500/20 gap-2">
-                  <span className="text-xs font-mono uppercase text-slate-400">Registration ID</span>
-                  <span className="font-mono text-lg font-bold text-cyan-300 bg-cyan-950/80 px-3 py-1 rounded-lg border border-cyan-500/40 inline-block shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+              <div className="p-6 rounded-lg bg-[#faf9f6] border border-[#edebe6] mb-8 text-left space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#edebe6] gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Registration ID</span>
+                  <span className="font-mono text-base font-extrabold text-[#062b59] bg-white px-3 py-1 rounded border border-[#edebe6] inline-block shadow-xs">
                     {registrationId}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[11px]">TEAM NAME</span>
-                    <span className="text-slate-100 font-bold text-sm">{formData.teamName}</span>
+                    <span className="text-slate-400 block text-[11px] font-bold uppercase">TEAM NAME</span>
+                    <span className="text-[#062b59] font-bold text-sm">{formData.teamName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">TEAM LEADER</span>
-                    <span className="text-slate-100 font-bold text-sm">{formData.leadFullName}</span>
+                    <span className="text-slate-400 block text-[11px] font-bold uppercase">TEAM LEADER</span>
+                    <span className="text-[#062b59] font-bold text-sm">{formData.leadFullName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">TEAM SIZE</span>
-                    <span className="text-slate-100 font-bold text-sm">{formData.teamSize} Members</span>
+                    <span className="text-slate-400 block text-[11px] font-bold uppercase">TEAM SIZE</span>
+                    <span className="text-[#062b59] font-bold text-sm">{formData.teamSize} Members</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">PRIMARY EMAIL</span>
-                    <span className="text-slate-100 font-bold text-sm truncate block">{formData.leadEmail}</span>
+                    <span className="text-slate-400 block text-[11px] font-bold uppercase">PRIMARY EMAIL</span>
+                    <span className="text-[#062b59] font-bold text-sm truncate block">{formData.leadEmail}</span>
                   </div>
                 </div>
               </div>
@@ -467,14 +410,14 @@ export default function Registration() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   to="/"
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black font-mono font-bold text-sm uppercase tracking-wider transition-all duration-300 shadow-[0_0_25px_rgba(6,182,212,0.5)] text-center"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs text-center"
                 >
                   BACK TO HOME
                 </Link>
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-500/30 font-mono font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3.5 bg-[#faf9f6] hover:bg-white text-[#062b59] border border-[#edebe6] font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer shadow-xs"
                 >
                   REGISTER ANOTHER TEAM
                 </button>
@@ -488,7 +431,7 @@ export default function Registration() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left / Main Column: Multi-Step Registration Form */}
             <div className="lg:col-span-8">
-              <div className="relative rounded-3xl bg-[#080c18]/90 border border-cyan-500/30 p-6 sm:p-8 lg:p-10 backdrop-blur-xl shadow-[0_0_40px_-10px_rgba(6,182,212,0.18)]">
+              <div className="rounded-xl bg-white border border-[#edebe6] p-6 sm:p-8 lg:p-10 shadow-xs">
                 {/* 3-Step Progress Indicator */}
                 <RegistrationProgress
                   currentStep={currentStep}
@@ -507,17 +450,17 @@ export default function Registration() {
                   {currentStep === 1 && (
                     <div className="space-y-6 animate-fadeIn">
                       {/* Step Header */}
-                      <div className="pb-4 border-b border-cyan-500/20">
+                      <div className="pb-4 border-b border-[#edebe6]">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-[#2563eb] border border-blue-100 uppercase">
                             STEP 01
                           </span>
-                          <h2 className="text-xl sm:text-2xl font-bold font-mono text-white m-0">
+                          <h2 className="text-xl sm:text-2xl font-extrabold text-[#062b59] m-0">
                             Team Lead Details
                           </h2>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-400 mt-1.5 font-sans">
-                          Enter the details of the team leader.
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1.5">
+                          Enter the details of the team leader (Member 1).
                         </p>
                       </div>
 
@@ -530,7 +473,7 @@ export default function Registration() {
                             name="leadFullName"
                             value={formData.leadFullName}
                             onChange={handleChange}
-                            placeholder="e.g. Alex Morgan"
+                            placeholder="e.g. Aarav Sharma"
                             required
                             error={errors.leadFullName}
                             icon={UserIcon}
@@ -545,7 +488,7 @@ export default function Registration() {
                             name="leadEmail"
                             value={formData.leadEmail}
                             onChange={handleChange}
-                            placeholder="e.g. alex.morgan@gmail.com"
+                            placeholder="e.g. aarav.sharma@example.com"
                             required
                             error={errors.leadEmail}
                             icon={MailIcon}
@@ -574,7 +517,7 @@ export default function Registration() {
                             name="leadCollege"
                             value={formData.leadCollege}
                             onChange={handleChange}
-                            placeholder="e.g. National Institute of Technology"
+                            placeholder="e.g. Amrutvahini College of Engineering, Sangamner"
                             required
                             error={errors.leadCollege}
                             icon={AcademicCapIcon}
@@ -588,7 +531,7 @@ export default function Registration() {
                             name="leadCourse"
                             value={formData.leadCourse}
                             onChange={handleChange}
-                            placeholder="e.g. Computer Science & Engineering"
+                            placeholder="e.g. B.Tech Computer Science / AI & DS"
                             required
                             error={errors.leadCourse}
                             icon={BookOpenIcon}
@@ -618,7 +561,7 @@ export default function Registration() {
                             name="leadCity"
                             value={formData.leadCity}
                             onChange={handleChange}
-                            placeholder="e.g. Mumbai / Bangalore / Delhi"
+                            placeholder="e.g. Pune / Mumbai / Sangamner"
                             required
                             error={errors.leadCity}
                             icon={MapPinIcon}
@@ -627,13 +570,13 @@ export default function Registration() {
                       </div>
 
                       {/* Step 1 Actions */}
-                      <div className="pt-6 border-t border-cyan-500/20 flex items-center justify-end">
+                      <div className="pt-6 border-t border-[#edebe6] flex items-center justify-end">
                         <button
                           type="button"
                           onClick={handleNextStep}
-                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] cursor-pointer group"
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs cursor-pointer group"
                         >
-                          <span>NEXT STEP</span>
+                          <span>NEXT: TEAM DETAILS</span>
                           <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </button>
                       </div>
@@ -641,22 +584,22 @@ export default function Registration() {
                   )}
 
                   {/* ==================================================
-                      STEP 2 — TEAM DETAILS
+                       STEP 2 — TEAM DETAILS
                       ================================================== */}
                   {currentStep === 2 && (
                     <div className="space-y-6 animate-fadeIn">
                       {/* Step Header */}
-                      <div className="pb-4 border-b border-cyan-500/20">
+                      <div className="pb-4 border-b border-[#edebe6]">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-[#2563eb] border border-blue-100 uppercase">
                             STEP 02
                           </span>
-                          <h2 className="text-xl sm:text-2xl font-bold font-mono text-white m-0">
+                          <h2 className="text-xl sm:text-2xl font-extrabold text-[#062b59] m-0">
                             Team Details
                           </h2>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-400 mt-1.5 font-sans">
-                          Specify your team name and add details of your teammates (Team Lead is Member 1).
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1.5">
+                          Specify your team name and add details of your teammates (Leader is Member 1).
                         </p>
                       </div>
 
@@ -677,8 +620,8 @@ export default function Registration() {
 
                         {/* Team Size Selector (2, 3, 4) */}
                         <div className="flex flex-col space-y-1.5">
-                          <label className="text-xs font-semibold font-mono tracking-wide text-slate-300">
-                            Team Size <span className="text-cyan-400 font-bold">*</span>
+                          <label className="text-xs font-bold uppercase tracking-wider text-[#062b59]">
+                            Team Size <span className="text-[#ea580c] font-bold">*</span>
                           </label>
                           <div className="grid grid-cols-3 gap-2.5">
                             {['2', '3', '4'].map((size) => {
@@ -688,10 +631,10 @@ export default function Registration() {
                                   key={size}
                                   type="button"
                                   onClick={() => handleTeamSizeChange(size)}
-                                  className={`py-2.5 px-3 rounded-xl font-mono text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                                  className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
                                     isSelected
-                                      ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)]'
-                                      : 'bg-[#0c1022] text-slate-300 border border-cyan-500/20 hover:border-cyan-500/40'
+                                      ? 'bg-[#062b59] text-white border-2 border-[#062b59] shadow-xs'
+                                      : 'bg-[#faf9f6] text-slate-700 border border-[#edebe6] hover:border-slate-300'
                                   }`}
                                 >
                                   <span>{size} Members</span>
@@ -705,11 +648,11 @@ export default function Registration() {
                       {/* Dynamic Team Members Cards */}
                       <div className="space-y-4 pt-2">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-xs font-mono font-bold tracking-wider text-cyan-400 uppercase">
+                          <h3 className="text-xs font-bold tracking-wider text-[#062b59] uppercase">
                             ADDITIONAL TEAM MEMBERS ({additionalMembersCount})
                           </h3>
-                          <span className="text-[11px] font-mono text-slate-400">
-                            Leader: <strong className="text-white">{formData.leadFullName || 'You'}</strong>
+                          <span className="text-xs text-slate-500">
+                            Leader: <strong className="text-[#062b59]">{formData.leadFullName || 'You'}</strong>
                           </span>
                         </div>
 
@@ -719,18 +662,18 @@ export default function Registration() {
                           return (
                             <div
                               key={idx}
-                              className="p-4 sm:p-5 rounded-2xl bg-[#0d1326]/70 border border-cyan-500/20 space-y-4 hover:border-cyan-500/35 transition-colors"
+                              className="p-4 sm:p-5 rounded-lg bg-[#faf9f6] border border-[#edebe6] space-y-4"
                             >
-                              <div className="flex items-center justify-between pb-2 border-b border-cyan-500/15">
+                              <div className="flex items-center justify-between pb-2 border-b border-[#edebe6]">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-cyan-950 border border-cyan-400 text-[10px] font-mono font-bold text-cyan-400 flex items-center justify-center">
+                                  <div className="w-5 h-5 rounded-full bg-[#062b59] text-[10px] font-bold text-white flex items-center justify-center">
                                     {memberNum}
                                   </div>
-                                  <span className="text-xs font-mono font-bold text-slate-200">
+                                  <span className="text-xs font-bold text-[#062b59]">
                                     Team Member {idx + 1} (Member #{memberNum})
                                   </span>
                                 </div>
-                                <span className="text-[10px] font-mono text-cyan-400/80">Required</span>
+                                <span className="text-[10px] font-bold text-[#ea580c] uppercase">Required</span>
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -769,11 +712,11 @@ export default function Registration() {
                       </div>
 
                       {/* Step 2 Actions */}
-                      <div className="pt-6 border-t border-cyan-500/20 flex items-center justify-between gap-4">
+                      <div className="pt-6 border-t border-[#edebe6] flex items-center justify-between gap-4">
                         <button
                           type="button"
                           onClick={handlePrevStep}
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 font-mono font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer group"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer group shadow-xs"
                         >
                           <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                           <span>BACK</span>
@@ -782,9 +725,9 @@ export default function Registration() {
                         <button
                           type="button"
                           onClick={handleNextStep}
-                          className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] cursor-pointer group"
+                          className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs cursor-pointer group"
                         >
-                          <span>NEXT STEP</span>
+                          <span>NEXT: ADDITIONAL INFO</span>
                           <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </button>
                       </div>
@@ -797,16 +740,16 @@ export default function Registration() {
                   {currentStep === 3 && (
                     <div className="space-y-6 animate-fadeIn">
                       {/* Step Header */}
-                      <div className="pb-4 border-b border-cyan-500/20">
+                      <div className="pb-4 border-b border-[#edebe6]">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-[#2563eb] border border-blue-100 uppercase">
                             STEP 03
                           </span>
-                          <h2 className="text-xl sm:text-2xl font-bold font-mono text-white m-0">
+                          <h2 className="text-xl sm:text-2xl font-extrabold text-[#062b59] m-0">
                             Additional Information
                           </h2>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-400 mt-1.5 font-sans">
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1.5">
                           Provide links to your team's code profiles, technical skillsets, and experience.
                         </p>
                       </div>
@@ -815,7 +758,7 @@ export default function Registration() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <FormInput
-                            label="GitHub Profile / Organization"
+                            label="GitHub Profile / Org"
                             name="github"
                             value={formData.github}
                             onChange={handleChange}
@@ -849,23 +792,23 @@ export default function Registration() {
 
                       {/* Technical Skills Selection */}
                       <div className="space-y-2.5">
-                        <label className="text-xs font-semibold font-mono tracking-wide text-slate-300 block">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] block">
                           Technical Skills & Stack
                         </label>
 
-                        {/* Popular Skill Badges */}
+                        {/* Popular & Custom Skill Badges */}
                         <div className="flex flex-wrap gap-2">
-                          {POPULAR_SKILLS.map((skill) => {
+                          {Array.from(new Set([...POPULAR_SKILLS, ...formData.skills])).map((skill) => {
                             const isSelected = formData.skills.includes(skill)
                             return (
                               <button
                                 key={skill}
                                 type="button"
                                 onClick={() => toggleSkill(skill)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${
                                   isSelected
-                                    ? 'bg-cyan-500 text-black font-bold border border-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-                                    : 'bg-[#0c1022] text-slate-300 border border-cyan-500/20 hover:border-cyan-400/40 hover:text-white'
+                                    ? 'bg-blue-50 text-[#2563eb] font-bold border-2 border-[#2563eb]'
+                                    : 'bg-[#faf9f6] text-slate-600 border border-[#edebe6] hover:border-slate-300'
                                 }`}
                               >
                                 {isSelected ? <span>✓</span> : <span>+</span>}
@@ -884,12 +827,12 @@ export default function Registration() {
                             onChange={handleChange}
                             onKeyDown={handleAddCustomSkill}
                             placeholder="Add other skill (e.g. Flutter, Rust, OpenCV)..."
-                            className="flex-1 rounded-xl bg-[#0c1022]/90 border border-cyan-500/20 px-3.5 py-2 text-xs font-sans text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-400"
+                            className="flex-1 rounded-lg bg-[#faf9f6] focus:bg-white border border-[#edebe6] focus:border-[#2563eb] px-3.5 py-2 text-xs font-sans text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                           />
                           <button
                             type="button"
                             onClick={handleAddCustomSkill}
-                            className="px-4 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold transition-colors cursor-pointer"
+                            className="px-4 py-2 rounded-lg bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
                           >
                             + ADD
                           </button>
@@ -912,7 +855,7 @@ export default function Registration() {
 
                         <div>
                           <FormInput
-                            label="How did you hear about AI THON 2.0?"
+                            label="How did you hear about AITHON 2.0?"
                             type="select"
                             name="referral"
                             value={formData.referral}
@@ -926,10 +869,10 @@ export default function Registration() {
                       {/* Required Terms & Conditions Checkbox */}
                       <div className="pt-2">
                         <div
-                          className={`p-4 rounded-xl border transition-colors ${
+                          className={`p-4 rounded-lg border transition-colors ${
                             errors.agreedToTerms
-                              ? 'bg-rose-950/20 border-rose-500/60'
-                              : 'bg-[#0b1022]/70 border-cyan-500/20 hover:border-cyan-500/40'
+                              ? 'bg-rose-50 border-rose-300'
+                              : 'bg-[#faf9f6] border border-[#edebe6] hover:border-slate-300'
                           }`}
                         >
                           <label className="flex items-start gap-3 cursor-pointer">
@@ -938,28 +881,28 @@ export default function Registration() {
                               name="agreedToTerms"
                               checked={formData.agreedToTerms}
                               onChange={handleChange}
-                              className="mt-0.5 w-4 h-4 rounded border-cyan-500/40 text-cyan-500 focus:ring-cyan-400 focus:ring-offset-0 bg-[#0c1022] cursor-pointer"
+                              className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb] cursor-pointer"
                             />
-                            <div className="text-xs text-slate-300 font-sans leading-relaxed">
-                              <span className="font-semibold text-white">I agree to the hackathon rules and terms.</span>{' '}
-                              We confirm that all details provided are accurate and our team commits to adhering to the AI THON 2.0 Code of Conduct.
+                            <div className="text-xs text-slate-700 leading-relaxed">
+                              <span className="font-bold text-[#062b59]">I agree to the hackathon guidelines and code of conduct.</span>{' '}
+                              We confirm that all details provided are accurate and our team commits to adhering to the official rules of AITHON 2.0.
                             </div>
                           </label>
                         </div>
                         {errors.agreedToTerms && (
-                          <p className="text-[11px] font-mono text-rose-400 flex items-center gap-1 mt-1">
+                          <p className="text-xs font-medium text-rose-600 flex items-center gap-1 mt-1">
                             <span>⚠</span> {errors.agreedToTerms}
                           </p>
                         )}
                       </div>
 
                       {/* Step 3 Actions */}
-                      <div className="pt-6 border-t border-cyan-500/20 flex items-center justify-between gap-4">
+                      <div className="pt-6 border-t border-[#edebe6] flex items-center justify-between gap-4">
                         <button
                           type="button"
                           onClick={handlePrevStep}
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 font-mono font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer group disabled:opacity-50"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer group disabled:opacity-50 shadow-xs"
                         >
                           <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                           <span>BACK</span>
@@ -968,11 +911,11 @@ export default function Registration() {
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 via-cyan-300 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black font-mono font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_0_25px_rgba(6,182,212,0.5)] hover:shadow-[0_0_35px_rgba(6,182,212,0.8)] cursor-pointer disabled:opacity-50 group"
+                          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs cursor-pointer disabled:opacity-50 group"
                         >
                           {isSubmitting ? (
                             <>
-                              <svg className="animate-spin w-4 h-4 text-black" fill="none" viewBox="0 0 24 24">
+                              <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                               </svg>
@@ -992,7 +935,7 @@ export default function Registration() {
               </div>
             </div>
 
-            {/* Right Column: Registration Info Sidebar (on desktop) / Bottom on mobile */}
+            {/* Right Column: Registration Info Sidebar */}
             <div className="lg:col-span-4 w-full">
               <RegistrationInfo />
             </div>
@@ -1000,22 +943,8 @@ export default function Registration() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-cyan-500/20 bg-[#04060b]/90 backdrop-blur-md py-6 mt-16 text-center text-xs font-mono text-slate-400">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-cyan-400 font-bold">AI THON 2.0</span>
-            <span>© 2026. All rights reserved.</span>
-          </div>
-          <div className="flex items-center gap-4 text-[11px] text-slate-400">
-            <a href="#rules" className="hover:text-cyan-400 transition-colors">RULES</a>
-            <span>•</span>
-            <a href="#faq" className="hover:text-cyan-400 transition-colors">FAQ</a>
-            <span>•</span>
-            <a href="#contact" className="hover:text-cyan-400 transition-colors">CONTACT</a>
-          </div>
-        </div>
-      </footer>
+      {/* Official Footer */}
+      <Footer />
     </div>
   )
 }

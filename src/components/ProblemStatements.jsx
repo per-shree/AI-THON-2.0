@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function ProblemStatements() {
   const domains = [
     'Artificial Intelligence',
@@ -29,9 +27,9 @@ export default function ProblemStatements() {
           {domains.map((domain, idx) => (
             <div 
               key={idx}
-              className="bg-slate-50 border border-slate-100 p-8 flex items-center justify-center text-center group hover:bg-blue-50 transition-colors duration-300 rounded-sm"
+              className="bg-[#faf9f6] border border-[#edebe6] p-8 flex items-center justify-center text-center group hover:bg-white hover:border-[#2563eb] hover:shadow-xs transition-all duration-300 rounded-lg"
             >
-              <h3 className="text-lg font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">
+              <h3 className="text-base sm:text-lg font-bold text-[#062b59] group-hover:text-[#2563eb] transition-colors">
                 {domain}
               </h3>
             </div>
@@ -39,10 +37,10 @@ export default function ProblemStatements() {
         </div>
 
         <a 
-          href="#problem-statement"
-          className="bg-white text-[#062b59] border-2 border-[#062b59] px-8 py-4 font-semibold hover:bg-[#062b59] hover:text-white transition-all duration-300 tracking-wide"
+          href="#guidelines"
+          className="bg-[#faf9f6] hover:bg-[#062b59] text-[#062b59] hover:text-white border-2 border-[#062b59] px-8 py-4 font-bold text-xs uppercase tracking-wider transition-all duration-300 rounded-lg shadow-xs"
         >
-          VIEW PROBLEM STATEMENTS
+          VIEW ELIGIBILITY & GUIDELINES
         </a>
       </div>
     </section>

@@ -23,18 +23,18 @@ export default function FormInput({
       {label && (
         <label
           htmlFor={id || name}
-          className="text-xs font-semibold font-mono tracking-wide text-slate-300 flex items-center justify-between"
+          className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between"
         >
           <span>
-            {label} {required && <span className="text-cyan-400 font-bold">*</span>}
+            {label} {required && <span className="text-[#ea580c] font-bold">*</span>}
           </span>
-          {helperText && <span className="text-[10px] text-slate-500 font-normal">{helperText}</span>}
+          {helperText && <span className="text-[11px] text-slate-500 font-normal normal-case">{helperText}</span>}
         </label>
       )}
 
-      <div className="relative rounded-xl group">
+      <div className="relative rounded-lg group">
         {Icon && (
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-cyan-400 transition-colors">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#2563eb] transition-colors">
             <Icon className="w-4 h-4" />
           </div>
         )}
@@ -46,22 +46,22 @@ export default function FormInput({
             value={value}
             onChange={onChange}
             onBlur={onBlur}
-            className={`w-full rounded-xl bg-[#0c1022]/90 border text-slate-100 text-sm font-sans focus:outline-none transition-all duration-200 cursor-pointer ${
+            className={`w-full rounded-lg bg-white border text-slate-800 text-sm font-sans focus:outline-none transition-all duration-200 cursor-pointer shadow-xs ${
               Icon ? 'pl-10' : 'pl-3.5'
             } pr-8 py-2.5 ${
               error
-                ? 'border-rose-500/80 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                : 'border-cyan-500/20 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                : 'border-[#edebe6] hover:border-slate-400 focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
             }`}
           >
-            <option value="" disabled className="bg-[#0c1022] text-slate-500">
+            <option value="" disabled className="bg-white text-slate-400">
               {placeholder || 'Select an option...'}
             </option>
             {options.map((opt) => {
               const val = typeof opt === 'object' ? opt.value : opt
               const lbl = typeof opt === 'object' ? opt.label : opt
               return (
-                <option key={val} value={val} className="bg-[#0c1022] text-slate-100 py-1">
+                <option key={val} value={val} className="bg-white text-slate-800 py-1">
                   {lbl}
                 </option>
               )
@@ -76,12 +76,12 @@ export default function FormInput({
             onBlur={onBlur}
             placeholder={placeholder}
             rows={rows}
-            className={`w-full rounded-xl bg-[#0c1022]/90 border text-slate-100 placeholder:text-slate-500 text-sm font-sans focus:outline-none transition-all duration-200 resize-none ${
+            className={`w-full rounded-lg bg-white border text-slate-800 placeholder:text-slate-400 text-sm font-sans focus:outline-none transition-all duration-200 resize-none shadow-xs ${
               Icon ? 'pl-10' : 'pl-3.5'
             } pr-3.5 py-2.5 ${
               error
-                ? 'border-rose-500/80 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                : 'border-cyan-500/20 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                : 'border-[#edebe6] hover:border-slate-400 focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
             }`}
           />
         ) : (
@@ -93,19 +93,19 @@ export default function FormInput({
             onChange={onChange}
             onBlur={onBlur}
             placeholder={placeholder}
-            className={`w-full rounded-xl bg-[#0c1022]/90 border text-slate-100 placeholder:text-slate-500 text-sm font-sans focus:outline-none transition-all duration-200 ${
+            className={`w-full rounded-lg bg-white border text-slate-800 placeholder:text-slate-400 text-sm font-sans focus:outline-none transition-all duration-200 shadow-xs ${
               Icon ? 'pl-10' : 'pl-3.5'
             } pr-3.5 py-2.5 ${
               error
-                ? 'border-rose-500/80 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                : 'border-cyan-500/20 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                : 'border-[#edebe6] hover:border-slate-400 focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
             }`}
           />
         )}
       </div>
 
       {error && (
-        <p className="text-[11px] font-mono text-rose-400 flex items-center gap-1 mt-0.5 animate-fadeIn">
+        <p className="text-xs font-medium text-rose-600 flex items-center gap-1 mt-1 animate-fadeIn">
           <span>⚠</span> {error}
         </p>
       )}

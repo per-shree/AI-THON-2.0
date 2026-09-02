@@ -13,7 +13,7 @@ export default function TimelineSection() {
   ]
 
   return (
-    <section id="timeline" className="w-full bg-[#eef5fa] py-20 lg:py-28 px-6 lg:px-8 border-b border-slate-200">
+    <section id="timeline" className="w-full bg-white py-20 lg:py-28 px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-16">
         
         <div className="max-w-3xl space-y-3">
@@ -31,7 +31,7 @@ export default function TimelineSection() {
         {/* Timeline Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {steps.map((s) => (
-            <div key={s.num} className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-2 relative">
+            <div key={s.num} className="bg-[#faf9f6] hover:bg-white p-6 rounded-xl border border-[#edebe6] hover:border-[#2563eb] transition-all shadow-xs space-y-2 relative">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold text-[#2563eb]">{s.num}</span>
                 <span className="w-2 h-2 rounded-full bg-[#ea580c]" />

@@ -25,7 +25,7 @@ export default function SponsorsSection() {
               <span className="text-sm font-bold text-slate-400 uppercase tracking-widest text-center">
                 {sponsor.tier}
               </span>
-              <div className="w-full max-w-[200px] aspect-[3/2] border-2 border-slate-100 bg-slate-50 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+              <div className="w-full max-w-[200px] aspect-[3/2] border-2 border-[#edebe6] bg-[#faf9f6] rounded-xl flex items-center justify-center opacity-80 hover:opacity-100 hover:border-[#2563eb] transition-all duration-300">
                 <span className="text-slate-400 font-semibold tracking-wider text-sm">
                   {sponsor.placeholder}
                 </span>
@@ -34,7 +34,7 @@ export default function SponsorsSection() {
           ))}
         </div>
 
-        <div className="pt-8 border-t border-slate-200 text-center">
+        <div className="pt-8 border-t border-[#edebe6] text-center">
           <p className="text-xs text-slate-500 mb-4">Interested in sponsoring AITHON 2.0?</p>
           <a
             href="#contact"

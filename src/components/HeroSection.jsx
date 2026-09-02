@@ -3,12 +3,12 @@ import BackgroundArtwork from './BackgroundArtwork'
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full bg-[#f8fafc] border-b border-slate-200 overflow-hidden min-h-[85vh] flex items-center justify-center">
+    <section className="relative w-full bg-[#faf9f6] overflow-hidden min-h-[85vh] flex items-center justify-center">
       
       {/* Subtle Low-Contrast Skyline Background */}
       <BackgroundArtwork variant="hero" />
 
-      <div className="max-w-5xl mx-auto relative z-10 px-6 lg:px-8 text-center flex flex-col items-center justify-center -mt-16">
+      <div className="max-w-5xl mx-auto relative z-10 px-6 lg:px-8 text-center flex flex-col items-center justify-center py-12 sm:py-16">
         
         <p className="text-sm font-bold uppercase tracking-widest text-[#2563eb] mb-6">
           NATIONAL LEVEL AI HACKATHON
@@ -26,8 +26,8 @@ export default function HeroSection() {
           "12 Hours of Artificial Intelligence, Innovation & Real-World Problem Solving."
         </p>
 
-        {/* Clean Line Event Info */}
-        <div className="text-sm sm:text-base font-semibold text-[#062b59] py-3 px-6 bg-white border border-slate-200 shadow-sm mb-12 flex flex-wrap justify-center items-center gap-x-4 gap-y-2 rounded-sm">
+        {/* Clean Line Event Info in Warm White Pill */}
+        <div className="text-sm sm:text-base font-semibold text-[#062b59] py-3.5 px-6 bg-[#faf9f6] border border-[#edebe6] shadow-xs mb-12 flex flex-wrap justify-center items-center gap-x-4 gap-y-2 rounded-lg">
           <span>9 OCTOBER 2026</span>
           <span className="text-slate-300 hidden sm:inline">|</span>
           <span>12 HOURS</span>
@@ -41,13 +41,13 @@ export default function HeroSection() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
           <Link
             to="/register"
-            className="w-full sm:w-auto px-10 py-4 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-sm uppercase tracking-wider transition-colors shadow-sm text-center rounded-sm"
+            className="w-full sm:w-auto px-10 py-4 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-sm uppercase tracking-wider transition-colors shadow-sm text-center rounded-lg"
           >
             REGISTER NOW
           </Link>
           <a
             href="#about"
-            className="w-full sm:w-auto px-10 py-4 bg-white hover:bg-slate-50 text-[#062b59] border-2 border-[#062b59] font-bold text-sm uppercase tracking-wider transition-colors text-center shadow-xs rounded-sm"
+            className="w-full sm:w-auto px-10 py-4 bg-[#faf9f6] hover:bg-white text-[#062b59] border-2 border-[#062b59] font-bold text-sm uppercase tracking-wider transition-colors text-center shadow-xs rounded-lg"
           >
             EXPLORE AITHON
           </a>

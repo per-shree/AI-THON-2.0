@@ -41,19 +41,19 @@ export default function CountdownTimer() {
       </p>
 
       <div className="grid grid-cols-4 gap-4 max-w-md mx-auto text-center">
-        <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-xs">
+        <div className="bg-white border border-[#edebe6] p-4 rounded-xl shadow-xs">
           <span className="block text-3xl font-extrabold text-[#062b59]">{formatNumber(timeLeft.days)}</span>
           <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">DAYS</span>
         </div>
-        <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-xs">
+        <div className="bg-white border border-[#edebe6] p-4 rounded-xl shadow-xs">
           <span className="block text-3xl font-extrabold text-[#062b59]">{formatNumber(timeLeft.hours)}</span>
           <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">HOURS</span>
         </div>
-        <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-xs">
+        <div className="bg-white border border-[#edebe6] p-4 rounded-xl shadow-xs">
           <span className="block text-3xl font-extrabold text-[#062b59]">{formatNumber(timeLeft.minutes)}</span>
           <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">MINUTES</span>
         </div>
-        <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-xs">
+        <div className="bg-white border border-[#edebe6] p-4 rounded-xl shadow-xs">
           <span className="block text-3xl font-extrabold text-[#062b59]">{formatNumber(timeLeft.seconds)}</span>
           <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">SECONDS</span>
         </div>

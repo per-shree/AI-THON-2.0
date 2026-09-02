@@ -1,19 +1,47 @@
-import React from 'react'
-
-export default function WaveTransition({ colorClass = 'text-blue-50', bgClass = 'bg-white' }) {
+export default function WaveTransition({
+  colorClass = 'text-white',
+  bgClass = 'bg-white',
+  flip = false,
+  isFooter = false,
+}) {
   return (
-    <div className={`w-full overflow-hidden leading-none ${bgClass} -mt-1`}>
+    <div className={`w-full overflow-hidden leading-none ${bgClass} pointer-events-none select-none -my-0.5`}>
       <svg
-        className="relative block w-full h-[60px] md:h-[100px] lg:h-[140px]"
-        data-name="Layer 1"
+        className={`relative block w-full h-[65px] sm:h-[95px] md:h-[125px] lg:h-[150px] ${
+          flip ? '-scale-x-100' : ''
+        }`}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 1200 120"
+        viewBox="0 0 1440 140"
         preserveAspectRatio="none"
       >
+        {/* Tier 1: Soft Atmospheric Background Swell */}
         <path
-          d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118,130.42,121.28,193.38,107.5C236.4,98.11,279.7,78.29,321.39,56.44Z"
+          d="M0,50 C300,10 620,95 940,35 C1180,-10 1340,65 1440,50 L1440,140 L0,140 Z"
           className={`fill-current ${colorClass}`}
-        ></path>
+          opacity="0.16"
+        />
+
+        {/* Tier 2: Flowing Midground Undulation */}
+        <path
+          d="M0,75 C240,40 500,115 780,65 C1060,20 1280,100 1440,75 L1440,140 L0,140 Z"
+          className={`fill-current ${colorClass}`}
+          opacity="0.42"
+        />
+
+        {/* Tier 3: Primary Sculptural Foreground Wave */}
+        <path
+          d="M0,95 C280,60 560,130 860,85 C1140,45 1320,115 1440,95 L1440,140 L0,140 Z"
+          className={`fill-current ${colorClass}`}
+        />
+
+        {/* Tier 4: Luminous Crest Edge Highlight */}
+        <path
+          d="M0,95 C280,60 560,130 860,85 C1140,45 1320,115 1440,95"
+          fill="none"
+          stroke={isFooter ? 'rgba(37, 99, 235, 0.45)' : 'rgba(255, 255, 255, 0.75)'}
+          strokeWidth="1.75"
+          strokeLinecap="round"
+        />
       </svg>
     </div>
   )

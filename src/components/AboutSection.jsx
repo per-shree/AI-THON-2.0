@@ -7,7 +7,7 @@ export default function AboutSection() {
   ]
 
   return (
-    <section className="w-full bg-slate-50 py-16 lg:py-24 px-6 lg:px-8">
+    <section className="w-full bg-[#f5ede4] py-16 lg:py-24 px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-16">
         
         {/* Editorial Two-Column Header */}
@@ -34,7 +34,7 @@ export default function AboutSection() {
         </div>
 
         {/* Clean Editorial Stat Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 border-t border-slate-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 border-t border-[#e2d5c5]">
           {stats.map((s) => (
             <div key={s.label} className="space-y-1 text-center md:text-left">
               <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
