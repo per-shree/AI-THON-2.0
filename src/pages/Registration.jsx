@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import HeaderTop from '../components/HeaderTop'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import RegistrationProgress from '../components/RegistrationProgress'
@@ -332,10 +331,7 @@ export default function Registration() {
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
-      {/* 1. Top Utility Header */}
-      <HeaderTop />
-
-      {/* 2. Main Navigation */}
+      {/* 1. Main Navigation */}
       <Navbar />
 
       {/* Main Page Content */}

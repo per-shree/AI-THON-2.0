@@ -32,19 +32,19 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className={`w-full sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-xs border-b border-[#edebe6] py-3.5' : 'bg-white py-4 sm:py-5 border-b border-[#edebe6]'}`}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+    <nav className={`w-full sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-xs border-b border-[#edebe6] py-2 sm:py-2.5' : 'bg-white py-2.5 sm:py-3 border-b border-[#edebe6]'}`}>
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           
           {/* Brand Logos */}
           <div className="flex items-center shrink-0">
-            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none py-1 shrink-0">
+            <Link to="/" className="flex items-center gap-3 sm:gap-4 group focus:outline-none py-0.5 shrink-0">
               <img
                 src="/amrutvahini_logo.png"
                 alt="Amrutvahini College of Engineering"
-                className="h-11 sm:h-12 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-14 sm:h-16 md:h-20 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
-              <div className="h-8 w-px bg-slate-200 hidden sm:block shrink-0" />
+              <div className="h-10 sm:h-12 w-px bg-slate-200 hidden sm:block shrink-0" />
               <img
                 src="/aiesa_logo.png"
                 alt="AIESA"

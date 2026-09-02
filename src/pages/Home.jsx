@@ -1,4 +1,3 @@
-import HeaderTop from '../components/HeaderTop'
 import Navbar from '../components/Navbar'
 import AnnouncementTicker from '../components/AnnouncementTicker'
 import HeroSection from '../components/HeroSection'
@@ -16,10 +15,7 @@ import WaveTransition from '../components/WaveTransition'
 export default function Home() {
   return (
     <div className="min-h-screen bg-white text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
-      {/* 1. Top Utility Header */}
-      <HeaderTop />
-
-      {/* 2. Main Sticky Navigation Header */}
+      {/* 1. Main Sticky Navigation Header */}
       <Navbar />
 
       {/* 3. Announcement Marquee Ticker */}
