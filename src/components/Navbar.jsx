@@ -36,29 +36,40 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex justify-between items-center">
           
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-2xl font-extrabold text-[#062b59] tracking-tight">
-              AITHON<span className="text-[#2563eb]">2.0</span>
+          {/* Brand Logos */}
+          <div className="flex items-center shrink-0">
+            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none py-1 shrink-0">
+              <img
+                src="/amrutvahini_logo.png"
+                alt="Amrutvahini College of Engineering"
+                className="h-11 sm:h-12 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+              />
+              <div className="h-8 w-px bg-slate-200 hidden sm:block shrink-0" />
+              <img
+                src="/aiesa_logo.png"
+                alt="AIESA"
+                className="h-9 sm:h-10 md:h-11 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+              />
             </Link>
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-8">
-            <div className="flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-4 xl:gap-6 shrink-0">
+            <div className="flex items-center gap-3 xl:gap-4.5">
               {navLinks.map((link) => (
                 <a 
                   key={link.label}
                   href={getHref(link.href)}
-                  className="text-sm font-bold text-slate-600 hover:text-[#2563eb] transition-colors uppercase tracking-wider"
+                  className="text-xs xl:text-sm font-bold text-slate-700 hover:text-[#2563eb] transition-colors uppercase tracking-wider whitespace-nowrap py-1"
                 >
                   {link.label}
                 </a>
               ))}
             </div>
-            
+
             <Link 
               to="/register"
-              className="px-6 py-2.5 bg-[#062b59] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#2563eb] transition-colors rounded-lg shadow-xs"
+              className="px-5 py-2.5 bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-widest transition-colors rounded-lg shadow-xs shrink-0 whitespace-nowrap"
             >
               REGISTER
             </Link>

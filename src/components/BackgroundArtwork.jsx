@@ -6,13 +6,14 @@ export default function BackgroundArtwork({ variant = 'hero' }) {
         <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#d4bba0]/30 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-10 w-[400px] h-[400px] bg-[#c4a482]/25 rounded-full blur-3xl" />
 
-        {/* Faint Warm Skin Tone Grid Pattern */}
+        {/* Subtle Tech Dot Matrix with smooth top/bottom fade masks */}
         <div
-          className="absolute inset-0 opacity-[0.25]"
+          className="absolute inset-0 opacity-[0.20]"
           style={{
-            backgroundImage:
-              'linear-gradient(to right, #cba483 1px, transparent 1px), linear-gradient(to bottom, #cba483 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
+            backgroundImage: 'radial-gradient(circle, #cba483 1.2px, transparent 1.2px)',
+            backgroundSize: '32px 32px',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
           }}
         />
 
