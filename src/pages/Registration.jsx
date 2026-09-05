@@ -35,7 +35,6 @@ const YEAR_OPTIONS = [
   '2nd Year (Sophomore)',
   '3rd Year (Junior)',
   '4th Year (Senior)',
-  'Postgraduate / Master\'s',
   'Other',
 ]
 
@@ -337,16 +336,16 @@ export default function Registration() {
       {/* Main Page Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         {/* PAGE HERO */}
-        <section className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
-          <p className="text-xs font-bold text-[#2563eb] uppercase tracking-widest mb-3">
+        <section className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3">
+          <p className="text-xs font-extrabold text-[#2563eb] uppercase tracking-widest">
             NATIONAL LEVEL AI HACKATHON
           </p>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-[#062b59] tracking-tight mb-3">
+          <h1 className="text-3xl sm:text-5xl font-black text-[#062b59] tracking-tight leading-tight">
             TEAM <span className="text-[#2563eb]">REGISTRATION</span>
           </h1>
 
-          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed text-center font-medium pt-1">
             Fill in the details below to register your team for AITHON 2.0 at Amrutvahini College of Engineering, Sangamner.
           </p>
         </section>
