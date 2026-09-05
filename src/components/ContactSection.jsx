@@ -4,7 +4,6 @@ import {
   MapPin, 
   Phone, 
   Mail, 
-  Instagram, 
   Users, 
   ExternalLink, 
   Calendar, 
@@ -14,6 +13,16 @@ import {
   MessageSquare
 } from 'lucide-react'
 import OrganizersModal from './OrganizersModal'
+
+function InstagramIcon({ className = "w-5 h-5", ...props }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" {...props}>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>
+  )
+}
 
 export default function ContactSection() {
   const [isOrganizersOpen, setIsOrganizersOpen] = useState(false)
@@ -154,7 +163,7 @@ export default function ContactSection() {
               <div className="bg-[#faf9f6] border border-[#edebe6] hover:border-[#e2d5c5] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 transition-all">
                 <div className="space-y-3">
                   <div className="w-10 h-10 rounded-xl bg-[#f5ede4] border border-[#e2d5c5] flex items-center justify-center text-[#ea580c]">
-                    <Instagram className="w-5 h-5" />
+                    <InstagramIcon className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
