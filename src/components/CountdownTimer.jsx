@@ -45,9 +45,8 @@ export default function CountdownTimer() {
     <div className="py-6 sm:py-10 w-full max-w-4xl mx-auto px-4">
       {/* Event Header Pill & Generous Spacing */}
       <div className="flex flex-col items-center text-center mb-8 sm:mb-12 space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#e2d5c5] shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-[#ea580c] animate-pulse" />
-          <span className="text-xs sm:text-sm font-bold text-[#062b59] uppercase tracking-wider">
+        <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-[#e2d5c5] shadow-xs">
+          <span className="text-sm sm:text-base font-extrabold text-[#062b59] uppercase tracking-wider">
             COUNTDOWN TO AITHON 2.0
           </span>
         </div>
