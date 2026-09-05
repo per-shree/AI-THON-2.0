@@ -176,7 +176,7 @@ export function AdminProvider({ children }) {
   // ─── PUBLIC REGISTRATION ACTION ──────────────────────────────────────────
   const registerTeam = (registrationData) => {
     const ts = nowTimestamp()
-    const teamId = `TEAM-${100 + teams.length + 1}`
+    const teamId = registrationData.teamId || `TEAM-${100 + teams.length + 1}`
     const leadId = registrationData.registrationId || `AI25-${Math.floor(1000 + Math.random() * 9000)}`
 
     const newLead = {

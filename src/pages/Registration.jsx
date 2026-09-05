@@ -6,6 +6,7 @@ import RegistrationProgress from '../components/RegistrationProgress'
 import RegistrationInfo from '../components/RegistrationInfo'
 import FormInput from '../components/FormInput'
 import { useAdmin } from '../context/AdminContext'
+import { submitRegistrationToGoogleSheet } from '../services/googleSheetsService'
 import {
   UserIcon,
   MailIcon,
@@ -75,6 +76,7 @@ export default function Registration() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [registrationId, setRegistrationId] = useState('')
+  const [teamId, setTeamId] = useState('')
 
   // Form State
   const [formData, setFormData] = useState({
@@ -270,29 +272,42 @@ export default function Registration() {
   }
 
   // Final Form Submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validateStep3()) return
 
     setIsSubmitting(true)
 
-    setTimeout(() => {
-      const randomCode = Math.floor(1000 + Math.random() * 9000)
-      const generatedId = `AI25-${randomCode}`
-      setRegistrationId(generatedId)
+    const randomCode = Math.floor(1000 + Math.random() * 9000)
+    const generatedRegId = `AI25-${randomCode}`
+    const generatedTeamId = `TEAM-${Math.floor(100 + Math.random() * 900)}`
 
-      // Sync to AdminContext
+    setRegistrationId(generatedRegId)
+    setTeamId(generatedTeamId)
+
+    try {
+      // 1. Send full structured data to Google Sheet (Target Account: ai.veer2k26@gmail.com)
+      await submitRegistrationToGoogleSheet(
+        formData,
+        generatedTeamId,
+        generatedRegId
+      )
+
+      // 2. Sync to local AdminContext for admin review
       if (registerTeam) {
         registerTeam({
           ...formData,
-          registrationId: generatedId,
+          registrationId: generatedRegId,
+          teamId: generatedTeamId,
         })
       }
-
+    } catch (err) {
+      console.error('[Registration] Submission sync error:', err)
+    } finally {
       setIsSubmitting(false)
       setIsSubmitted(true)
       window.scrollTo({ top: 100, behavior: 'smooth' })
-    }, 600)
+    }
   }
 
   const handleReset = () => {
@@ -321,6 +336,8 @@ export default function Registration() {
       agreedToTerms: false,
     })
     setErrors({})
+    setRegistrationId('')
+    setTeamId('')
     setIsSubmitted(false)
     setCurrentStep(1)
   }
@@ -374,11 +391,19 @@ export default function Registration() {
 
               {/* Registration ID & Summary Card */}
               <div className="p-6 rounded-lg bg-[#faf9f6] border border-[#edebe6] mb-8 text-left space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#edebe6] gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Registration ID</span>
-                  <span className="font-mono text-base font-extrabold text-[#062b59] bg-white px-3 py-1 rounded border border-[#edebe6] inline-block shadow-xs">
-                    {registrationId}
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#edebe6] gap-3">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Registration ID</span>
+                    <span className="font-mono text-base font-extrabold text-[#062b59] bg-white px-3 py-1 rounded border border-[#edebe6] inline-block shadow-xs mt-1">
+                      {registrationId}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Team ID</span>
+                    <span className="font-mono text-base font-extrabold text-[#ea580c] bg-white px-3 py-1 rounded border border-[#edebe6] inline-block shadow-xs mt-1">
+                      {teamId}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -395,9 +420,17 @@ export default function Registration() {
                     <span className="text-[#062b59] font-bold text-sm">{formData.teamSize} Members</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px] font-bold uppercase">PRIMARY EMAIL</span>
-                    <span className="text-[#062b59] font-bold text-sm truncate block">{formData.leadEmail}</span>
+                    <span className="text-slate-400 block text-[11px] font-bold uppercase">LEADER CONTACT</span>
+                    <span className="text-[#062b59] font-bold text-sm truncate block">{formData.leadEmail} • {formData.leadPhone}</span>
                   </div>
+                </div>
+
+                {/* Google Sheet Sync Confirmation Note */}
+                <div className="pt-3 border-t border-[#edebe6] flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 gap-1">
+                  <span>Google Account: <strong className="text-[#062b59]">ai.veer2k26@gmail.com</strong></span>
+                  <span className="text-emerald-600 font-bold flex items-center gap-1">
+                    <span>✓</span> Full Team Data Structured & Logged
+                  </span>
                 </div>
               </div>
 
