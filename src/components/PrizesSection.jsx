@@ -44,7 +44,7 @@ export default function PrizesSection() {
         </div>
 
         {/* Integrated Countdown Section */}
-        <div className="pt-8 border-t border-[#e2d5c5]">
+        <div className="pt-12 sm:pt-16 mt-16 border-t border-[#e2d5c5]/80">
           <CountdownTimer />
         </div>
 
