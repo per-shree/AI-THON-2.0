@@ -62,9 +62,9 @@ export default function TracksSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {tracks.map((t) => (
             <div key={t.num} className="space-y-3 pt-6 border-t-2 border-slate-200 hover:border-[#2563eb] transition-colors">
-              <span className="text-xs font-bold text-[#2563eb] block">{t.num}</span>
-              <h3 className="text-base font-extrabold text-[#062b59] tracking-tight">{t.name}</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">{t.desc}</p>
+              <span className="text-xs font-extrabold text-[#2563eb] block uppercase tracking-wider">{t.num}</span>
+              <h3 className="text-base font-extrabold text-[#062b59] leading-snug tracking-tight">{t.name}</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">{t.desc}</p>
             </div>
           ))}
         </div>
