@@ -45,9 +45,9 @@ export default function CountdownTimer() {
     <div className="py-6 sm:py-10 w-full max-w-4xl mx-auto px-4">
       {/* Event Header Pill & Generous Spacing */}
       <div className="flex flex-col items-center text-center mb-8 sm:mb-12 space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-[#2563eb] animate-pulse" />
-          <span className="text-xs sm:text-sm font-extrabold text-[#062b59] uppercase tracking-wider">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#e2d5c5] shadow-2xs">
+          <span className="w-2 h-2 rounded-full bg-[#ea580c] animate-pulse" />
+          <span className="text-xs sm:text-sm font-bold text-[#062b59] uppercase tracking-wider">
             COUNTDOWN TO AITHON 2.0
           </span>
         </div>
@@ -61,18 +61,18 @@ export default function CountdownTimer() {
         {timeUnits.map((unit) => (
           <div
             key={unit.label}
-            className="bg-white border border-[#edebe6] hover:border-[#2563eb]/40 rounded-2xl p-5 sm:p-7 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col items-center justify-center space-y-3 sm:space-y-4 group relative overflow-hidden"
+            className="bg-white border border-[#edebe6] hover:border-[#ea580c]/50 rounded-2xl p-5 sm:p-7 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col items-center justify-center space-y-3 sm:space-y-4 group relative overflow-hidden"
           >
             {/* Top subtle accent bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ea580c] to-[#f97316] opacity-0 group-hover:opacity-100 transition-opacity" />
 
             {/* Digit Display */}
-            <span className="block text-4xl sm:text-5xl lg:text-6xl font-black text-[#062b59] font-mono tabular-nums tracking-tight group-hover:text-[#2563eb] transition-colors">
+            <span className="block text-4xl sm:text-5xl lg:text-6xl font-black text-[#062b59] font-mono tabular-nums tracking-tight group-hover:text-[#ea580c] transition-colors">
               {unit.value}
             </span>
 
             {/* Formatted Badge Unit Label */}
-            <span className="inline-block px-3 py-1 rounded-md bg-[#faf9f6] border border-[#edebe6] text-[11px] sm:text-xs font-extrabold text-slate-500 uppercase tracking-widest group-hover:bg-blue-50 group-hover:text-[#2563eb] group-hover:border-blue-200 transition-colors">
+            <span className="inline-block px-3 py-1 rounded-md bg-[#faf9f6] border border-[#edebe6] text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-widest group-hover:bg-[#f5ede4] group-hover:text-[#062b59] group-hover:border-[#e2d5c5] transition-colors">
               {unit.label}
             </span>
           </div>
