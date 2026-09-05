@@ -1,5 +1,4 @@
-import React from 'react'
-import { ExternalLink, Handshake, Sparkles } from 'lucide-react'
+import { ExternalLink, Handshake } from 'lucide-react'
 
 export default function SponsorsSection() {
   const sponsors = [
@@ -72,7 +71,7 @@ export default function SponsorsSection() {
   ]
 
   const renderStrapItems = (keyPrefix = 'strap1', isAriaHidden = false) => (
-    <div className="flex items-center gap-5 shrink-0 px-2" aria-hidden={isAriaHidden}>
+    <div className="flex items-center gap-5 shrink-0 pr-5" aria-hidden={isAriaHidden}>
       {sponsors.map((item, idx) => {
         const hasValidLink = item.url && item.url !== '#'
 
@@ -83,37 +82,43 @@ export default function SponsorsSection() {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative bg-white border border-[#edebe6] hover:border-[#2563eb] rounded-2xl px-4 py-3 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 shrink-0 h-20 sm:h-22 w-72 sm:w-84 cursor-pointer"
+              className="group relative bg-white border border-[#edebe6] hover:border-blue-500 rounded-2xl px-4 py-3 flex items-center gap-4 shadow-xs hover:shadow-md transition-all duration-300 shrink-0 w-80 sm:w-88 cursor-pointer"
             >
               {/* Logo Box */}
-              <div className={`w-20 h-14 sm:w-24 sm:h-16 rounded-xl ${item.isFullBox ? 'bg-black border-slate-900 overflow-hidden' : 'bg-slate-50 border-slate-100 p-1.5'} flex items-center justify-center shrink-0 group-hover:bg-blue-50/40 transition-colors`}>
+              <div
+                className={`w-20 h-16 sm:w-24 sm:h-16 rounded-xl ${
+                  item.isFullBox
+                    ? 'bg-black border border-slate-900'
+                    : 'bg-slate-50 border border-slate-100 p-2'
+                } flex items-center justify-center shrink-0 group-hover:bg-blue-50/50 transition-colors overflow-hidden`}
+              >
                 <img
                   src={item.logo}
                   alt={item.name}
                   className={
                     item.isFullBox
-                      ? 'w-full h-full object-contain object-center p-1 bg-black group-hover:scale-105 transition-transform'
+                      ? 'w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300'
                       : item.isLargeLogo
-                      ? 'max-h-14 sm:max-h-16 scale-125 max-w-full object-contain group-hover:scale-105 transition-transform'
-                      : 'max-h-10 sm:max-h-12 max-w-full object-contain group-hover:scale-105 transition-transform'
+                      ? 'max-h-12 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
+                      : 'max-h-10 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
                   }
                 />
               </div>
 
               {/* Details */}
               <div className="flex-1 min-w-0">
-                <span className="text-[7.5px] font-black text-[#2563eb] uppercase tracking-wider bg-blue-50/90 px-1 py-0.5 rounded inline-block leading-none">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-tight">
                   {item.tier}
                 </span>
-                <h3 className="text-xs sm:text-sm font-black text-[#062b59] group-hover:text-[#2563eb] transition-colors truncate mt-0.5">
+                <h3 className="text-sm font-bold text-[#062b59] group-hover:text-blue-600 transition-colors truncate mt-1">
                   {item.name}
                 </h3>
-                <p className="text-[10px] font-medium text-slate-500 truncate mt-0.5">
+                <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
                   {item.desc}
                 </p>
               </div>
 
-              <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#2563eb] shrink-0" />
+              <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 ml-1" />
             </a>
           )
         }
@@ -122,26 +127,38 @@ export default function SponsorsSection() {
           return (
             <div
               key={`${keyPrefix}-${idx}`}
-              className="group relative bg-white border border-[#edebe6] rounded-2xl px-4 py-3 flex items-center gap-4 shadow-sm shrink-0 h-20 sm:h-22 w-72 sm:w-84 cursor-default"
+              className="group relative bg-white border border-[#edebe6] rounded-2xl px-4 py-3 flex items-center gap-4 shadow-xs shrink-0 w-80 sm:w-88 cursor-default"
             >
               {/* Logo Box */}
-              <div className="w-20 h-14 sm:w-24 sm:h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+              <div
+                className={`w-20 h-16 sm:w-24 sm:h-16 rounded-xl ${
+                  item.isFullBox
+                    ? 'bg-black border border-slate-900'
+                    : 'bg-slate-50 border border-slate-100 p-2'
+                } flex items-center justify-center shrink-0 overflow-hidden`}
+              >
                 <img
                   src={item.logo}
                   alt={item.name}
-                  className={`${item.isLargeLogo ? 'max-h-14 sm:max-h-16 scale-125' : 'max-h-10 sm:max-h-12'} max-w-full object-contain`}
+                  className={
+                    item.isFullBox
+                      ? 'w-full h-full object-contain p-1'
+                      : item.isLargeLogo
+                      ? 'max-h-12 max-w-full object-contain'
+                      : 'max-h-10 max-w-full object-contain'
+                  }
                 />
               </div>
 
               {/* Details */}
               <div className="flex-1 min-w-0">
-                <span className="text-[7.5px] font-black text-[#2563eb] uppercase tracking-wider bg-blue-50/90 px-1 py-0.5 rounded inline-block leading-none">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-tight">
                   {item.tier}
                 </span>
-                <h3 className="text-xs sm:text-sm font-black text-[#062b59] truncate mt-0.5">
+                <h3 className="text-sm font-bold text-[#062b59] truncate mt-1">
                   {item.name}
                 </h3>
-                <p className="text-[10px] font-medium text-slate-500 truncate mt-0.5">
+                <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
                   {item.desc}
                 </p>
               </div>
@@ -152,18 +169,21 @@ export default function SponsorsSection() {
         return (
           <div
             key={`${keyPrefix}-${idx}`}
-            className="bg-white/60 border border-dashed border-[#edebe6] rounded-2xl px-4 py-3 flex items-center gap-3.5 shrink-0 h-20 sm:h-22 w-64 sm:w-72"
+            className="bg-white/80 border border-dashed border-[#edebe6] rounded-2xl px-4 py-3 flex items-center gap-4 shrink-0 w-72 sm:w-80"
           >
-            <div className="w-12 h-12 rounded-xl bg-slate-100/80 border border-slate-200/60 flex items-center justify-center shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-center shrink-0">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-[7.5px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200/70 leading-tight">
                 {item.tier}
               </span>
-              <span className="text-xs sm:text-sm font-black text-[#062b59]/70 tracking-tight block mt-0.5">
+              <h3 className="text-sm font-bold text-[#062b59]/80 truncate mt-1">
                 {item.desc}
-              </span>
+              </h3>
+              <p className="text-xs font-medium text-slate-400 truncate mt-0.5">
+                {item.name}
+              </p>
             </div>
           </div>
         )
@@ -176,35 +196,34 @@ export default function SponsorsSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         
         {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#edebe6]/80">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-100 text-[#2563eb] leading-none">
-              <Sparkles className="w-2.5 h-2.5" />
-              Partners & Supporters
-            </span>
-            <h2 className="text-lg sm:text-xl font-black text-[#062b59] tracking-tight">
-              Our Official Sponsors
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 pb-3 border-b border-[#edebe6]">
+          <div className="space-y-0.5">
+            <h2 className="text-xl sm:text-2xl font-black text-[#062b59] tracking-tight uppercase">
+              PARTNERS & SUPPORTERS
             </h2>
+            <p className="text-xs sm:text-sm font-semibold text-slate-500">
+              Our Official Sponsors
+            </p>
           </div>
 
           <a
             href="#contact"
-            className="inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm font-extrabold text-[#2563eb] hover:text-[#1d4ed8] transition-colors group self-start sm:self-auto"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold text-[#062b59] bg-[#f5ede4] hover:bg-[#ede3d5] border border-[#e2d5c5] transition-all group self-start sm:self-auto shadow-2xs"
           >
-            <Handshake className="w-4 h-4" />
-            Become a Partner
+            <Handshake className="w-4 h-4 text-[#ea580c] shrink-0" />
+            <span>Become a Partner</span>
             <span className="group-hover:translate-x-1 transition-transform">→</span>
           </a>
         </div>
 
         {/* Right-to-Left Infinite Running Strap Viewport */}
-        <div className="relative w-full overflow-hidden py-1.5">
+        <div className="relative w-full overflow-hidden py-1">
           {/* Edge Gradient Fades for Seamless Viewport Entrance/Exit */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#faf9f6] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#faf9f6] to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-r from-[#faf9f6] to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-l from-[#faf9f6] to-transparent z-10 pointer-events-none" />
 
           {/* Running Marquee Strap */}
-          <div className="flex w-max will-change-transform animate-[marquee_25s_linear_infinite] hover:[animation-play-state:paused]">
+          <div className="sponsor-marquee">
             {renderStrapItems('primary', false)}
             {renderStrapItems('duplicate', true)}
           </div>
