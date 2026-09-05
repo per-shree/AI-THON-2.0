@@ -89,15 +89,15 @@ export default function SponsorsSection() {
                 className={`w-20 h-16 sm:w-24 sm:h-16 rounded-xl ${
                   item.isFullBox
                     ? 'bg-black border border-slate-900'
-                    : 'bg-slate-50 border border-slate-100 p-2'
-                } flex items-center justify-center shrink-0 group-hover:bg-blue-50/50 transition-colors overflow-hidden`}
+                    : 'bg-slate-50 border border-slate-100 p-2 group-hover:bg-slate-100/80'
+                } flex items-center justify-center shrink-0 transition-colors overflow-hidden`}
               >
                 <img
                   src={item.logo}
                   alt={item.name}
                   className={
                     item.isFullBox
-                      ? 'w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300'
+                      ? 'w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-300'
                       : item.isLargeLogo
                       ? 'max-h-12 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
                       : 'max-h-10 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
@@ -107,7 +107,7 @@ export default function SponsorsSection() {
 
               {/* Details */}
               <div className="flex-1 min-w-0">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-tight">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none">
                   {item.tier}
                 </span>
                 <h3 className="text-sm font-bold text-[#062b59] group-hover:text-blue-600 transition-colors truncate mt-1">
@@ -152,7 +152,7 @@ export default function SponsorsSection() {
 
               {/* Details */}
               <div className="flex-1 min-w-0">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-tight">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none">
                   {item.tier}
                 </span>
                 <h3 className="text-sm font-bold text-[#062b59] truncate mt-1">
@@ -175,7 +175,7 @@ export default function SponsorsSection() {
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200/70 leading-tight">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200/70 leading-none">
                 {item.tier}
               </span>
               <h3 className="text-sm font-bold text-[#062b59]/80 truncate mt-1">
