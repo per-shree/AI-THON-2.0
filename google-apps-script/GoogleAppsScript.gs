@@ -1,28 +1,27 @@
 /**
  * ============================================================================
- * AITHON 2.0 — Google Sheets Registration Sync Script
+ * AITHON 2.0 — Google Sheets Registration Sync & Email Dispatch Script
  * Target Account: ai.veer2k26@gmail.com
  * ============================================================================
  * 
- * INSTRUCTIONS FOR SETUP:
- * 1. Log in to Google with account: ai.veer2k26@gmail.com
- * 2. Go to https://sheets.google.com and create a new sheet: "AITHON 2.0 Registrations"
- * 3. In the top menu, click: Extensions > Apps Script
- * 4. Delete any existing code and PASTE this entire script into the editor.
- * 5. Click "Deploy" (top right) > "New deployment"
- * 6. Select type: "Web app"
- *    - Description: "AITHON 2.0 Registration Webhook"
- *    - Execute as: "Me (ai.veer2k26@gmail.com)"
- *    - Who has access: "Anyone"  <-- CRITICAL: Choose "Anyone"
- * 7. Click "Deploy", grant permissions when prompted.
- * 8. Copy the Web App URL (starts with https://script.google.com/macros/s/.../exec)
- * 9. Add it to your project's .env file as:
- *    VITE_GOOGLE_SHEETS_URL=https://script.google.com/macros/s/.../exec
- *    (or paste it in the Admin Dashboard > Settings > Google Sheets URL)
+ * INSTRUCTIONS TO FIX & ENABLE AUTOMATED CONFIRMATION EMAILS:
+ * 1. Open Google Apps Script editor at your sheet (Extensions > Apps Script).
+ * 2. Replace all code with this updated script and click SAVE (Ctrl+S / Cmd+S).
+ * 3. ⚠️ IMPORTANT STEP (AUTHORIZE GMAIL PERMISSIONS):
+ *    - In the top menu toolbar, select function: "testSendEmail"
+ *    - Click "Run".
+ *    - A popup "Authorization Required" will appear.
+ *    - Click "Review Permissions" > Choose your Google Account (ai.veer2k26@gmail.com).
+ *    - Click "Advanced" > Click "Go to AITHON Webhook (unsafe)" > Click "Allow".
+ *    - Check your inbox (ai.veer2k26@gmail.com) for a test email!
+ * 4. ⚠️ CRITICAL STEP (UPDATE WEB APP DEPLOYMENT):
+ *    - Click "Deploy" (top right) > "Manage deployments"
+ *    - Click the Pencil/Edit icon.
+ *    - Under "Version", select "New version".
+ *    - Click "Deploy".
  * ============================================================================
  */
 
-// Define the exact structured columns for the hackathon
 var HEADERS = [
   "Timestamp",
   "Team ID",
@@ -54,8 +53,6 @@ var HEADERS = [
   "Status"
 ];
 
-// Target Google Spreadsheet ID from your URL:
-// https://docs.google.com/spreadsheets/d/1uBkGnCNJ8dIRhLUY9N4zbTWSh5VEy-p-fbnTkfUNt6k/edit?usp=sharing
 var SPREADSHEET_ID = "1uBkGnCNJ8dIRhLUY9N4zbTWSh5VEy-p-fbnTkfUNt6k";
 
 function getTargetSpreadsheet() {
@@ -64,14 +61,13 @@ function getTargetSpreadsheet() {
       return SpreadsheetApp.openById(SPREADSHEET_ID.trim());
     }
   } catch (err) {
-    Logger.log("Falling back to active spreadsheet: " + err.toString());
+    Logger.log("Fallback to active spreadsheet: " + err.toString());
   }
   return SpreadsheetApp.getActiveSpreadsheet();
 }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  // Wait up to 30 seconds for other processes to finish
   lock.tryLock(30000);
 
   try {
@@ -88,12 +84,10 @@ function doPost(e) {
       }
     }
 
-    // Auto-create headers if sheet is brand new / empty
     if (sheet.getLastRow() === 0) {
       setupSheetHeaders(sheet);
     }
 
-    // Parse incoming data
     var data = {};
     if (e.postData && e.postData.contents) {
       try {
@@ -105,13 +99,9 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    // Format Indian Standard Time
     var timestamp = data.timestamp || Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm:ss a");
-
-    // Format phone to prevent Google Sheets scientific notation
     var phone = data.leadPhone ? "'" + data.leadPhone : "";
 
-    // Arrange row data in the exact structured column order
     var row = [
       timestamp,
       data.teamId || "N/A",
@@ -143,23 +133,25 @@ function doPost(e) {
       data.status || "Pending Review"
     ];
 
-    // Append the row
     sheet.appendRow(row);
 
-    // Style the appended row (center align IDs and timestamps, vertical center)
     var lastRow = sheet.getLastRow();
     var rowRange = sheet.getRange(lastRow, 1, 1, row.length);
     rowRange.setVerticalAlignment("middle");
     rowRange.setFontFamily("Plus Jakarta Sans");
     rowRange.setFontSize(10);
 
-    // Optional: send confirmation email to team leader from ai.veer2k26@gmail.com
+    // Send confirmation email to team leader
+    var emailSentStatus = false;
+    var emailErrorMsg = "";
     try {
       if (data.leadEmail && data.leadEmail.indexOf("@") !== -1) {
         sendConfirmationEmail(data);
+        emailSentStatus = true;
       }
     } catch (mailErr) {
-      Logger.log("Email error: " + mailErr.toString());
+      emailErrorMsg = mailErr.toString();
+      Logger.log("Email Dispatch Error: " + emailErrorMsg);
     }
 
     return ContentService
@@ -167,7 +159,9 @@ function doPost(e) {
         result: "success", 
         row: lastRow, 
         teamId: data.teamId,
-        registrationId: data.registrationId
+        registrationId: data.registrationId,
+        emailSent: emailSentStatus,
+        emailError: emailErrorMsg
       }))
       .setMimeType(ContentService.MimeType.JSON);
 
@@ -181,7 +175,6 @@ function doPost(e) {
   }
 }
 
-// Health check endpoint
 function doGet(e) {
   return ContentService
     .createTextOutput(JSON.stringify({
@@ -193,12 +186,9 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Helper: Setup aesthetic header row
 function setupSheetHeaders(sheet) {
   sheet.appendRow(HEADERS);
   var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
-  
-  // Theme styling: Deep Navy (#062b59) with white bold text
   headerRange.setBackground("#062b59");
   headerRange.setFontColor("#ffffff");
   headerRange.setFontWeight("bold");
@@ -206,33 +196,104 @@ function setupSheetHeaders(sheet) {
   headerRange.setFontSize(10);
   headerRange.setHorizontalAlignment("center");
   headerRange.setVerticalAlignment("middle");
-  
   sheet.setRowHeight(1, 36);
   sheet.setFrozenRows(1);
 }
 
-// Helper: Optional automated confirmation email
+/**
+ * Dispatch confirmation email using GmailApp & MailApp fallback
+ */
 function sendConfirmationEmail(data) {
-  var subject = "AITHON 2.0 Registration Confirmed — " + data.teamName + " [" + data.teamId + "]";
-  var body = 
-    "Dear " + data.leadFullName + ",\n\n" +
-    "Thank you for registering your team for AITHON 2.0 — National Level AI Hackathon at Amrutvahini College of Engineering (AVCOE), Sangamner!\n\n" +
+  var recipient = data.leadEmail;
+  var subject = "AITHON 2.0 Registration Confirmed — " + data.teamName + " [" + (data.teamId || 'TEAM') + "]";
+
+  var plainBody = 
+    "Dear " + (data.leadFullName || "Participant") + ",\n\n" +
+    "Congratulations! Your team registration for AITHON 2.0 has been successfully recorded.\n\n" +
     "REGISTRATION SUMMARY:\n" +
-    "• Team Name: " + data.teamName + "\n" +
-    "• Team ID: " + data.teamId + "\n" +
-    "• Registration ID: " + data.registrationId + "\n" +
-    "• Team Size: " + data.teamSize + " Members\n" +
+    "• Team Name: " + (data.teamName || "N/A") + "\n" +
+    "• Team ID: " + (data.teamId || "N/A") + "\n" +
+    "• Registration ID: " + (data.registrationId || "N/A") + "\n" +
+    "• Team Size: " + (data.teamSize || "3") + " Members\n" +
     "• Event Date: 09 October 2026\n" +
     "• Venue: Dept. of AI & DS, AVCOE Sangamner, Maharashtra\n\n" +
-    "Our organizing committee will review your application and update your verification status shortly.\n\n" +
-    "For any urgent queries, contact our student coordinators:\n" +
+    "Our organizing committee will review your team details. For urgent queries, contact:\n" +
+    "• Email: aiesa.avcoe@gmail.com\n" +
     "• Vedant Mande: +91 85919 10018\n" +
     "• Sudhanshu Rahane: +91 77200 92989\n\n" +
     "Best regards,\n" +
-    "Organizing Committee — AITHON 2.0\n" +
-    "Department of Artificial Intelligence & Data Science\n" +
-    "AVCOE Sangamner\n" +
-    "ai.veer2k26@gmail.com";
+    "AITHON 2.0 Organizing Committee\n" +
+    "Dept. of AI & DS, AVCOE Sangamner";
 
-  MailApp.sendEmail(data.leadEmail, subject, body);
+  var htmlBody = 
+    "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; rounded: 12px; overflow: hidden;'>" +
+      "<div style='background-color: #062b59; padding: 24px; text-align: center; color: #ffffff;'>" +
+        "<h1 style='margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;'>AITHON 2.0</h1>" +
+        "<p style='margin: 4px 0 0 0; font-size: 12px; color: #93c5fd; text-transform: uppercase; tracking-wider: 1px;'>National Level AI Hackathon • AVCOE</p>" +
+      "</div>" +
+      "<div style='padding: 24px; background-color: #ffffff; color: #334155; line-height: 1.6;'>" +
+        "<h2 style='color: #062b59; font-size: 18px; margin-top: 0;'>Registration Confirmed! 🎉</h2>" +
+        "<p>Dear <strong>" + (data.leadFullName || "Participant") + "</strong>,</p>" +
+        "<p>Thank you for registering your team for <strong>AITHON 2.0</strong> organized by the Department of Artificial Intelligence & Data Science, Amrutvahini College of Engineering, Sangamner.</p>" +
+        
+        "<div style='background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 20px 0;'>" +
+          "<h3 style='margin-top: 0; color: #2563eb; font-size: 14px; text-transform: uppercase;'>Team Details</h3>" +
+          "<table style='width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;'>" +
+            "<tr><td style='padding: 4px 0; color: #64748b;'>Team Name:</td><td style='padding: 4px 0; font-weight: bold; color: #0f172a;'>" + (data.teamName || "N/A") + "</td></tr>" +
+            "<tr><td style='padding: 4px 0; color: #64748b;'>Team ID:</td><td style='padding: 4px 0; font-weight: bold; color: #2563eb;'>" + (data.teamId || "N/A") + "</td></tr>" +
+            "<tr><td style='padding: 4px 0; color: #64748b;'>Registration ID:</td><td style='padding: 4px 0; font-weight: bold; color: #059669;'>" + (data.registrationId || "N/A") + "</td></tr>" +
+            "<tr><td style='padding: 4px 0; color: #64748b;'>Team Size:</td><td style='padding: 4px 0; font-weight: bold; color: #0f172a;'>" + (data.teamSize || "3") + " Members</td></tr>" +
+          "</table>" +
+        "</div>" +
+
+        "<p style='font-size: 13px;'>Keep your <strong>Team ID</strong> safe. You will need it for project submissions and check-in on the hackathon day.</p>" +
+        
+        "<hr style='border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;' />" +
+        
+        "<p style='font-size: 12px; color: #64748b; margin-bottom: 0;'>For support, contact student coordinators:<br/>" +
+        "• <strong>Vedant Mande:</strong> +91 85919 10018<br/>" +
+        "• <strong>Sudhanshu Rahane:</strong> +91 77200 92989<br/>" +
+        "• Email: <a href='mailto:aiesa.avcoe@gmail.com' style='color: #2563eb;'>aiesa.avcoe@gmail.com</a></p>" +
+      "</div>" +
+      "<div style='background-color: #f1f5f9; padding: 12px; text-align: center; font-size: 11px; color: #64748b;'>" +
+        "© 2026 AITHON 2.0 • Dept of AI & DS, AVCOE Sangamner" +
+      "</div>" +
+    "</div>";
+
+  // Attempt GmailApp first
+  try {
+    GmailApp.sendEmail(recipient, subject, plainBody, {
+      htmlBody: htmlBody,
+      name: "AITHON 2.0 Organizing Committee"
+    });
+    Logger.log("Email successfully sent via GmailApp to: " + recipient);
+  } catch (gErr) {
+    Logger.log("GmailApp failed, trying MailApp fallback: " + gErr.toString());
+    MailApp.sendEmail({
+      to: recipient,
+      subject: subject,
+      body: plainBody,
+      htmlBody: htmlBody,
+      name: "AITHON 2.0 Organizing Committee"
+    });
+    Logger.log("Email successfully sent via MailApp to: " + recipient);
+  }
+}
+
+/**
+ * 🧪 TEST FUNCTION — Run this once in Apps Script Editor to trigger Authorization Popup!
+ */
+function testSendEmail() {
+  var dummyData = {
+    leadEmail: "ai.veer2k26@gmail.com",
+    leadFullName: "Test Organizers",
+    teamName: "Test Squad",
+    teamId: "TEAM-999",
+    registrationId: "AI25-9999",
+    teamSize: "3"
+  };
+  
+  Logger.log("Sending test email to ai.veer2k26@gmail.com...");
+  sendConfirmationEmail(dummyData);
+  Logger.log("Test email sent! Please check your inbox at ai.veer2k26@gmail.com.");
 }

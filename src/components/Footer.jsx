@@ -26,9 +26,6 @@ export default function Footer() {
             <h2 className="text-2xl font-extrabold tracking-tight text-white m-0">
               AITHON 2.0
             </h2>
-            <span className="text-[#60a5fa] font-bold text-[11px] tracking-wider uppercase bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/50">
-              AI HACKATHON
-            </span>
           </div>
           <p className="text-slate-300 text-xs leading-relaxed">
             Department of Artificial Intelligence & Data Science<br/>
@@ -60,8 +57,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:contact@aithon.com" className="hover:text-white transition-colors">
-                  contact@aithon.com
+                <a href="mailto:aiesa.avcoe@gmail.com" className="hover:text-white transition-colors">
+                  aiesa.avcoe@gmail.com
                 </a>
               </li>
             </ul>

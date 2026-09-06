@@ -372,9 +372,9 @@ export default function Registration() {
              SUCCESS STATE SCREEN
              ================================================== */
           <section className="max-w-2xl mx-auto">
-            <div className="rounded-xl bg-white border border-[#edebe6] p-8 sm:p-12 shadow-sm text-center">
+            <div className="rounded-xl bg-white border border-[#edebe6] p-8 sm:p-12 shadow-sm text-center flex flex-col items-center">
               {/* Animated Checkmark Badge */}
-              <div className="mx-auto w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-6 shadow-xs">
+              <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-6 shadow-xs">
                 <CheckIcon className="w-8 h-8 stroke-[3]" />
               </div>
 
@@ -382,15 +382,15 @@ export default function Registration() {
               <span className="inline-block px-3 py-1 rounded bg-blue-50 text-[#2563eb] text-xs font-bold tracking-wider uppercase mb-2">
                 APPLICATION RECEIVED
               </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#062b59] tracking-tight mb-3">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#062b59] tracking-tight mb-3 text-center">
                 REGISTRATION SUCCESSFUL
               </h2>
-              <p className="text-slate-600 text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed">
+              <p className="text-slate-600 text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed text-center">
                 Your team registration has been submitted successfully for AITHON 2.0. Our committee will review your application.
               </p>
 
               {/* Registration ID & Summary Card */}
-              <div className="p-6 rounded-lg bg-[#faf9f6] border border-[#edebe6] mb-8 text-left space-y-4">
+              <div className="w-full p-6 rounded-lg bg-[#faf9f6] border border-[#edebe6] mb-8 text-left space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#edebe6] gap-3">
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Registration ID</span>

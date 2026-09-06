@@ -73,7 +73,7 @@ export default function ApproveTeamModal({ isOpen, teamName, onConfirm, onCancel
           </p>
           <p className="text-xs font-sans text-slate-400 leading-relaxed">
             The team will be marked as <strong className="text-emerald-400">officially approved</strong> and
-            will gain access to submission portals, resource credits, and mentor channels.
+            will gain access to submission portals and resource credits.
           </p>
         </div>
 

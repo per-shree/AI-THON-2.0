@@ -29,7 +29,7 @@ export default function AdminAnnouncements() {
               Announcements & Broadcasts
             </h1>
             <p className="text-xs text-slate-400 font-sans mt-0.5">
-              Publish official alerts, mentor schedule notices, and resource links directly to all participants.
+              Publish official alerts and resource links directly to all participants.
             </p>
           </div>
 
@@ -48,7 +48,7 @@ export default function AdminAnnouncements() {
           <div className="px-2 text-slate-500 flex items-center gap-1">
             <FilterIcon className="w-3.5 h-3.5" />
           </div>
-          {['ALL', 'IMPORTANT', 'MENTORSHIP', 'RESOURCES', 'SCHEDULE'].map((cat) => (
+          {['ALL', 'IMPORTANT', 'RESOURCES', 'SCHEDULE'].map((cat) => (
             <button
               key={cat}
               type="button"

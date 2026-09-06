@@ -12,21 +12,16 @@ export default function WhyAithon() {
     },
     {
       num: '03',
-      title: 'Expert Mentorship',
-      desc: 'Receive direct guidance and feedback from academic faculty and industry technology leaders.',
-    },
-    {
-      num: '04',
       title: 'National Exposure',
       desc: 'Showcase your innovations alongside talented student engineering teams from across India.',
     },
     {
-      num: '05',
+      num: '04',
       title: 'Professional Networking',
-      desc: 'Connect with peers, mentors, researchers, and domain experts in the AI space.',
+      desc: 'Connect with peers, researchers, and domain experts in the AI space.',
     },
     {
-      num: '06',
+      num: '05',
       title: 'Recognition & Rewards',
       desc: 'Compete for ₹1,00,000* in total prizes and institutional recognition for your technical excellence.',
     },

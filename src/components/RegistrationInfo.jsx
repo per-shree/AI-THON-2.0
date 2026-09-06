@@ -97,7 +97,7 @@ export default function RegistrationInfo() {
         </p>
 
         <a
-          href="mailto:contact@aithon.com"
+          href="mailto:aiesa.avcoe@gmail.com"
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#faf9f6] border border-[#062b59] text-[#062b59] hover:bg-[#062b59] hover:text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-xs"
         >
           <span>EMAIL ORGANIZERS</span>

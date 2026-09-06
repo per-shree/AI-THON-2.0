@@ -5,11 +5,10 @@ export default function TimelineSection() {
     { num: '03', title: 'CHALLENGE REVEAL', desc: 'Detailed problem statements & track datasets released' },
     { num: '04', title: 'HACKATHON BEGINS', desc: '12-hour continuous development at AVCOE' },
     { num: '05', title: 'DEVELOPMENT', desc: 'Rapid prototyping, model training & software build' },
-    { num: '06', title: 'MENTORSHIP', desc: 'Guidance & feedback rounds with expert mentors' },
-    { num: '07', title: 'SUBMISSION', desc: 'Source code repository & live prototype submission' },
-    { num: '08', title: 'EVALUATION', desc: 'Technical evaluation by independent jury panel' },
-    { num: '09', title: 'FINAL PRESENTATION', desc: 'Top finalist teams pitch live to jury panel' },
-    { num: '10', title: 'RESULTS', desc: 'Winner ceremony & prize distribution' },
+    { num: '06', title: 'SUBMISSION', desc: 'Source code repository & live prototype submission' },
+    { num: '07', title: 'EVALUATION', desc: 'Technical evaluation by independent jury panel' },
+    { num: '08', title: 'FINAL PRESENTATION', desc: 'Top finalist teams pitch live to jury panel' },
+    { num: '09', title: 'RESULTS', desc: 'Winner ceremony & prize distribution' },
   ]
 
   return (
@@ -24,7 +23,7 @@ export default function TimelineSection() {
             HACKATHON TIMELINE
           </h2>
           <p className="text-slate-600 text-base">
-            Ten structured stages from initial team registration to winner announcements.
+            Nine structured stages from initial team registration to winner announcements.
           </p>
         </div>
 
