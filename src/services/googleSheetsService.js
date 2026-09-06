@@ -7,8 +7,9 @@
  */
 
 // Default or fallback Google Apps Script Web App URL
-// This can be overridden via .env (VITE_GOOGLE_SHEETS_URL) or Admin Settings
-export const DEFAULT_SHEET_URL = import.meta.env.VITE_GOOGLE_SHEETS_URL || ''
+export const DEFAULT_SHEET_URL =
+  import.meta.env.VITE_GOOGLE_SHEETS_URL ||
+  'https://script.google.com/macros/s/AKfycbzskVa7z-Jw-ThDFhc1Nk6hIsu5bbwT8TChhwma7R5dfj_5y1RDfgJf2nOAe5NK6sKE/exec'
 
 /**
  * Gets the active Google Apps Script Web App URL

@@ -95,7 +95,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose }) {
                 <option value="All Teams">All Teams</option>
                 <option value="All Participants">All Participants</option>
                 <option value="Approved Teams">Approved Teams</option>
-                <option value="Mentors & Judges">Mentors & Judges</option>
+                <option value="Judges & Evaluation Panel">Judges & Evaluation Panel</option>
               </select>
             </div>
 
@@ -107,7 +107,6 @@ export default function CreateAnnouncementModal({ isOpen, onClose }) {
                 className="w-full rounded-xl bg-[#090b14] border border-slate-800 px-2.5 py-2 text-xs font-sans text-slate-200 focus:outline-none focus:border-cyan-400 cursor-pointer"
               >
                 <option value="Important">Important</option>
-                <option value="Mentorship">Mentorship</option>
                 <option value="Resources">Resources</option>
                 <option value="Schedule">Schedule</option>
                 <option value="General">General</option>

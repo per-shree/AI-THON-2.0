@@ -102,7 +102,7 @@ export default function OrganizersModal({ isOpen, onClose }) {
         className="relative w-full max-w-3xl bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden max-h-[85vh] flex flex-col my-auto text-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
-        
+
         {/* Minimal Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
           <div>
@@ -127,7 +127,7 @@ export default function OrganizersModal({ isOpen, onClose }) {
         <div className="p-6 overflow-y-auto flex-1 divide-y divide-slate-100">
           {members.map((m, idx) => (
             <div key={idx} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              
+
               {/* Member Info */}
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">

@@ -511,13 +511,13 @@ export const INITIAL_ANNOUNCEMENTS = [
   },
   {
     id: 'ANN-02',
-    title: 'Mentor Office Hours: AI & Agentic Architectures',
-    content: 'Special mentoring AMA with Google DeepMind and top AI founders on Discord stage channel starting today at 6:00 PM IST.',
+    title: 'AMA Session: AI & Agentic Architectures',
+    content: 'Special technical AMA with Google DeepMind and top AI founders on Discord stage channel starting today at 6:00 PM IST.',
     audience: 'All Participants',
-    category: 'Mentorship',
+    category: 'Schedule',
     priority: 'Normal',
     postedAt: '2026-08-30 02:30 PM',
-    author: 'Mentorship Lead',
+    author: 'Tech Lead',
   },
   {
     id: 'ANN-03',
