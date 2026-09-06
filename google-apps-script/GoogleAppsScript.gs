@@ -99,29 +99,11 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    // Auto-generate unique sequential serial numbers starting strictly from 101 (TEAM-101, AI25-101)
+    // Auto-generate strictly consecutive unique serial numbers starting from 101 (TEAM-101, AI25-101)
     var nextSerialInfo = getLiveNextSerial(sheet);
-    var nextSerialNum = nextSerialInfo.nextNum;
-    var usedNums = nextSerialInfo.usedNums || {};
+    var assignedNum = nextSerialInfo.nextNum;
 
-    // Validate if client sent a serial number that matches the next available unique slot
-    var requestedNum = null;
-    if (data.teamId && typeof data.teamId === 'string') {
-      var match = data.teamId.match(/^TEAM-(\d+)$/i);
-      if (match) {
-        requestedNum = parseInt(match[1], 10);
-      }
-    }
-
-    var assignedNum = nextSerialNum;
-    // Accept client ID ONLY if it is >= 101, not already used in the sheet, and matches nextSerialNum
-    if (requestedNum && requestedNum >= 101 && !usedNums[requestedNum] && requestedNum === nextSerialNum) {
-      assignedNum = requestedNum;
-    } else {
-      assignedNum = nextSerialNum;
-    }
-
-    // Both Team ID and Registration ID increase simultaneously with the exact same unique number
+    // Both Team ID and Registration ID increase simultaneously in strict sequence
     data.teamId = "TEAM-" + assignedNum;
     data.registrationId = "AI25-" + assignedNum;
 
@@ -208,10 +190,13 @@ function doPost(e) {
 }
 
 /**
- * Calculates the next unique serial number starting strictly from 101.
- * Scans existing rows in the "Registrations" sheet for sequential series (101, 102, 103, ...).
- * Guarantees that every new team receives a strictly increasing, unique number,
- * and ignores legacy/random test artifacts (e.g. 653, 999).
+ * Calculates the next unique serial number strictly in consecutive sequence (101, 102, 103, 104, ...).
+ * It scans all existing rows in the "Registrations" sheet, marks every used number,
+ * and starts from 101 to find the very first unused sequential number.
+ * This guarantees:
+ * 1. IDs are strictly in consecutive sequence: 101, 102, 103, 104, 105...
+ * 2. It NEVER jumps to random numbers (like 309 or 653).
+ * 3. It NEVER repeats any ID to anyone.
  */
 function getLiveNextSerial(sheet) {
   var lastRow = sheet.getLastRow();
@@ -221,36 +206,25 @@ function getLiveNextSerial(sheet) {
 
   var idRows = sheet.getRange(2, 2, lastRow - 1, 2).getValues();
   var usedNums = {};
-  var maxSequentialNum = 100; // Sequence baseline (first team will be 101)
 
   for (var i = 0; i < idRows.length; i++) {
     var teamIdStr = String(idRows[i][0] || "").trim();
     var regIdStr = String(idRows[i][1] || "").trim();
 
-    // Check Team ID (e.g. TEAM-101)
-    var m1 = teamIdStr.match(/^TEAM-(\d+)$/i);
+    var m1 = teamIdStr.match(/\d+/);
     if (m1) {
-      var n1 = parseInt(m1[1], 10);
-      // Valid sequential series (101 to 499)
-      if (n1 >= 101 && n1 < 500) {
-        usedNums[n1] = true;
-        if (n1 > maxSequentialNum) maxSequentialNum = n1;
-      }
+      usedNums[parseInt(m1[0], 10)] = true;
     }
 
-    // Check Registration ID (e.g. AI25-101)
-    var m2 = regIdStr.match(/^AI25-(\d+)$/i);
+    var m2 = regIdStr.match(/\d+/);
     if (m2) {
-      var n2 = parseInt(m2[1], 10);
-      if (n2 >= 101 && n2 < 500) {
-        usedNums[n2] = true;
-        if (n2 > maxSequentialNum) maxSequentialNum = n2;
-      }
+      usedNums[parseInt(m2[0], 10)] = true;
     }
   }
 
-  // Find next available unique number >= maxSequentialNum + 1 that is not used
-  var candidate = maxSequentialNum + 1;
+  // Strictly start from 101 and find the very first unused consecutive number:
+  // 101 -> 102 -> 103 -> 104 -> 105 ...
+  var candidate = 101;
   while (usedNums[candidate]) {
     candidate++;
   }

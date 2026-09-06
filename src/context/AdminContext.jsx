@@ -176,7 +176,7 @@ export function AdminProvider({ children }) {
   // Helper to sync and set next serial number
   const syncNextSerialNum = (num) => {
     const parsed = typeof num === 'string' ? parseInt(num, 10) : num
-    if (!isNaN(parsed) && parsed >= 101) {
+    if (!isNaN(parsed) && parsed >= 101 && parsed < 300) {
       try {
         localStorage.setItem('aithon_next_team_num', parsed.toString())
         localStorage.setItem('aithon_next_reg_num', parsed.toString())
@@ -193,8 +193,12 @@ export function AdminProvider({ children }) {
       const stored = localStorage.getItem('aithon_next_team_num') || localStorage.getItem('aithon_next_reg_num')
       if (stored) {
         const parsed = parseInt(stored, 10)
-        if (!isNaN(parsed) && parsed >= 101) {
+        if (!isNaN(parsed) && parsed >= 101 && parsed < 300) {
           nextNum = parsed
+        } else if (parsed >= 300) {
+          // Clean up stale artifact from earlier test run
+          localStorage.removeItem('aithon_next_team_num')
+          localStorage.removeItem('aithon_next_reg_num')
         }
       }
     } catch (e) {
@@ -209,8 +213,11 @@ export function AdminProvider({ children }) {
       const stored = localStorage.getItem('aithon_next_team_num') || localStorage.getItem('aithon_next_reg_num')
       if (stored) {
         const parsed = parseInt(stored, 10)
-        if (!isNaN(parsed) && parsed >= 101) {
+        if (!isNaN(parsed) && parsed >= 101 && parsed < 300) {
           nextNum = parsed
+        } else if (parsed >= 300) {
+          localStorage.removeItem('aithon_next_team_num')
+          localStorage.removeItem('aithon_next_reg_num')
         }
       }
     } catch (e) {
