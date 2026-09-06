@@ -217,6 +217,8 @@ function sendConfirmationEmail(data) {
     "• Team Size: " + (data.teamSize || "3") + " Members\n" +
     "• Event Date: 09 October 2026\n" +
     "• Venue: Dept. of AI & DS, AVCOE Sangamner, Maharashtra\n\n" +
+    "JOIN OUR OFFICIAL WHATSAPP COMMUNITY:\n" +
+    "https://chat.whatsapp.com/HRvMvxxB2NUIvw5zMiTsQ9\n\n" +
     "Our organizing committee will review your team details. For urgent queries, contact:\n" +
     "• Email: aiesa.avcoe@gmail.com\n" +
     "• Vedant Mande: +91 85919 10018\n" +
@@ -226,13 +228,13 @@ function sendConfirmationEmail(data) {
     "Dept. of AI & DS, AVCOE Sangamner";
 
   var htmlBody = 
-    "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; rounded: 12px; overflow: hidden;'>" +
+    "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;'>" +
       "<div style='background-color: #062b59; padding: 24px; text-align: center; color: #ffffff;'>" +
         "<h1 style='margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;'>AITHON 2.0</h1>" +
         "<p style='margin: 4px 0 0 0; font-size: 12px; color: #93c5fd; text-transform: uppercase; tracking-wider: 1px;'>National Level AI Hackathon • AVCOE</p>" +
       "</div>" +
       "<div style='padding: 24px; background-color: #ffffff; color: #334155; line-height: 1.6;'>" +
-        "<h2 style='color: #062b59; font-size: 18px; margin-top: 0;'>Registration Confirmed! 🎉</h2>" +
+        "<h2 style='color: #062b59; font-size: 18px; margin-top: 0;'>Registration Confirmed!</h2>" +
         "<p>Dear <strong>" + (data.leadFullName || "Participant") + "</strong>,</p>" +
         "<p>Thank you for registering your team for <strong>AITHON 2.0</strong> organized by the Department of Artificial Intelligence & Data Science, Amrutvahini College of Engineering, Sangamner.</p>" +
         
@@ -244,6 +246,12 @@ function sendConfirmationEmail(data) {
             "<tr><td style='padding: 4px 0; color: #64748b;'>Registration ID:</td><td style='padding: 4px 0; font-weight: bold; color: #059669;'>" + (data.registrationId || "N/A") + "</td></tr>" +
             "<tr><td style='padding: 4px 0; color: #64748b;'>Team Size:</td><td style='padding: 4px 0; font-weight: bold; color: #0f172a;'>" + (data.teamSize || "3") + " Members</td></tr>" +
           "</table>" +
+        "</div>" +
+
+        "<div style='background-color: #25D36615; border: 1px solid #25D366; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>" +
+          "<h3 style='margin: 0 0 6px 0; color: #075E54; font-size: 15px;'>Join Official WhatsApp Community</h3>" +
+          "<p style='font-size: 13px; color: #334155; margin: 0 0 12px 0;'>Stay updated with important announcements, schedule, and guidelines.</p>" +
+          "<a href='https://chat.whatsapp.com/HRvMvxxB2NUIvw5zMiTsQ9' target='_blank' style='display: inline-block; background-color: #25D366; color: #ffffff; text-decoration: none; font-weight: bold; padding: 10px 20px; border-radius: 6px; font-size: 14px;'>Join WhatsApp Group</a>" +
         "</div>" +
 
         "<p style='font-size: 13px;'>Keep your <strong>Team ID</strong> safe. You will need it for project submissions and check-in on the hackathon day.</p>" +
