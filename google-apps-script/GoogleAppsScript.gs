@@ -99,41 +99,52 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    // Auto-generate serial Team ID starting from TEAM-101 (Guarantees sequential order & zero duplication)
+    // Auto-generate serial Team ID & Registration ID starting from 101 (TEAM-101, AI25-101)
     var lastRowBeforeAppend = sheet.getLastRow();
-    var nextTeamNum = 101; // Sequence starts strictly at 101
+    var nextSerialNum = 101; // Sequence starts strictly at 101
 
     if (lastRowBeforeAppend > 1) {
-      var existingTeamIds = sheet.getRange(2, 2, lastRowBeforeAppend - 1, 1).getValues();
+      // Scan both Team ID (Col 2) and Registration ID (Col 3) to find the highest existing serial number
+      var existingIdRows = sheet.getRange(2, 2, lastRowBeforeAppend - 1, 2).getValues();
       var maxFoundNum = 100; // So maxFoundNum + 1 = 101 for the first team
-      for (var i = 0; i < existingTeamIds.length; i++) {
-        var idStr = String(existingTeamIds[i][0] || "").trim();
-        if (idStr.indexOf("TEST") !== -1 || idStr.indexOf("999") !== -1) continue;
-        var numMatch = idStr.match(/\d+/);
-        if (numMatch) {
-          var parsed = parseInt(numMatch[0], 10);
-          if (parsed < 900 && parsed > maxFoundNum) {
-            maxFoundNum = parsed;
-          }
+      for (var i = 0; i < existingIdRows.length; i++) {
+        var teamIdStr = String(existingIdRows[i][0] || "").trim();
+        var regIdStr = String(existingIdRows[i][1] || "").trim();
+        if (teamIdStr.indexOf("TEST") !== -1 || teamIdStr.indexOf("999") !== -1) continue;
+
+        var numMatch1 = teamIdStr.match(/\d+/);
+        if (numMatch1) {
+          var parsed1 = parseInt(numMatch1[0], 10);
+          if (parsed1 < 900 && parsed1 > maxFoundNum) maxFoundNum = parsed1;
+        }
+
+        var numMatch2 = regIdStr.match(/\d+/);
+        if (numMatch2) {
+          var parsed2 = parseInt(numMatch2[0], 10);
+          if (parsed2 < 900 && parsed2 > maxFoundNum) maxFoundNum = parsed2;
         }
       }
-      nextTeamNum = maxFoundNum + 1;
+      nextSerialNum = maxFoundNum + 1;
     }
 
-    // Preserve valid serial teamId from client so Website UI & Email match 100%
+    // Preserve client serial IDs so Website UI, Sheet, and Email are 100% identical
     if (data.teamId && typeof data.teamId === 'string' && /^TEAM-\d+$/i.test(data.teamId.trim())) {
       data.teamId = data.teamId.trim().toUpperCase();
     } else {
-      data.teamId = "TEAM-" + nextTeamNum;
+      data.teamId = "TEAM-" + nextSerialNum;
+    }
+
+    // Extract the serial number from Team ID so Registration ID perfectly matches (e.g. TEAM-101 -> AI25-101)
+    var assignedNum = nextSerialNum;
+    var teamNumMatch = data.teamId.match(/\d+/);
+    if (teamNumMatch) {
+      assignedNum = parseInt(teamNumMatch[0], 10);
     }
 
     if (data.registrationId && typeof data.registrationId === 'string' && /^AI25-\d+$/i.test(data.registrationId.trim())) {
       data.registrationId = data.registrationId.trim().toUpperCase();
     } else {
-      var teamNum = 101;
-      var matchNum = data.teamId.match(/\d+/);
-      if (matchNum) teamNum = parseInt(matchNum[0], 10);
-      data.registrationId = "AI25-" + (8000 + teamNum);
+      data.registrationId = "AI25-" + assignedNum;
     }
 
     // Enforce max team size of 4 members
@@ -339,7 +350,7 @@ function testSendEmail() {
     leadFullName: "Test Organizers",
     teamName: "Test Squad",
     teamId: "TEAM-101",
-    registrationId: "AI25-8101",
+    registrationId: "AI25-101",
     teamSize: "3"
   };
   

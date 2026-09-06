@@ -280,8 +280,10 @@ export default function Registration() {
 
     setIsSubmitting(true)
 
-    const generatedRegId = getNextSerialRegId ? getNextSerialRegId() : `AI25-8101`
     const generatedTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-101`
+    const teamNumMatch = generatedTeamId.match(/\d+/)
+    const teamNum = teamNumMatch ? teamNumMatch[0] : '101'
+    const generatedRegId = `AI25-${teamNum}`
 
     setRegistrationId(generatedRegId)
     setTeamId(generatedTeamId)
