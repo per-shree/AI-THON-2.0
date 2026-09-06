@@ -1,5 +1,3 @@
-import CountdownTimer from './CountdownTimer'
-
 export default function PrizesSection() {
   const prizes = [
     { title: '1st Prize', note: 'Winner Champion Trophy & Award', status: 'Coming Soon' },
@@ -41,11 +39,6 @@ export default function PrizesSection() {
               </span>
             </div>
           ))}
-        </div>
-
-        {/* Integrated Countdown Section */}
-        <div className="pt-12 sm:pt-16 mt-16 border-t border-[#e2d5c5]/80">
-          <CountdownTimer />
         </div>
 
       </div>

@@ -130,11 +130,13 @@ export default function Registration() {
     }
   }
 
-  // Handle Team Size change
+  // Handle Team Size change (Max 4 members)
   const handleTeamSizeChange = (sizeStr) => {
+    const parsed = parseInt(sizeStr, 10)
+    const clamped = Math.min(4, Math.max(1, isNaN(parsed) ? 3 : parsed))
     setFormData((prev) => ({
       ...prev,
-      teamSize: sizeStr,
+      teamSize: clamped.toString(),
     }))
   }
 
@@ -278,8 +280,10 @@ export default function Registration() {
 
     setIsSubmitting(true)
 
-    const generatedRegId = getNextSerialRegId ? getNextSerialRegId() : `AI25-8101`
-    const generatedTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-108`
+    const generatedTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-101`
+    const teamNumMatch = generatedTeamId.match(/\d+/)
+    const teamNum = teamNumMatch ? teamNumMatch[0] : '101'
+    const generatedRegId = `AI25-${teamNum}`
 
     setRegistrationId(generatedRegId)
     setTeamId(generatedTeamId)
@@ -341,8 +345,8 @@ export default function Registration() {
     setCurrentStep(1)
   }
 
-  const teamSizeNum = parseInt(formData.teamSize, 10) || 3
-  const additionalMembersCount = teamSizeNum - 1
+  const teamSizeNum = Math.min(4, Math.max(1, parseInt(formData.teamSize, 10) || 3))
+  const additionalMembersCount = Math.min(3, Math.max(0, teamSizeNum - 1))
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
@@ -424,11 +428,10 @@ export default function Registration() {
                   </div>
                 </div>
 
-                {/* Google Sheet Sync Confirmation Note */}
+                {/* Registration Sync Confirmation Note */}
                 <div className="pt-3 border-t border-[#edebe6] flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 gap-1">
-                  <span>Google Account: <strong className="text-[#062b59]">ai.veer2k26@gmail.com</strong></span>
                   <span className="text-emerald-600 font-bold flex items-center gap-1">
-                    <span>✓</span> Full Team Data Structured & Logged
+                    <span>✓</span> Confirmation Email Sent & Registration Recorded
                   </span>
                 </div>
               </div>

@@ -38,7 +38,8 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     hour12: true,
   })
 
-  const teamSizeNum = parseInt(formData.teamSize || '3', 10)
+  const rawSize = parseInt(formData.teamSize || '3', 10)
+  const teamSizeNum = Math.min(4, Math.max(1, isNaN(rawSize) ? 3 : rawSize))
   const members = formData.members || []
 
   const member2 = teamSizeNum >= 2 ? members[0] || {} : {}
@@ -53,7 +54,7 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
 
     // Team Meta
     teamName: formData.teamName || '',
-    teamSize: formData.teamSize || '3',
+    teamSize: String(teamSizeNum),
 
     // Team Leader (Full Profile)
     leadFullName: formData.leadFullName || '',
