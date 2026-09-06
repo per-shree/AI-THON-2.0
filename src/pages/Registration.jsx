@@ -410,7 +410,8 @@ export default function Registration() {
           </h1>
 
           <p className="text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed text-center font-medium pt-1">
-            Fill in the details below to register your team for AITHON 2.0 at Amrutvahini College of Engineering, Sangamner.
+            Fill in the details below to register your team for AITHON 2.0 at <br className="hidden sm:inline" />
+            Amrutvahini College of Engineering, Sangamner.
           </p>
         </section>
 
