@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import BackgroundArtwork from './BackgroundArtwork'
+import CountdownTimer from './CountdownTimer'
 import { CalendarIcon, ClockIcon, UsersIcon, MapPinIcon } from './Icons'
 
 export default function HeroSection() {
@@ -9,7 +10,7 @@ export default function HeroSection() {
       {/* Subtle Low-Contrast Skyline Background */}
       <BackgroundArtwork variant="hero" />
 
-      <div className="max-w-5xl w-full mx-auto relative z-10 text-center flex flex-col items-center justify-center space-y-5 sm:space-y-7">
+      <div className="max-w-5xl w-full mx-auto relative z-10 text-center flex flex-col items-center justify-center space-y-5 sm:space-y-6">
         
         {/* Top Eyebrow Tag */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 border border-blue-100 backdrop-blur-xs shadow-2xs">
@@ -36,7 +37,7 @@ export default function HeroSection() {
         </p>
 
         {/* Clean Event Info Pill - Vector SVG Icons */}
-        <div className="w-full max-w-3xl text-xs sm:text-sm md:text-base font-bold text-[#062b59] p-3 sm:py-3.5 sm:px-6 bg-white/90 backdrop-blur-sm border border-[#edebe6] shadow-xs rounded-xl mt-2">
+        <div className="w-full max-w-3xl text-xs sm:text-sm md:text-base font-bold text-[#062b59] p-3 sm:py-3.5 sm:px-6 bg-white/90 backdrop-blur-sm border border-[#edebe6] shadow-xs rounded-xl mt-1">
           <div className="flex flex-wrap justify-center items-center gap-x-3 sm:gap-x-5 gap-y-2.5 text-center">
             <span className="inline-flex items-center gap-1.5">
               <CalendarIcon className="w-4 h-4 text-[#2563eb]" /> 9 OCTOBER 2026
@@ -54,6 +55,11 @@ export default function HeroSection() {
               <MapPinIcon className="w-4 h-4 text-emerald-600" /> AVCOE, SANGAMNER
             </span>
           </div>
+        </div>
+
+        {/* Integrated Hero Live Countdown Timer */}
+        <div className="w-full max-w-xl mx-auto pt-1">
+          <CountdownTimer variant="hero" />
         </div>
 
         {/* Action Buttons */}
