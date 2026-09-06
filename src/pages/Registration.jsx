@@ -426,11 +426,10 @@ export default function Registration() {
                   </div>
                 </div>
 
-                {/* Google Sheet Sync Confirmation Note */}
+                {/* Registration Sync Confirmation Note */}
                 <div className="pt-3 border-t border-[#edebe6] flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 gap-1">
-                  <span>Google Account: <strong className="text-[#062b59]">ai.veer2k26@gmail.com</strong></span>
                   <span className="text-emerald-600 font-bold flex items-center gap-1">
-                    <span>✓</span> Full Team Data Structured & Logged
+                    <span>✓</span> Confirmation Email Sent & Registration Recorded
                   </span>
                 </div>
               </div>
