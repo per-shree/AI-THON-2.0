@@ -99,19 +99,20 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    // Auto-generate serial Team ID and Registration ID (Guarantees sequential order & zero duplication)
+    // Auto-generate serial Team ID starting from TEAM-101 (Guarantees sequential order & zero duplication)
     var lastRowBeforeAppend = sheet.getLastRow();
-    var nextTeamNum = 101; // Default starting number if sheet is fresh
+    var nextTeamNum = 101; // Sequence starts strictly at 101
 
     if (lastRowBeforeAppend > 1) {
       var existingTeamIds = sheet.getRange(2, 2, lastRowBeforeAppend - 1, 1).getValues();
-      var maxFoundNum = 100;
+      var maxFoundNum = 100; // So maxFoundNum + 1 = 101 for the first team
       for (var i = 0; i < existingTeamIds.length; i++) {
         var idStr = String(existingTeamIds[i][0] || "").trim();
+        if (idStr.indexOf("TEST") !== -1 || idStr.indexOf("999") !== -1) continue;
         var numMatch = idStr.match(/\d+/);
         if (numMatch) {
           var parsed = parseInt(numMatch[0], 10);
-          if (parsed > maxFoundNum) {
+          if (parsed < 900 && parsed > maxFoundNum) {
             maxFoundNum = parsed;
           }
         }
@@ -119,13 +120,26 @@ function doPost(e) {
       nextTeamNum = maxFoundNum + 1;
     }
 
-    // If client didn't provide a serial teamId or provided a random one, override with serial ID
-    if (!data.teamId || !/^TEAM-\d+$/.test(data.teamId)) {
+    // Preserve valid serial teamId from client so Website UI & Email match 100%
+    if (data.teamId && typeof data.teamId === 'string' && /^TEAM-\d+$/i.test(data.teamId.trim())) {
+      data.teamId = data.teamId.trim().toUpperCase();
+    } else {
       data.teamId = "TEAM-" + nextTeamNum;
     }
-    if (!data.registrationId || !/^AI25-\d+$/.test(data.registrationId)) {
-      data.registrationId = "AI25-" + (8000 + nextTeamNum);
+
+    if (data.registrationId && typeof data.registrationId === 'string' && /^AI25-\d+$/i.test(data.registrationId.trim())) {
+      data.registrationId = data.registrationId.trim().toUpperCase();
+    } else {
+      var teamNum = 101;
+      var matchNum = data.teamId.match(/\d+/);
+      if (matchNum) teamNum = parseInt(matchNum[0], 10);
+      data.registrationId = "AI25-" + (8000 + teamNum);
     }
+
+    // Enforce max team size of 4 members
+    var rawTeamSize = parseInt(data.teamSize || "3", 10);
+    var clampedTeamSize = Math.min(4, Math.max(1, isNaN(rawTeamSize) ? 3 : rawTeamSize));
+    data.teamSize = String(clampedTeamSize);
 
     var timestamp = data.timestamp || Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm:ss a");
     var phone = data.leadPhone ? "'" + data.leadPhone : "";
@@ -135,7 +149,7 @@ function doPost(e) {
       data.teamId || "N/A",
       data.registrationId || "N/A",
       data.teamName || "N/A",
-      data.teamSize || "3",
+      data.teamSize,
       data.leadFullName || "N/A",
       data.leadEmail || "N/A",
       phone,
@@ -324,8 +338,8 @@ function testSendEmail() {
     leadEmail: "ai.veer2k26@gmail.com",
     leadFullName: "Test Organizers",
     teamName: "Test Squad",
-    teamId: "TEAM-999",
-    registrationId: "AI25-9999",
+    teamId: "TEAM-101",
+    registrationId: "AI25-8101",
     teamSize: "3"
   };
   

@@ -173,36 +173,37 @@ export function AdminProvider({ children }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
   }
 
-  // Helper to generate next sequential Team ID without duplicates
+  // Helper to generate next sequential Team ID starting at TEAM-101 for live registrations
   const getNextSerialTeamId = () => {
-    let maxNum = 100
-    teams.forEach((t) => {
-      const match = String(t.id || t.teamId || '').match(/\d+/)
-      if (match) {
-        const num = parseInt(match[0], 10)
-        if (num > maxNum) maxNum = num
+    let nextNum = 101
+    try {
+      const stored = localStorage.getItem('aithon_next_team_num')
+      if (stored) {
+        const parsed = parseInt(stored, 10)
+        if (!isNaN(parsed) && parsed >= 101) {
+          nextNum = parsed
+        }
       }
-    })
-    participants.forEach((p) => {
-      const match = String(p.teamId || '').match(/\d+/)
-      if (match) {
-        const num = parseInt(match[0], 10)
-        if (num > maxNum) maxNum = num
-      }
-    })
-    return `TEAM-${maxNum + 1}`
+    } catch (e) {
+      console.warn('localStorage read error:', e)
+    }
+    return `TEAM-${nextNum}`
   }
 
   const getNextSerialRegId = () => {
-    let maxNum = 8100
-    participants.forEach((p) => {
-      const match = String(p.id || '').match(/\d+/)
-      if (match) {
-        const num = parseInt(match[0], 10)
-        if (num > maxNum) maxNum = num
+    let nextNum = 8101
+    try {
+      const stored = localStorage.getItem('aithon_next_reg_num')
+      if (stored) {
+        const parsed = parseInt(stored, 10)
+        if (!isNaN(parsed) && parsed >= 8101) {
+          nextNum = parsed
+        }
       }
-    })
-    return `AI25-${maxNum + 1}`
+    } catch (e) {
+      console.warn('localStorage read error:', e)
+    }
+    return `AI25-${nextNum}`
   }
 
   // ─── PUBLIC REGISTRATION ACTION ──────────────────────────────────────────
@@ -210,6 +211,22 @@ export function AdminProvider({ children }) {
     const ts = nowTimestamp()
     const teamId = registrationData.teamId || getNextSerialTeamId()
     const leadId = registrationData.registrationId || getNextSerialRegId()
+
+    // Increment next serial number for subsequent registration
+    try {
+      const matchTeam = teamId.match(/\d+/)
+      if (matchTeam) {
+        const currentNum = parseInt(matchTeam[0], 10)
+        localStorage.setItem('aithon_next_team_num', (currentNum + 1).toString())
+      }
+      const matchReg = leadId.match(/\d+/)
+      if (matchReg) {
+        const currentRegNum = parseInt(matchReg[0], 10)
+        localStorage.setItem('aithon_next_reg_num', (currentRegNum + 1).toString())
+      }
+    } catch (e) {
+      console.warn('localStorage write error:', e)
+    }
 
     const newLead = {
       id: leadId,
