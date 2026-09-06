@@ -1,7 +1,6 @@
 import {
   ClockIcon,
   UsersIcon,
-  TagIcon,
   CalendarIcon,
   InfoIcon,
 } from './Icons'
@@ -17,12 +16,6 @@ export default function RegistrationInfo() {
       label: 'Team Size',
       value: '2–4 Members',
       icon: UsersIcon,
-    },
-    {
-      label: 'Registration Fee',
-      value: 'Free Entry',
-      badge: '100% FREE',
-      icon: TagIcon,
     },
     {
       label: 'Hackathon Duration',
@@ -82,26 +75,6 @@ export default function RegistrationInfo() {
         <div className="mt-5 p-3.5 rounded-lg bg-blue-50/60 border border-blue-100 text-slate-700 text-xs leading-relaxed">
           <span className="text-[#2563eb] font-bold">⚡ Note:</span> Ensure team lead and member details match your college IDs for physical verification on event day.
         </div>
-      </div>
-
-      {/* Need Help / Support Panel */}
-      <div className="rounded-xl bg-white border border-[#edebe6] p-6 shadow-xs">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-2 h-2 rounded-full bg-[#ea580c]" />
-          <h2 className="text-xs font-bold text-[#062b59] tracking-wider uppercase m-0">
-            NEED ASSISTANCE?
-          </h2>
-        </div>
-        <p className="text-xs text-slate-600 leading-relaxed mb-4">
-          Have queries about rules, team registration, or problem tracks? Reach out to the organizing team or join the community.
-        </p>
-
-        <a
-          href="mailto:aiesa.avcoe@gmail.com"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#faf9f6] border border-[#062b59] text-[#062b59] hover:bg-[#062b59] hover:text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-xs"
-        >
-          <span>EMAIL ORGANIZERS</span>
-        </a>
       </div>
     </aside>
   )
