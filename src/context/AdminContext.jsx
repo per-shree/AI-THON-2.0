@@ -173,11 +173,43 @@ export function AdminProvider({ children }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
   }
 
+  // Helper to generate next sequential Team ID without duplicates
+  const getNextSerialTeamId = () => {
+    let maxNum = 100
+    teams.forEach((t) => {
+      const match = String(t.id || t.teamId || '').match(/\d+/)
+      if (match) {
+        const num = parseInt(match[0], 10)
+        if (num > maxNum) maxNum = num
+      }
+    })
+    participants.forEach((p) => {
+      const match = String(p.teamId || '').match(/\d+/)
+      if (match) {
+        const num = parseInt(match[0], 10)
+        if (num > maxNum) maxNum = num
+      }
+    })
+    return `TEAM-${maxNum + 1}`
+  }
+
+  const getNextSerialRegId = () => {
+    let maxNum = 8100
+    participants.forEach((p) => {
+      const match = String(p.id || '').match(/\d+/)
+      if (match) {
+        const num = parseInt(match[0], 10)
+        if (num > maxNum) maxNum = num
+      }
+    })
+    return `AI25-${maxNum + 1}`
+  }
+
   // ─── PUBLIC REGISTRATION ACTION ──────────────────────────────────────────
   const registerTeam = (registrationData) => {
     const ts = nowTimestamp()
-    const teamId = registrationData.teamId || `TEAM-${100 + teams.length + 1}`
-    const leadId = registrationData.registrationId || `AI25-${Math.floor(1000 + Math.random() * 9000)}`
+    const teamId = registrationData.teamId || getNextSerialTeamId()
+    const leadId = registrationData.registrationId || getNextSerialRegId()
 
     const newLead = {
       id: leadId,
@@ -236,7 +268,7 @@ export function AdminProvider({ children }) {
       pendingReview: { ...prev.pendingReview, value: prev.pendingReview.value + 1 },
     }))
     setNotifications((prev) => [
-      { id: Date.now(), text: `New team registered: "${registrationData.teamName}"`, time: 'Just now', unread: true },
+      { id: Date.now(), text: `New team registered: "${registrationData.teamName}" (${teamId})`, time: 'Just now', unread: true },
       ...prev,
     ])
     return { teamId, leadId }
@@ -264,6 +296,8 @@ export function AdminProvider({ children }) {
         settings,
         adminUser,
         notifications,
+        getNextSerialTeamId,
+        getNextSerialRegId,
         updateParticipantStatus,
         updateTeamStatus,
         approveTeam,

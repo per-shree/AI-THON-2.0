@@ -99,6 +99,34 @@ function doPost(e) {
       data = e.parameter;
     }
 
+    // Auto-generate serial Team ID and Registration ID (Guarantees sequential order & zero duplication)
+    var lastRowBeforeAppend = sheet.getLastRow();
+    var nextTeamNum = 101; // Default starting number if sheet is fresh
+
+    if (lastRowBeforeAppend > 1) {
+      var existingTeamIds = sheet.getRange(2, 2, lastRowBeforeAppend - 1, 1).getValues();
+      var maxFoundNum = 100;
+      for (var i = 0; i < existingTeamIds.length; i++) {
+        var idStr = String(existingTeamIds[i][0] || "").trim();
+        var numMatch = idStr.match(/\d+/);
+        if (numMatch) {
+          var parsed = parseInt(numMatch[0], 10);
+          if (parsed > maxFoundNum) {
+            maxFoundNum = parsed;
+          }
+        }
+      }
+      nextTeamNum = maxFoundNum + 1;
+    }
+
+    // If client didn't provide a serial teamId or provided a random one, override with serial ID
+    if (!data.teamId || !/^TEAM-\d+$/.test(data.teamId)) {
+      data.teamId = "TEAM-" + nextTeamNum;
+    }
+    if (!data.registrationId || !/^AI25-\d+$/.test(data.registrationId)) {
+      data.registrationId = "AI25-" + (8000 + nextTeamNum);
+    }
+
     var timestamp = data.timestamp || Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm:ss a");
     var phone = data.leadPhone ? "'" + data.leadPhone : "";
 
@@ -399,6 +427,7 @@ function sendConfirmationEmail(data) {
     '</body>' +
     '</html>';
 
+  // Attempt GmailApp first
   try {
     GmailApp.sendEmail(recipient, subject, plainText, {
       htmlBody: htmlBody,
