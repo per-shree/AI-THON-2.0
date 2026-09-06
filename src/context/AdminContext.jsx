@@ -173,11 +173,24 @@ export function AdminProvider({ children }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
   }
 
+  // Helper to sync and set next serial number
+  const syncNextSerialNum = (num) => {
+    const parsed = typeof num === 'string' ? parseInt(num, 10) : num
+    if (!isNaN(parsed) && parsed >= 101) {
+      try {
+        localStorage.setItem('aithon_next_team_num', parsed.toString())
+        localStorage.setItem('aithon_next_reg_num', parsed.toString())
+      } catch (e) {
+        console.warn('localStorage write error:', e)
+      }
+    }
+  }
+
   // Helper to generate next sequential Team ID starting at TEAM-101 for live registrations
   const getNextSerialTeamId = () => {
     let nextNum = 101
     try {
-      const stored = localStorage.getItem('aithon_next_team_num')
+      const stored = localStorage.getItem('aithon_next_team_num') || localStorage.getItem('aithon_next_reg_num')
       if (stored) {
         const parsed = parseInt(stored, 10)
         if (!isNaN(parsed) && parsed >= 101) {
@@ -214,13 +227,8 @@ export function AdminProvider({ children }) {
     const currentNum = teamNumMatch ? parseInt(teamNumMatch[0], 10) : 101
     const leadId = registrationData.registrationId || `AI25-${currentNum}`
 
-    // Increment next serial number for subsequent registration
-    try {
-      localStorage.setItem('aithon_next_team_num', (currentNum + 1).toString())
-      localStorage.setItem('aithon_next_reg_num', (currentNum + 1).toString())
-    } catch (e) {
-      console.warn('localStorage write error:', e)
-    }
+    // Advance next serial number strictly to currentNum + 1 for subsequent registration
+    syncNextSerialNum(currentNum + 1)
 
     const newLead = {
       id: leadId,
@@ -309,6 +317,7 @@ export function AdminProvider({ children }) {
         notifications,
         getNextSerialTeamId,
         getNextSerialRegId,
+        syncNextSerialNum,
         updateParticipantStatus,
         updateTeamStatus,
         approveTeam,

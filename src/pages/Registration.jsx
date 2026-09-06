@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -6,7 +6,7 @@ import RegistrationProgress from '../components/RegistrationProgress'
 import RegistrationInfo from '../components/RegistrationInfo'
 import FormInput from '../components/FormInput'
 import { useAdmin } from '../context/AdminContext'
-import { submitRegistrationToGoogleSheet } from '../services/googleSheetsService'
+import { submitRegistrationToGoogleSheet, fetchNextSerialId } from '../services/googleSheetsService'
 import {
   UserIcon,
   MailIcon,
@@ -71,12 +71,25 @@ const POPULAR_SKILLS = [
 ]
 
 export default function Registration() {
-  const { registerTeam, getNextSerialTeamId, getNextSerialRegId } = useAdmin()
+  const { registerTeam, getNextSerialTeamId, getNextSerialRegId, syncNextSerialNum } = useAdmin()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [registrationId, setRegistrationId] = useState('')
   const [teamId, setTeamId] = useState('')
+
+  // Pre-fetch live next serial ID from Google Sheets on mount to ensure multi-device synchronization
+  useEffect(() => {
+    let isMounted = true
+    fetchNextSerialId().then((res) => {
+      if (isMounted && res && res.nextNum && syncNextSerialNum) {
+        syncNextSerialNum(res.nextNum)
+      }
+    }).catch(() => {})
+    return () => {
+      isMounted = false
+    }
+  }, [syncNextSerialNum])
 
   // Form State
   const [formData, setFormData] = useState({
@@ -280,29 +293,60 @@ export default function Registration() {
 
     setIsSubmitting(true)
 
-    const generatedTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-101`
-    const teamNumMatch = generatedTeamId.match(/\d+/)
-    const teamNum = teamNumMatch ? teamNumMatch[0] : '101'
-    const generatedRegId = `AI25-${teamNum}`
+    // 1. Determine next serial number baseline
+    let currentTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-101`
+    let teamNumMatch = currentTeamId.match(/\d+/)
+    let currentNum = teamNumMatch ? parseInt(teamNumMatch[0], 10) : 101
+    let currentRegId = `AI25-${currentNum}`
 
-    setRegistrationId(generatedRegId)
-    setTeamId(generatedTeamId)
+    // Fetch the freshest live serial ID directly from Google Sheets before submission
+    try {
+      const live = await fetchNextSerialId()
+      if (live && live.nextNum) {
+        currentNum = live.nextNum
+        currentTeamId = live.teamId
+        currentRegId = live.registrationId
+        if (syncNextSerialNum) syncNextSerialNum(currentNum)
+      }
+    } catch (err) {
+      console.warn('[Registration] Could not fetch live ID before submit:', err)
+    }
+
+    setRegistrationId(currentRegId)
+    setTeamId(currentTeamId)
 
     try {
-      // 1. Send full structured data to Google Sheet (Target Account: ai.veer2k26@gmail.com)
-      await submitRegistrationToGoogleSheet(
+      // 2. Send full structured data to Google Sheet (Target Account: ai.veer2k26@gmail.com)
+      const result = await submitRegistrationToGoogleSheet(
         formData,
-        generatedTeamId,
-        generatedRegId
+        currentTeamId,
+        currentRegId
       )
 
-      // 2. Sync to local AdminContext for admin review
+      // 3. If server returned confirmed unique IDs, use them
+      if (result && result.teamId && result.registrationId) {
+        currentTeamId = result.teamId
+        currentRegId = result.registrationId
+        setTeamId(result.teamId)
+        setRegistrationId(result.registrationId)
+        const serverMatch = result.teamId.match(/\d+/)
+        if (serverMatch) {
+          currentNum = parseInt(serverMatch[0], 10)
+        }
+      }
+
+      // 4. Sync to local AdminContext for admin review
       if (registerTeam) {
         registerTeam({
           ...formData,
-          registrationId: generatedRegId,
-          teamId: generatedTeamId,
+          registrationId: currentRegId,
+          teamId: currentTeamId,
         })
+      }
+
+      // 5. Advance local serial to next number
+      if (syncNextSerialNum) {
+        syncNextSerialNum(currentNum + 1)
       }
     } catch (err) {
       console.error('[Registration] Submission sync error:', err)

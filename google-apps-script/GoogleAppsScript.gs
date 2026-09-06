@@ -99,53 +99,31 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    // Auto-generate serial Team ID & Registration ID starting from 101 (TEAM-101, AI25-101)
-    var lastRowBeforeAppend = sheet.getLastRow();
-    var nextSerialNum = 101; // Sequence starts strictly at 101
+    // Auto-generate unique sequential serial numbers starting strictly from 101 (TEAM-101, AI25-101)
+    var nextSerialInfo = getLiveNextSerial(sheet);
+    var nextSerialNum = nextSerialInfo.nextNum;
+    var usedNums = nextSerialInfo.usedNums || {};
 
-    if (lastRowBeforeAppend > 1) {
-      // Scan both Team ID (Col 2) and Registration ID (Col 3) to find the highest existing serial number
-      var existingIdRows = sheet.getRange(2, 2, lastRowBeforeAppend - 1, 2).getValues();
-      var maxFoundNum = 100; // So maxFoundNum + 1 = 101 for the first team
-      for (var i = 0; i < existingIdRows.length; i++) {
-        var teamIdStr = String(existingIdRows[i][0] || "").trim();
-        var regIdStr = String(existingIdRows[i][1] || "").trim();
-        if (teamIdStr.indexOf("TEST") !== -1 || teamIdStr.indexOf("999") !== -1) continue;
-
-        var numMatch1 = teamIdStr.match(/\d+/);
-        if (numMatch1) {
-          var parsed1 = parseInt(numMatch1[0], 10);
-          if (parsed1 < 900 && parsed1 > maxFoundNum) maxFoundNum = parsed1;
-        }
-
-        var numMatch2 = regIdStr.match(/\d+/);
-        if (numMatch2) {
-          var parsed2 = parseInt(numMatch2[0], 10);
-          if (parsed2 < 900 && parsed2 > maxFoundNum) maxFoundNum = parsed2;
-        }
+    // Validate if client sent a serial number that matches the next available unique slot
+    var requestedNum = null;
+    if (data.teamId && typeof data.teamId === 'string') {
+      var match = data.teamId.match(/^TEAM-(\d+)$/i);
+      if (match) {
+        requestedNum = parseInt(match[1], 10);
       }
-      nextSerialNum = maxFoundNum + 1;
     }
 
-    // Preserve client serial IDs so Website UI, Sheet, and Email are 100% identical
-    if (data.teamId && typeof data.teamId === 'string' && /^TEAM-\d+$/i.test(data.teamId.trim())) {
-      data.teamId = data.teamId.trim().toUpperCase();
-    } else {
-      data.teamId = "TEAM-" + nextSerialNum;
-    }
-
-    // Extract the serial number from Team ID so Registration ID perfectly matches (e.g. TEAM-101 -> AI25-101)
     var assignedNum = nextSerialNum;
-    var teamNumMatch = data.teamId.match(/\d+/);
-    if (teamNumMatch) {
-      assignedNum = parseInt(teamNumMatch[0], 10);
+    // Accept client ID ONLY if it is >= 101, not already used in the sheet, and matches nextSerialNum
+    if (requestedNum && requestedNum >= 101 && !usedNums[requestedNum] && requestedNum === nextSerialNum) {
+      assignedNum = requestedNum;
+    } else {
+      assignedNum = nextSerialNum;
     }
 
-    if (data.registrationId && typeof data.registrationId === 'string' && /^AI25-\d+$/i.test(data.registrationId.trim())) {
-      data.registrationId = data.registrationId.trim().toUpperCase();
-    } else {
-      data.registrationId = "AI25-" + assignedNum;
-    }
+    // Both Team ID and Registration ID increase simultaneously with the exact same unique number
+    data.teamId = "TEAM-" + assignedNum;
+    data.registrationId = "AI25-" + assignedNum;
 
     // Enforce max team size of 4 members
     var rawTeamSize = parseInt(data.teamSize || "3", 10);
@@ -211,6 +189,7 @@ function doPost(e) {
       .createTextOutput(JSON.stringify({ 
         result: "success", 
         row: lastRow, 
+        serialNum: assignedNum,
         teamId: data.teamId,
         registrationId: data.registrationId,
         emailSent: emailSentStatus,
@@ -228,15 +207,89 @@ function doPost(e) {
   }
 }
 
+/**
+ * Calculates the next unique serial number starting strictly from 101.
+ * Scans existing rows in the "Registrations" sheet for sequential series (101, 102, 103, ...).
+ * Guarantees that every new team receives a strictly increasing, unique number,
+ * and ignores legacy/random test artifacts (e.g. 653, 999).
+ */
+function getLiveNextSerial(sheet) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    return { nextNum: 101, usedNums: {} };
+  }
+
+  var idRows = sheet.getRange(2, 2, lastRow - 1, 2).getValues();
+  var usedNums = {};
+  var maxSequentialNum = 100; // Sequence baseline (first team will be 101)
+
+  for (var i = 0; i < idRows.length; i++) {
+    var teamIdStr = String(idRows[i][0] || "").trim();
+    var regIdStr = String(idRows[i][1] || "").trim();
+
+    // Check Team ID (e.g. TEAM-101)
+    var m1 = teamIdStr.match(/^TEAM-(\d+)$/i);
+    if (m1) {
+      var n1 = parseInt(m1[1], 10);
+      // Valid sequential series (101 to 499)
+      if (n1 >= 101 && n1 < 500) {
+        usedNums[n1] = true;
+        if (n1 > maxSequentialNum) maxSequentialNum = n1;
+      }
+    }
+
+    // Check Registration ID (e.g. AI25-101)
+    var m2 = regIdStr.match(/^AI25-(\d+)$/i);
+    if (m2) {
+      var n2 = parseInt(m2[1], 10);
+      if (n2 >= 101 && n2 < 500) {
+        usedNums[n2] = true;
+        if (n2 > maxSequentialNum) maxSequentialNum = n2;
+      }
+    }
+  }
+
+  // Find next available unique number >= maxSequentialNum + 1 that is not used
+  var candidate = maxSequentialNum + 1;
+  while (usedNums[candidate]) {
+    candidate++;
+  }
+
+  return {
+    nextNum: candidate,
+    usedNums: usedNums
+  };
+}
+
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({
-      status: "online",
-      service: "AITHON 2.0 Registration Webhook",
-      account: "ai.veer2k26@gmail.com",
-      timestamp: new Date().toISOString()
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    var ss = getTargetSpreadsheet();
+    var sheet = ss ? ss.getSheetByName("Registrations") : null;
+    var nextInfo = sheet ? getLiveNextSerial(sheet) : { nextNum: 101 };
+    var serial = nextInfo.nextNum;
+
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: "online",
+        service: "AITHON 2.0 Registration Webhook",
+        account: "ai.veer2k26@gmail.com",
+        nextSerialNum: serial,
+        nextTeamId: "TEAM-" + serial,
+        nextRegistrationId: "AI25-" + serial,
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: "error",
+        error: err.toString(),
+        nextSerialNum: 101,
+        nextTeamId: "TEAM-101",
+        nextRegistrationId: "AI25-101"
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 function setupSheetHeaders(sheet) {
