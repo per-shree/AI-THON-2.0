@@ -71,7 +71,7 @@ const POPULAR_SKILLS = [
 ]
 
 export default function Registration() {
-  const { registerTeam } = useAdmin()
+  const { registerTeam, getNextSerialTeamId, getNextSerialRegId } = useAdmin()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -278,9 +278,8 @@ export default function Registration() {
 
     setIsSubmitting(true)
 
-    const randomCode = Math.floor(1000 + Math.random() * 9000)
-    const generatedRegId = `AI25-${randomCode}`
-    const generatedTeamId = `TEAM-${Math.floor(100 + Math.random() * 900)}`
+    const generatedRegId = getNextSerialRegId ? getNextSerialRegId() : `AI25-8101`
+    const generatedTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-108`
 
     setRegistrationId(generatedRegId)
     setTeamId(generatedTeamId)
