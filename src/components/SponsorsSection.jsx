@@ -28,14 +28,6 @@ export default function SponsorsSection() {
       isActive: true
     },
     {
-      name: 'SoulSoft Infotech',
-      logo: '/soulsoft_logo.png',
-      url: 'https://soulsoft.in/',
-      tier: 'ASSOCIATE PARTNER',
-      desc: 'Customised Software Solutions',
-      isActive: true
-    },
-    {
       name: 'NEXA (Maruti Suzuki)',
       logo: '/nexa_logo.png',
       url: 'https://www.nexaexperience.com/',
@@ -43,6 +35,15 @@ export default function SponsorsSection() {
       desc: 'Automotive Partner',
       isActive: true,
       isFullBox: true
+    },
+    {
+      name: 'Dainik Yuvavarta',
+      logo: '/yuvavarta_logo.png',
+      url: '#',
+      tier: 'MEDIA PARTNER',
+      desc: 'Official Media Partner',
+      isActive: true,
+      isLargeLogo: true
     },
     {
       name: 'Title Sponsor',
