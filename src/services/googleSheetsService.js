@@ -95,6 +95,57 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
 }
 
 /**
+ * Fetches the next available unique sequential Team ID & Registration ID
+ * directly from the live Google Sheet / Webhook endpoint.
+ * Returns { nextNum, teamId, registrationId } or null on network error.
+ */
+export async function fetchNextSerialId() {
+  const scriptUrl = getGoogleSheetUrl()
+  if (!scriptUrl || scriptUrl.includes('docs.google.com/spreadsheets')) {
+    return null
+  }
+
+  try {
+    const separator = scriptUrl.includes('?') ? '&' : '?'
+    const queryUrl = `${scriptUrl}${separator}action=getNextId&_t=${Date.now()}`
+    const res = await fetch(queryUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+
+    if (!res.ok) {
+      return null
+    }
+
+    const data = await res.json()
+    if (data && data.nextSerialNum) {
+      const num = parseInt(data.nextSerialNum, 10)
+      if (!isNaN(num) && num >= 101) {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('aithon_next_team_num', num.toString())
+            localStorage.setItem('aithon_next_reg_num', num.toString())
+          } catch (e) {
+            console.warn(e)
+          }
+        }
+        return {
+          nextNum: num,
+          teamId: data.nextTeamId || `TEAM-${num}`,
+          registrationId: data.nextRegistrationId || `AI25-${num}`,
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[GoogleSheets] Could not fetch next live serial ID:', err)
+  }
+
+  return null
+}
+
+/**
  * Submits the registration payload to Google Sheets via Google Apps Script Web App
  */
 export async function submitRegistrationToGoogleSheet(formData, teamId, registrationId) {
@@ -117,30 +168,55 @@ export async function submitRegistrationToGoogleSheet(formData, teamId, registra
     }
   }
 
-  try {
-    // We send payload as text/plain string with mode: 'no-cors' to prevent CORS preflight blocks from Google Apps Script redirect
-    await fetch(scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8',
-      },
-      body: JSON.stringify(payload),
-    })
+  let finalTeamId = teamId
+  let finalRegId = registrationId
 
-    console.log('[GoogleSheets] Successfully posted to Google Sheet for team:', teamId)
+  try {
+    // 1. Try standard CORS fetch to parse the confirmed unique IDs returned by Apps Script
+    let responseData = null
+    try {
+      const res = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
+        body: JSON.stringify(payload),
+      })
+      if (res.ok) {
+        responseData = await res.json()
+      }
+    } catch (corsErr) {
+      console.warn('[GoogleSheets] Direct CORS response blocked, falling back to no-cors mode:', corsErr)
+      // 2. Fallback to mode: 'no-cors' so submission never fails in strict browser environments
+      await fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
+        body: JSON.stringify(payload),
+      })
+    }
+
+    if (responseData && responseData.teamId && responseData.registrationId) {
+      finalTeamId = responseData.teamId
+      finalRegId = responseData.registrationId
+      console.log('[GoogleSheets] Server confirmed unique IDs:', finalTeamId, finalRegId)
+    }
+
+    console.log('[GoogleSheets] Successfully posted to Google Sheet for team:', finalTeamId)
     return {
       success: true,
-      teamId,
-      registrationId,
+      teamId: finalTeamId,
+      registrationId: finalRegId,
     }
   } catch (err) {
     console.error('[GoogleSheets] Network error posting to Google Sheet:', err)
     return {
       success: false,
       error: err.message,
-      teamId,
-      registrationId,
+      teamId: finalTeamId,
+      registrationId: finalRegId,
     }
   }
 }

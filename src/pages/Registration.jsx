@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -6,7 +6,7 @@ import RegistrationProgress from '../components/RegistrationProgress'
 import RegistrationInfo from '../components/RegistrationInfo'
 import FormInput from '../components/FormInput'
 import { useAdmin } from '../context/AdminContext'
-import { submitRegistrationToGoogleSheet } from '../services/googleSheetsService'
+import { submitRegistrationToGoogleSheet, fetchNextSerialId } from '../services/googleSheetsService'
 import {
   UserIcon,
   MailIcon,
@@ -71,12 +71,25 @@ const POPULAR_SKILLS = [
 ]
 
 export default function Registration() {
-  const { registerTeam, getNextSerialTeamId, getNextSerialRegId } = useAdmin()
+  const { registerTeam, getNextSerialTeamId, getNextSerialRegId, syncNextSerialNum } = useAdmin()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [registrationId, setRegistrationId] = useState('')
   const [teamId, setTeamId] = useState('')
+
+  // Pre-fetch live next serial ID from Google Sheets on mount to ensure multi-device synchronization
+  useEffect(() => {
+    let isMounted = true
+    fetchNextSerialId().then((res) => {
+      if (isMounted && res && res.nextNum && syncNextSerialNum) {
+        syncNextSerialNum(res.nextNum)
+      }
+    }).catch(() => {})
+    return () => {
+      isMounted = false
+    }
+  }, [syncNextSerialNum])
 
   // Form State
   const [formData, setFormData] = useState({
@@ -280,29 +293,60 @@ export default function Registration() {
 
     setIsSubmitting(true)
 
-    const generatedTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-101`
-    const teamNumMatch = generatedTeamId.match(/\d+/)
-    const teamNum = teamNumMatch ? teamNumMatch[0] : '101'
-    const generatedRegId = `AI25-${teamNum}`
+    // 1. Determine next serial number baseline
+    let currentTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-101`
+    let teamNumMatch = currentTeamId.match(/\d+/)
+    let currentNum = teamNumMatch ? parseInt(teamNumMatch[0], 10) : 101
+    let currentRegId = `AI25-${currentNum}`
 
-    setRegistrationId(generatedRegId)
-    setTeamId(generatedTeamId)
+    // Fetch the freshest live serial ID directly from Google Sheets before submission
+    try {
+      const live = await fetchNextSerialId()
+      if (live && live.nextNum) {
+        currentNum = live.nextNum
+        currentTeamId = live.teamId
+        currentRegId = live.registrationId
+        if (syncNextSerialNum) syncNextSerialNum(currentNum)
+      }
+    } catch (err) {
+      console.warn('[Registration] Could not fetch live ID before submit:', err)
+    }
+
+    setRegistrationId(currentRegId)
+    setTeamId(currentTeamId)
 
     try {
-      // 1. Send full structured data to Google Sheet (Target Account: ai.veer2k26@gmail.com)
-      await submitRegistrationToGoogleSheet(
+      // 2. Send full structured data to Google Sheet (Target Account: ai.veer2k26@gmail.com)
+      const result = await submitRegistrationToGoogleSheet(
         formData,
-        generatedTeamId,
-        generatedRegId
+        currentTeamId,
+        currentRegId
       )
 
-      // 2. Sync to local AdminContext for admin review
+      // 3. If server returned confirmed unique IDs, use them
+      if (result && result.teamId && result.registrationId) {
+        currentTeamId = result.teamId
+        currentRegId = result.registrationId
+        setTeamId(result.teamId)
+        setRegistrationId(result.registrationId)
+        const serverMatch = result.teamId.match(/\d+/)
+        if (serverMatch) {
+          currentNum = parseInt(serverMatch[0], 10)
+        }
+      }
+
+      // 4. Sync to local AdminContext for admin review
       if (registerTeam) {
         registerTeam({
           ...formData,
-          registrationId: generatedRegId,
-          teamId: generatedTeamId,
+          registrationId: currentRegId,
+          teamId: currentTeamId,
         })
+      }
+
+      // 5. Advance local serial to next number
+      if (syncNextSerialNum) {
+        syncNextSerialNum(currentNum + 1)
       }
     } catch (err) {
       console.error('[Registration] Submission sync error:', err)
@@ -356,7 +400,7 @@ export default function Registration() {
       {/* Main Page Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         {/* PAGE HERO */}
-        <section className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3">
+        <section className="text-center max-w-xl mx-auto mb-10 sm:mb-12 space-y-3">
           <p className="text-xs font-extrabold text-[#2563eb] uppercase tracking-widest">
             NATIONAL LEVEL AI HACKATHON
           </p>
@@ -365,8 +409,11 @@ export default function Registration() {
             TEAM <span className="text-[#2563eb]">REGISTRATION</span>
           </h1>
 
-          <p className="text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed text-center font-medium pt-1">
-            Fill in the details below to register your team for AITHON 2.0 at Amrutvahini College of Engineering, Sangamner.
+          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed text-center font-medium pt-1">
+            Fill in the details below to register your team for AITHON 2.0 at <br />
+            <span className="inline-block sm:whitespace-nowrap">
+              Amrutvahini College of Engineering, Sangamner.
+            </span>
           </p>
         </section>
 
@@ -434,6 +481,41 @@ export default function Registration() {
                     <span>✓</span> Confirmation Email Sent & Registration Recorded
                   </span>
                 </div>
+              </div>
+
+              {/* Mandatory WhatsApp Group Callout for Team Leaders */}
+              <div className="p-5 rounded-xl bg-emerald-50 border-2 border-emerald-500/40 mb-8 text-left space-y-3 shadow-xs">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-8 h-8 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                        Mandatory For Team Leaders
+                      </span>
+                      <h3 className="text-sm font-extrabold text-emerald-950 mt-0.5">
+                        Join Official WhatsApp Community
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-emerald-900 leading-relaxed">
+                  Join our official WhatsApp group to receive critical announcements, problem statement drops, timeline changes, and direct coordinator support.
+                </p>
+
+                <a
+                  href="https://chat.whatsapp.com/HRvMvxxB2NUIvw5zMiTsQ9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all text-center flex items-center justify-center gap-2 shadow-xs cursor-pointer group"
+                >
+                  <span>JOIN TEAM LEADERS WHATSAPP GROUP</span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </a>
               </div>
 
               {/* Action Buttons */}
