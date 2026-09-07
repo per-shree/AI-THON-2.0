@@ -1,50 +1,33 @@
 export default function TracksSection() {
   const tracks = [
-    {
-      num: '01',
-      name: 'ARTIFICIAL INTELLIGENCE & MACHINE LEARNING',
-      desc: 'Build predictive AI models, classification engines, neural network architectures, and automated ML pipelines.',
-    },
-    {
-      num: '02',
-      name: 'GENERATIVE AI',
-      desc: 'Harness Large Language Models (LLMs), multi-modal generation, prompt architecture, and synthetic media pipelines.',
-    },
-    {
-      num: '03',
-      name: 'DATA SCIENCE',
-      desc: 'Transform raw data into actionable insights through big data engineering, statistical modeling, and predictive analytics.',
-    },
-    {
-      num: '04',
-      name: 'COMPUTER VISION',
-      desc: 'Develop spatial AI solutions for object identification, medical image analysis, face detection, and video stream analytics.',
-    },
-    {
-      num: '05',
-      name: 'NATURAL LANGUAGE PROCESSING',
-      desc: 'Construct speech recognition systems, text analytics engines, Indic language models, and conversational AI assistants.',
-    },
-    {
-      num: '06',
-      name: 'AI AUTOMATION',
-      desc: 'Engineer autonomous software agents, intelligent document parsing pipelines, and automated workflow solutions.',
-    },
-    {
-      num: '07',
-      name: 'SMART TECHNOLOGY',
-      desc: 'Combine AI models with IoT hardware sensors, microcontrollers, edge computing devices, and campus tech.',
-    },
-    {
-      num: '08',
-      name: 'OPEN INNOVATION',
-      desc: 'Pitch and prototype breakthrough AI solutions for any real-world domain with complete creative freedom.',
-    },
+    { num: '01', name: 'AI in Healthcare & Medicine' },
+    { num: '02', name: 'AI in Dental Science & Diagnostics' },
+    { num: '03', name: 'AI in Pharmacy & Drug Discovery' },
+    { num: '04', name: 'LegalTech, AI Ethics & Law' },
+    { num: '05', name: 'FinTech & Financial Intelligence' },
+    { num: '06', name: 'EdTech & Smart Learning' },
+    { num: '07', name: 'AI in Film, Animation & Storytelling' },
+    { num: '08', name: 'UI/UX & Accessible Design' },
+    { num: '09', name: 'Industrial Automation & Robotics' },
+    { num: '10', name: 'Smart Energy & CleanTech' },
+    { num: '11', name: 'Aerospace, Telemetry & SpaceTech' },
+    { num: '12', name: 'AgriTech & Smart Farming' },
+    { num: '13', name: 'Environmental AI & Sustainability' },
+    { num: '14', name: 'E-Commerce & Retail Automation' },
+    { num: '15', name: 'Supply Chain & Logistics Intelligence' },
+    { num: '16', name: 'Cybersecurity, Forensics & Cyber Law' },
+    { num: '17', name: 'Smart Cities & Urban Mobility' },
+    { num: '18', name: 'Disaster Management & Public Safety' },
+    { num: '19', name: 'Mental Health & Psychology AI' },
+    { num: '20', name: 'Sports Analytics & Performance Tech' },
+    { num: '21', name: 'Hospitality, Tourism & Service AI' },
+    { num: '22', name: 'Social Good & Civic Innovation' },
+    { num: '23', name: 'Open Innovation (Unrestricted Domain)' },
   ]
 
   return (
-    <section id="tracks" className="w-full bg-white py-20 lg:py-28 px-6 lg:px-8 border-b border-slate-200">
-      <div className="max-w-7xl mx-auto space-y-16">
+    <section id="tracks" className="w-full bg-white py-16 lg:py-24 px-6 lg:px-8 border-b border-slate-200">
+      <div className="max-w-7xl mx-auto space-y-12">
         
         <div className="max-w-3xl space-y-3">
           <p className="text-xs font-bold text-[#2563eb] uppercase tracking-widest">
@@ -54,17 +37,16 @@ export default function TracksSection() {
             HACKATHON TRACKS
           </h2>
           <p className="text-slate-600 text-base">
-            Eight focused domains designed for targeted technological innovation.
+            23 focused domains designed for targeted technological innovation.
           </p>
         </div>
 
-        {/* Clean 4-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Clean Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
           {tracks.map((t) => (
-            <div key={t.num} className="space-y-3 pt-6 border-t-2 border-slate-200 hover:border-[#2563eb] transition-colors">
+            <div key={t.num} className="space-y-2 pt-4 border-t-2 border-slate-200 hover:border-[#2563eb] transition-colors">
               <span className="text-xs font-extrabold text-[#2563eb] block uppercase tracking-wider">{t.num}</span>
-              <h3 className="text-base font-extrabold text-[#062b59] leading-snug tracking-tight">{t.name}</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">{t.desc}</p>
+              <h3 className="text-sm sm:text-base font-extrabold text-[#062b59] leading-snug tracking-tight">{t.name}</h3>
             </div>
           ))}
         </div>
