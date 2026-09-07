@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 
 export default function Footer() {
   const location = useLocation()
@@ -68,9 +68,8 @@ export default function Footer() {
       </div>
       
       {/* Bottom Bar */}
-      <div className="max-w-5xl mx-auto pt-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-400">
+      <div className="max-w-5xl mx-auto pt-4 text-center text-xs text-slate-400">
         <p>© 2026 AITHON 2.0. All Rights Reserved.</p>
-        <Link to="/admin/login" className="hover:text-white transition-colors">Admin Login</Link>
       </div>
     </footer>
   )
