@@ -320,7 +320,7 @@ function sendConfirmationEmail(data) {
     "• Team ID          : " + teamId + "\n" +
     "• Registration ID  : " + regId + "\n" +
     "• Team Size        : " + teamSize + " Members\n" +
-    "• Event Date       : Friday, 09 October 2026\n" +
+    "• Event Date       : Friday, 16 October 2026\n" +
     "• Venue            : Dept. of AI & DS, AVCOE Sangamner, Maharashtra\n\n" +
     "----------------------------------------------------------\n" +
     "ACTION REQUIRED: JOIN OFFICIAL WHATSAPP COMMUNITY\n" +
@@ -333,7 +333,7 @@ function sendConfirmationEmail(data) {
     "----------------------------------------------------------\n" +
     "1. Review & Screening: Our evaluation committee will verify team credentials.\n" +
     "2. WhatsApp Alerts: Turn on notifications for the problem statement release.\n" +
-    "3. Campus Check-in: Report at AVCOE campus on 09 October 2026 with your Team ID.\n\n" +
+    "3. Campus Check-in: Report at AVCOE campus on 16 October 2026 with your Team ID.\n\n" +
     "Student Coordinators:\n" +
     "• Vedant Mande   : +91 85919 10018\n" +
     "• Sudhanshu Rahane: +91 77200 92989\n" +
@@ -413,7 +413,7 @@ function sendConfirmationEmail(data) {
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Event Date:</td>' +
-    '                  <td style="color: #0f172a; font-weight: 600;">Friday, 09 October 2026</td>' +
+    '                  <td style="color: #0f172a; font-weight: 600;">Friday, 16 October 2026</td>' +
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Venue:</td>' +
@@ -452,7 +452,7 @@ function sendConfirmationEmail(data) {
     '        <ol style="font-size: 13px; color: #334155; padding-left: 18px; margin-top: 0; margin-bottom: 22px; line-height: 1.6;">' +
     '          <li style="margin-bottom: 6px;"><strong>Review & Screening:</strong> Our evaluation committee reviews team credentials.</li>' +
     '          <li style="margin-bottom: 6px;"><strong>WhatsApp Alerts:</strong> Keep notifications ON for problem statement releases.</li>' +
-    '          <li style="margin-bottom: 6px;"><strong>Offline Hackathon:</strong> Report at AVCOE campus on 09 October 2026.</li>' +
+    '          <li style="margin-bottom: 6px;"><strong>Offline Hackathon:</strong> Report at AVCOE campus on 16 October 2026.</li>' +
     '        </ol>' +
     '        <!-- Student Coordinators Support Card -->' +
     '        <div style="background-color: #f8fafc; border-left: 3px solid #2563eb; padding: 14px 16px; border-radius: 6px; font-size: 12px; color: #475569; margin-bottom: 22px;">' +

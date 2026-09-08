@@ -9,7 +9,7 @@ export default function CountdownTimer({ variant = 'default' }) {
   })
 
   useEffect(() => {
-    const targetDate = new Date('2026-10-09T09:00:00+05:30').getTime()
+    const targetDate = new Date('2026-10-16T09:00:00+05:30').getTime()
 
     const updateTimer = () => {
       const now = new Date().getTime()
@@ -73,7 +73,7 @@ export default function CountdownTimer({ variant = 'default' }) {
           </span>
         </div>
         <p className="text-xs sm:text-sm font-semibold text-slate-500 tracking-widest uppercase">
-          EVENT DATE: 09 OCTOBER 2026 • AVCOE SANGAMNER
+          EVENT DATE: 16 OCTOBER 2026 • AVCOE SANGAMNER
         </p>
       </div>
 
