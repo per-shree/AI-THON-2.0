@@ -8,13 +8,13 @@ const heroSponsors = [
     name: '.XYZ Domains',
     logo: '/xyz_logo.png',
     url: 'https://gen.xyz',
-    role: 'Domain Partner',
+    role: 'Official Domain Partner',
   },
   {
-    name: 'Bijankur Developers',
+    name: 'Bijankur Real Estate & Developers',
     logo: '/bijankur_logo.png',
     url: '',
-    role: 'Real Estate Partner',
+    role: 'Real Estate & Developers',
   },
   {
     name: 'Pravara Infotech',
@@ -23,17 +23,23 @@ const heroSponsors = [
     role: 'IT Solutions Partner',
   },
   {
-    name: 'NEXA',
+    name: 'SoulSoft Infotech',
+    logo: '/soulsoft_logo.png',
+    url: 'https://soulsoft.in/',
+    role: 'Custom Software Partner',
+  },
+  {
+    name: 'NEXA (Mahalaxmi Automotives, Sangamner)',
     logo: '/nexa_logo.png',
     url: 'https://www.nexaexperience.com/',
-    role: 'Automotive Partner',
+    role: 'Official Automotive Partner',
     isDarkBg: true,
   },
   {
     name: 'Dainik Yuvavarta',
     logo: '/yuvavarta_logo.png',
     url: '',
-    role: 'Media Partner',
+    role: 'Official Media Partner',
   },
 ]
 
