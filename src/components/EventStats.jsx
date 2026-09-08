@@ -6,7 +6,7 @@ export default function EventStats() {
         <div className="flex flex-wrap items-center justify-center md:justify-start gap-y-2 gap-x-6 text-sm font-bold text-[#062b59]">
           <div className="flex items-center gap-2">
             <span className="text-slate-400 font-normal text-xs">DATE:</span>
-            <span>09 OCTOBER 2026</span>
+            <span>16 OCTOBER 2026</span>
           </div>
 
           <span className="hidden md:inline text-slate-300">|</span>

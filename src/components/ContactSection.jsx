@@ -222,7 +222,7 @@ export default function ContactSection() {
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-[#062b59]">09 October 2026</span>
+                    <span className="font-bold text-[#062b59]">16 October 2026</span>
                     <span className="text-slate-500 block text-xs">12 Hours Non-Stop Sprint</span>
                   </div>
                 </div>
