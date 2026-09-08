@@ -28,14 +28,6 @@ export default function SponsorsSection() {
       isActive: true
     },
     {
-      name: 'SoulSoft Infotech',
-      logo: '/soulsoft_logo.png',
-      url: 'https://soulsoft.in/',
-      tier: 'ASSOCIATE PARTNER',
-      desc: 'Customised Software Solutions',
-      isActive: true
-    },
-    {
       name: 'NEXA (Mahalaxmi Automotives, Sangamner)',
       logo: '/nexa_logo.png',
       url: 'https://www.nexaexperience.com/',

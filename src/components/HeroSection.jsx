@@ -23,12 +23,6 @@ const heroSponsors = [
     role: 'IT Solutions Partner',
   },
   {
-    name: 'SoulSoft Infotech',
-    logo: '/soulsoft_logo.png',
-    url: 'https://soulsoft.in/',
-    role: 'Custom Software Partner',
-  },
-  {
     name: 'NEXA (Mahalaxmi Automotives, Sangamner)',
     logo: '/nexa_logo.png',
     url: 'https://www.nexaexperience.com/',
