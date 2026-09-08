@@ -28,7 +28,7 @@ export default function SponsorsSection() {
       isActive: true
     },
     {
-      name: 'NEXA (Maruti Suzuki)',
+      name: 'NEXA (MAHALXMI, SANGMNER)',
       logo: '/nexa_logo.png',
       url: 'https://www.nexaexperience.com/',
       tier: 'ASSOCIATE PARTNER',
