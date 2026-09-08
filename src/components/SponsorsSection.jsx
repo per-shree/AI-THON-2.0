@@ -91,7 +91,7 @@ export default function SponsorsSection() {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative bg-white border border-[#edebe6] hover:border-blue-500 rounded-2xl px-4 py-3 flex items-center gap-4 shadow-xs hover:shadow-md transition-all duration-300 shrink-0 w-96 sm:w-[26rem] cursor-pointer"
+              className="group relative bg-white border border-[#edebe6] hover:border-blue-500 rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 shadow-xs hover:shadow-md transition-all duration-300 shrink-0 w-max cursor-pointer"
             >
               {/* Logo Box */}
               <div
@@ -115,14 +115,14 @@ export default function SponsorsSection() {
               </div>
 
               {/* Details */}
-              <div className="flex-1 min-w-0">
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none">
+              <div className="min-w-max pr-1">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none whitespace-nowrap">
                   {item.tier}
                 </span>
-                <h3 className="text-xs sm:text-sm font-bold text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 break-words">
+                <h3 className="text-xs sm:text-sm font-bold text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap">
                   {item.name}
                 </h3>
-                <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5">
+                <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5 whitespace-nowrap">
                   {item.desc}
                 </p>
               </div>
@@ -136,7 +136,7 @@ export default function SponsorsSection() {
           return (
             <div
               key={`${keyPrefix}-${idx}`}
-              className="group relative bg-white border border-[#edebe6] rounded-2xl px-4 py-3 flex items-center gap-4 shadow-xs shrink-0 w-96 sm:w-[26rem] cursor-default"
+              className="group relative bg-white border border-[#edebe6] rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 shadow-xs shrink-0 w-max cursor-default"
             >
               {/* Logo Box */}
               <div
@@ -160,14 +160,14 @@ export default function SponsorsSection() {
               </div>
 
               {/* Details */}
-              <div className="flex-1 min-w-0">
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none">
+              <div className="min-w-max pr-1">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none whitespace-nowrap">
                   {item.tier}
                 </span>
-                <h3 className="text-xs sm:text-sm font-bold text-[#062b59] leading-snug mt-1 break-words">
+                <h3 className="text-xs sm:text-sm font-bold text-[#062b59] leading-snug mt-1 whitespace-nowrap">
                   {item.name}
                 </h3>
-                <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5">
+                <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5 whitespace-nowrap">
                   {item.desc}
                 </p>
               </div>
@@ -178,19 +178,19 @@ export default function SponsorsSection() {
         return (
           <div
             key={`${keyPrefix}-${idx}`}
-            className="bg-white/80 border border-dashed border-[#edebe6] rounded-2xl px-4 py-3 flex items-center gap-4 shrink-0 w-80 sm:w-88"
+            className="bg-white/80 border border-dashed border-[#edebe6] rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 shrink-0 w-max"
           >
             <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-center shrink-0">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
             </div>
-            <div className="flex-1 min-w-0">
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200/70 leading-none">
+            <div className="min-w-max pr-1">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200/70 leading-none whitespace-nowrap">
                 {item.tier}
               </span>
-              <h3 className="text-xs sm:text-sm font-bold text-[#062b59]/80 leading-snug mt-1 break-words">
+              <h3 className="text-xs sm:text-sm font-bold text-[#062b59]/80 leading-snug mt-1 whitespace-nowrap">
                 {item.desc}
               </h3>
-              <p className="text-xs font-medium text-slate-400 leading-normal mt-0.5">
+              <p className="text-xs font-medium text-slate-400 leading-normal mt-0.5 whitespace-nowrap">
                 {item.name}
               </p>
             </div>
