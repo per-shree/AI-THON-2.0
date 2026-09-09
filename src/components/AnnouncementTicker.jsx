@@ -1,7 +1,7 @@
 export default function AnnouncementTicker() {
   const announcements = [
     'AITHON 2.0',
-    '16 OCTOBER 2026',
+    '23 OCTOBER 2026',
     '12 HOURS NON-STOP',
     'NATIONAL LEVEL AI HACKATHON',
     'AVCOE SANGAMNER',

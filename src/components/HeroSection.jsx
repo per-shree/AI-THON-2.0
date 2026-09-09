@@ -74,7 +74,7 @@ export default function HeroSection() {
         <div className="w-full max-w-3xl text-xs sm:text-sm md:text-base font-bold text-[#062b59] p-3 sm:py-3.5 sm:px-6 bg-white/90 backdrop-blur-sm border border-[#edebe6] shadow-xs rounded-xl">
           <div className="flex flex-wrap justify-center items-center gap-x-3 sm:gap-x-5 gap-y-2.5 text-center">
             <span className="inline-flex items-center gap-1.5">
-              <CalendarIcon className="w-4 h-4 text-[#2563eb]" /> 16 OCTOBER 2026
+              <CalendarIcon className="w-4 h-4 text-[#2563eb]" /> 23 OCTOBER 2026
             </span>
             <span className="text-slate-300 hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1.5">
