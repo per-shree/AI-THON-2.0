@@ -4,192 +4,98 @@ import BackgroundArtwork from './BackgroundArtwork'
 import CountdownTimer from './CountdownTimer'
 import { CalendarIcon, ClockIcon, UsersIcon, MapPinIcon } from './Icons'
 
-const heroSponsors = [
-  {
-    name: '.XYZ Domains',
-    logo: '/xyz_logo.png',
-    url: 'https://gen.xyz',
-    role: 'Official Domain Partner',
-  },
-  {
-    name: 'Bijankur Real Estate & Developers',
-    logo: '/bijankur_logo.png',
-    url: '',
-    role: 'Real Estate & Developers',
-  },
-  {
-    name: 'Pravara Infotech',
-    logo: '/pravara_logo.png',
-    url: 'https://pravarainfotech.in/',
-    role: 'IT Solutions Partner',
-  },
-  {
-    name: 'NEXA (Mahalaxmi Automotives, Sangamner)',
-    logo: '/nexa_logo.png',
-    url: 'https://www.nexaexperience.com/',
-    role: 'Official Automotive Partner',
-    isDarkBg: true,
-  },
-  {
-    name: 'Dainik Yuvavarta',
-    logo: '/yuvavarta_logo.png',
-    url: '',
-    role: 'Official Media Partner',
-  },
-]
-
 export default function HeroSection() {
   return (
-    <section className="relative w-full bg-[#faf9f6] overflow-hidden min-h-[80vh] lg:min-h-[85vh] flex items-center justify-center py-10 sm:py-14 lg:py-20 px-4 sm:px-6 lg:px-8">
+    <section className="relative w-full bg-[#faf9f6] overflow-hidden min-h-[calc(100vh-146px)] flex flex-col items-center justify-center pt-2 sm:pt-3 lg:pt-4 pb-4 sm:pb-6 px-3 sm:px-6 lg:px-8">
       
-      {/* Subtle Low-Contrast Skyline Background */}
+      {/* City Skyline Artwork anchored to the bottom of the home page */}
       <BackgroundArtwork variant="hero" />
 
-      <div className="max-w-5xl w-full mx-auto relative z-10 text-center flex flex-col items-center justify-center space-y-5 sm:space-y-6">
+      <div className="max-w-4xl w-full mx-auto relative z-10 text-center flex flex-col items-center justify-center space-y-2 sm:space-y-2.5 my-auto">
         
-        {/* Top Eyebrow Tag */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 border border-blue-100 backdrop-blur-xs shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-[#2563eb] animate-pulse" />
-          <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-widest text-[#2563eb]">
+        {/* Top Eyebrow Tag - Premium Professional Badge */}
+        <div className="inline-flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-[#062b59] via-[#0b3b75] to-[#062b59] text-white shadow-[0_4px_16px_rgba(6,43,89,0.18)] border border-blue-400/30 hover:border-blue-400/60 transition-all duration-300">
+          <span className="flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-tr from-[#ea580c] to-[#f97316] text-white shadow-xs shrink-0">
+            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z" />
+            </svg>
+          </span>
+          <span className="text-[10px] sm:text-[11.5px] font-black uppercase tracking-[0.18em] sm:tracking-[0.22em] text-white">
             NATIONAL LEVEL AI HACKATHON
           </span>
+          <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse hidden xs:inline-block shrink-0" />
         </div>
 
         {/* Hero Official Brand Logo & Main Heading (SEO) */}
-        <div className="w-full flex flex-col items-center justify-center space-y-3 sm:space-y-4 max-w-full">
+        <div className="w-full flex flex-col items-center justify-center space-y-1 sm:space-y-1.5 max-w-full">
           <h1 className="sr-only">
             AITHON 2.0 - National Level AI Hackathon
           </h1>
 
-          <div className="relative group flex items-center justify-center w-full px-2 sm:px-4">
+          <div className="relative group flex items-center justify-center w-full px-2">
             {/* Ambient Multi-Spectrum Glow harmonized with Navy & Orange brand identity */}
-            <div className="absolute -inset-3 sm:-inset-6 bg-gradient-to-r from-blue-600/10 via-orange-500/15 to-blue-600/10 blur-2xl sm:blur-3xl rounded-3xl -z-10 pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-blue-600/10 via-orange-500/15 to-blue-600/10 blur-xl sm:blur-2xl rounded-3xl -z-10 pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity duration-700" />
             
             <img
               src={aithonHeroLogo}
               alt="AITHON 2.0 - National Level AI Hackathon"
-              className="w-full max-w-[320px] xs:max-w-[400px] sm:max-w-[520px] md:max-w-[640px] lg:max-w-[720px] h-auto object-contain drop-shadow-[0_10px_25px_rgba(6,43,89,0.07)] hover:scale-[1.02] transition-transform duration-500 ease-out select-none"
+              className="w-full max-w-[250px] xs:max-w-[300px] sm:max-w-[380px] md:max-w-[430px] lg:max-w-[460px] h-auto object-contain drop-shadow-[0_8px_20px_rgba(6,43,89,0.06)] hover:scale-[1.01] transition-transform duration-500 ease-out select-none"
               style={{ aspectRatio: '1017 / 268' }}
               loading="eager"
               fetchPriority="high"
             />
           </div>
           
-          <p className="text-base sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#ea580c] tracking-tight uppercase leading-snug break-words">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl font-black text-[#ea580c] tracking-tight uppercase leading-tight break-words">
             BUILD. INNOVATE. TRANSFORM.
           </p>
         </div>
 
-        {/* Subtitle Quote - Responsive text wrapping */}
-        <p className="text-slate-600 text-xs sm:text-sm md:text-base font-semibold tracking-wide leading-relaxed max-w-2xl mx-auto pt-0.5 px-2 text-center break-words">
+        {/* Subtitle Quote */}
+        <p className="text-slate-600 text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-wide leading-tight max-w-xl mx-auto px-2 text-center break-words">
           "12 Hours of Artificial Intelligence, Innovation & Real-World Problem Solving."
         </p>
 
-        {/* Clean Event Info Pill - Vector SVG Icons */}
-        <div className="w-full max-w-3xl text-xs sm:text-sm md:text-base font-bold text-[#062b59] p-3 sm:py-3.5 sm:px-6 bg-white/90 backdrop-blur-sm border border-[#edebe6] shadow-xs rounded-xl">
-          <div className="flex flex-wrap justify-center items-center gap-x-3 sm:gap-x-5 gap-y-2.5 text-center">
+        {/* Clean Event Info Pill */}
+        <div className="w-full max-w-2xl text-[11px] sm:text-xs md:text-[13px] font-bold text-[#062b59] py-1.5 sm:py-2 px-3 sm:px-5 bg-white/95 backdrop-blur-sm border border-[#edebe6] shadow-2xs rounded-xl">
+          <div className="flex flex-wrap justify-center items-center gap-x-2.5 sm:gap-x-4 gap-y-1 text-center">
             <span className="inline-flex items-center gap-1.5">
-              <CalendarIcon className="w-4 h-4 text-[#2563eb]" /> 23 OCTOBER 2026
+              <CalendarIcon className="w-3.5 h-3.5 text-[#2563eb]" /> 23 OCTOBER 2026
             </span>
             <span className="text-slate-300 hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1.5">
-              <ClockIcon className="w-4 h-4 text-[#ea580c]" /> 12 HOURS
+              <ClockIcon className="w-3.5 h-3.5 text-[#ea580c]" /> 12 HOURS
             </span>
             <span className="text-slate-300 hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1.5 text-[#2563eb]">
-              <UsersIcon className="w-4 h-4 text-[#2563eb]" /> OPEN FOR ALL
+              <UsersIcon className="w-3.5 h-3.5 text-[#2563eb]" /> OPEN FOR ALL
             </span>
             <span className="text-slate-300 hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1.5">
-              <MapPinIcon className="w-4 h-4 text-emerald-600" /> AVCOE, SANGAMNER
+              <MapPinIcon className="w-3.5 h-3.5 text-emerald-600" /> AVCOE, SANGAMNER
             </span>
           </div>
         </div>
 
         {/* Integrated Hero Live Countdown Timer */}
-        <div className="w-full max-w-xl mx-auto pt-0.5">
+        <div className="w-full max-w-md mx-auto">
           <CountdownTimer variant="hero" />
         </div>
 
-        {/* Action Buttons */}
-        <div className="pt-2 sm:pt-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full sm:w-auto max-w-xs sm:max-w-none">
+        {/* Action Buttons - At the end of the home page */}
+        <div className="pt-2 sm:pt-2.5 flex flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto relative z-20">
           <Link
             to="/register"
-            className="w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md"
+            className="px-7 sm:px-9 py-2.5 sm:py-3 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs sm:text-[13px] uppercase tracking-wider transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md active:scale-95"
           >
             REGISTER NOW
           </Link>
           <a
             href="#about"
-            className="w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 bg-white hover:bg-[#faf9f6] text-[#062b59] border-2 border-[#062b59] font-bold text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 text-center shadow-xs rounded-xl hover:border-[#2563eb] hover:text-[#2563eb]"
+            className="px-7 sm:px-9 py-2.5 sm:py-3 bg-white hover:bg-[#faf9f6] text-[#062b59] border-2 border-[#062b59] font-bold text-xs sm:text-[13px] uppercase tracking-wider transition-all duration-200 text-center shadow-xs rounded-xl hover:border-[#2563eb] hover:text-[#2563eb] active:scale-95"
           >
             EXPLORE AITHON
           </a>
-        </div>
-
-        {/* Clean Hero Sponsors & Partners Strip */}
-        <div className="w-full max-w-4xl pt-5 sm:pt-6 border-t border-[#edebe6]/80 mt-3 sm:mt-5">
-          <div className="flex items-center justify-center gap-3 mb-3 sm:mb-4">
-            <span className="h-px w-8 sm:w-14 bg-slate-300/80" />
-            <a
-              href="#sponsors"
-              className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-slate-500 hover:text-[#2563eb] transition-colors flex items-center gap-1.5"
-            >
-              <span>Our Official Partners & Sponsors</span>
-              <span className="text-slate-400 text-xs font-normal">↓</span>
-            </a>
-            <span className="h-px w-8 sm:w-14 bg-slate-300/80" />
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5">
-            {heroSponsors.map((sponsor) => {
-              const cardContent = (
-                <div
-                  className={`flex items-center gap-2.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border bg-white/95 backdrop-blur-xs transition-all duration-200 shadow-2xs ${
-                    sponsor.url
-                      ? 'border-[#edebe6] hover:border-blue-400 hover:shadow-xs hover:-translate-y-0.5 cursor-pointer'
-                      : 'border-[#edebe6] cursor-default'
-                  }`}
-                >
-                  <div
-                    className={`w-12 h-8 sm:w-14 sm:h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0 ${
-                      sponsor.isDarkBg
-                        ? 'bg-black px-1.5 py-1'
-                        : 'bg-slate-50 border border-slate-100 p-1'
-                    }`}
-                  >
-                    <img
-                      src={sponsor.logo}
-                      alt={sponsor.name}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[11px] sm:text-xs font-bold text-[#062b59] leading-tight">
-                      {sponsor.name}
-                    </p>
-                    <p className="text-[9px] sm:text-[10px] font-medium text-slate-500 leading-tight mt-0.5">
-                      {sponsor.role}
-                    </p>
-                  </div>
-                </div>
-              )
-
-              return sponsor.url ? (
-                <a
-                  key={sponsor.name}
-                  href={sponsor.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="no-underline"
-                >
-                  {cardContent}
-                </a>
-              ) : (
-                <div key={sponsor.name}>{cardContent}</div>
-              )
-            })}
-          </div>
         </div>
 
       </div>

@@ -17,9 +17,9 @@ export default function BackgroundArtwork({ variant = 'hero' }) {
           }}
         />
 
-        {/* City Skyline Silhouette SVG Layer in Medium Dark Skin Tone */}
+        {/* City Skyline Silhouette SVG Layer properly anchored to the bottom */}
         <svg
-          className="absolute bottom-0 left-0 right-0 w-full h-40 sm:h-56 opacity-25 text-[#c8a98b]"
+          className="absolute bottom-0 left-0 right-0 w-full h-28 sm:h-36 md:h-44 opacity-25 text-[#c8a98b] pointer-events-none"
           viewBox="0 0 1440 220"
           fill="none"
           preserveAspectRatio="none"

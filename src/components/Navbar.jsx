@@ -21,12 +21,12 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Home', href: '#home' },
+    { label: 'Sponsors', href: '#our-sponsors' },
     { label: 'About', href: '#about' },
     { label: 'Problem Statement', href: '#problem-statement' },
     { label: 'Guidelines', href: '#guidelines' },
     { label: 'Timeline', href: '#timeline' },
     { label: 'Prizes', href: '#prizes' },
-    { label: 'Sponsors', href: '#sponsors' },
     { label: 'FAQ', href: '#faq' },
     { label: 'Contact', href: '#contact' },
   ]

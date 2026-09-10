@@ -1,6 +1,7 @@
 import Navbar from '../components/Navbar'
 import AnnouncementTicker from '../components/AnnouncementTicker'
 import HeroSection from '../components/HeroSection'
+import OurSponsors from '../components/OurSponsors'
 import AboutSection from '../components/AboutSection'
 import ProblemStatements from '../components/ProblemStatements'
 import GuidelinesSection from '../components/GuidelinesSection'
@@ -24,52 +25,57 @@ export default function Home() {
       {/* 01 HOME (Warm White with Soft Skyline Silhouette) */}
       <div id="home">
         <HeroSection />
+      </div>
+
+      {/* 02 OUR SPONSORS (Static Cards with Info right after Home) */}
+      <div id="our-sponsors">
+        <OurSponsors />
         <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-[#faf9f6]" />
       </div>
 
-      {/* 02 ABOUT (Soft Professional Skin Tone) */}
+      {/* 03 ABOUT (Soft Professional Skin Tone) */}
       <div id="about">
         <AboutSection />
         <WaveTransition colorClass="text-white" bgClass="bg-[#f5ede4]" flip={true} />
       </div>
 
-      {/* 03 PROBLEM STATEMENT (Crisp White) */}
+      {/* 04 PROBLEM STATEMENT (Crisp White) */}
       <div id="problem-statement">
         <ProblemStatements />
         <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-white" />
       </div>
 
-      {/* 04 GUIDELINES (Soft Professional Skin Tone) */}
+      {/* 05 GUIDELINES (Soft Professional Skin Tone) */}
       <div id="guidelines">
         <GuidelinesSection />
         <WaveTransition colorClass="text-white" bgClass="bg-[#f5ede4]" flip={true} />
       </div>
 
-      {/* 05 TIMELINE (Crisp White) */}
+      {/* 06 TIMELINE (Crisp White) */}
       <div id="timeline">
         <TimelineSection />
         <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-white" />
       </div>
 
-      {/* 06 PRIZES & COUNTDOWN (Soft Professional Skin Tone) */}
+      {/* 07 PRIZES & COUNTDOWN (Soft Professional Skin Tone) */}
       <div id="prizes">
         <PrizesSection />
-        <WaveTransition colorClass="text-white" bgClass="bg-[#f5ede4]" flip={true} />
+        <WaveTransition colorClass="text-[#faf9f6]" bgClass="bg-[#f5ede4]" flip={true} />
       </div>
 
-      {/* 07 SPONSORS (Crisp White) */}
+      {/* 08 PARTNERS & SUPPORTERS (After Prize Pool Page) */}
       <div id="sponsors">
         <SponsorsSection />
-        <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-white" />
+        <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-[#faf9f6]" />
       </div>
 
-      {/* 08 FAQ (Soft Professional Skin Tone) */}
+      {/* 09 FAQ (Soft Professional Skin Tone) */}
       <div id="faq">
         <FaqSection />
         <WaveTransition colorClass="text-white" bgClass="bg-[#f5ede4]" flip={true} />
       </div>
 
-      {/* 09 CONTACT (Crisp White) */}
+      {/* 10 CONTACT (Crisp White) */}
       <div id="contact">
         <ContactSection />
         <WaveTransition colorClass="text-[#062b59]" bgClass="bg-white" isFooter={true} />
