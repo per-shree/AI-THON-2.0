@@ -102,4 +102,3 @@ export default function CountdownTimer({ variant = 'default' }) {
     </div>
   )
 }
-
