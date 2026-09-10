@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import aithonHeroLogo from '../assets/aithon-hero-logo.png'
 import BackgroundArtwork from './BackgroundArtwork'
 import CountdownTimer from './CountdownTimer'
 import { CalendarIcon, ClockIcon, UsersIcon, MapPinIcon } from './Icons'
@@ -39,12 +40,12 @@ const heroSponsors = [
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full bg-[#faf9f6] overflow-hidden min-h-[80vh] lg:min-h-[85vh] flex items-center justify-center py-10 sm:py-14 lg:py-16 px-4 sm:px-6 lg:px-8">
+    <section className="relative w-full bg-[#faf9f6] overflow-hidden min-h-[80vh] lg:min-h-[85vh] flex items-center justify-center py-10 sm:py-14 lg:py-20 px-4 sm:px-6 lg:px-8">
       
       {/* Subtle Low-Contrast Skyline Background */}
       <BackgroundArtwork variant="hero" />
 
-      <div className="max-w-5xl w-full mx-auto relative z-10 text-center flex flex-col items-center justify-center space-y-4 sm:space-y-5">
+      <div className="max-w-5xl w-full mx-auto relative z-10 text-center flex flex-col items-center justify-center space-y-5 sm:space-y-6">
         
         {/* Top Eyebrow Tag */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 border border-blue-100 backdrop-blur-xs shadow-2xs">
@@ -54,11 +55,25 @@ export default function HeroSection() {
           </span>
         </div>
 
-        {/* Hero Main Heading & Tagline Group */}
-        <div className="space-y-2 sm:space-y-3 max-w-full">
-          <h1 className="text-4xl sm:text-7xl md:text-8xl font-black text-[#062b59] tracking-tight leading-tight sm:leading-none break-words">
-            AITHON <span className="text-[#2563eb]">2.0</span>
+        {/* Hero Official Brand Logo & Main Heading (SEO) */}
+        <div className="w-full flex flex-col items-center justify-center space-y-3 sm:space-y-4 max-w-full">
+          <h1 className="sr-only">
+            AITHON 2.0 - National Level AI Hackathon
           </h1>
+
+          <div className="relative group flex items-center justify-center w-full px-2 sm:px-4">
+            {/* Ambient Multi-Spectrum Glow harmonized with Navy & Orange brand identity */}
+            <div className="absolute -inset-3 sm:-inset-6 bg-gradient-to-r from-blue-600/10 via-orange-500/15 to-blue-600/10 blur-2xl sm:blur-3xl rounded-3xl -z-10 pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity duration-700" />
+            
+            <img
+              src={aithonHeroLogo}
+              alt="AITHON 2.0 - National Level AI Hackathon"
+              className="w-full max-w-[320px] xs:max-w-[400px] sm:max-w-[520px] md:max-w-[640px] lg:max-w-[720px] h-auto object-contain drop-shadow-[0_10px_25px_rgba(6,43,89,0.07)] hover:scale-[1.02] transition-transform duration-500 ease-out select-none"
+              style={{ aspectRatio: '1017 / 268' }}
+              loading="eager"
+              fetchPriority="high"
+            />
+          </div>
           
           <p className="text-base sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#ea580c] tracking-tight uppercase leading-snug break-words">
             BUILD. INNOVATE. TRANSFORM.
