@@ -17,9 +17,9 @@ export default function BackgroundArtwork({ variant = 'hero' }) {
           }}
         />
 
-        {/* City Skyline Silhouette SVG Layer properly anchored to the bottom */}
+        {/* City Skyline Silhouette SVG Layer rising upward into the main starting hero page */}
         <svg
-          className="absolute bottom-0 left-0 right-0 w-full h-28 sm:h-36 md:h-44 opacity-25 text-[#c8a98b] pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 w-full h-44 sm:h-56 md:h-64 lg:h-72 opacity-25 sm:opacity-30 md:opacity-35 text-[#c8a98b] pointer-events-none"
           viewBox="0 0 1440 220"
           fill="none"
           preserveAspectRatio="none"

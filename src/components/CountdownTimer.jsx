@@ -43,12 +43,12 @@ export default function CountdownTimer({ variant = 'default' }) {
 
   if (variant === 'hero') {
     return (
-      <div className="w-full max-w-md mx-auto py-0.5">
+      <div className="w-full max-w-md mx-auto">
         <div className="grid grid-cols-4 gap-2 sm:gap-3">
           {timeUnits.map((unit) => (
             <div
               key={unit.label}
-              className="bg-white/95 backdrop-blur-sm border border-[#edebe6] rounded-xl py-1.5 sm:py-2 px-2 shadow-2xs flex flex-col items-center justify-center space-y-0.5 hover:border-[#2563eb]/40 transition-colors"
+              className="bg-white/95 backdrop-blur-sm border border-[#edebe6] rounded-xl py-2 sm:py-2.5 px-2 sm:px-3 shadow-2xs flex flex-col items-center justify-center space-y-0.5 hover:border-[#2563eb]/40 transition-colors"
             >
               <span className="text-xl sm:text-2xl lg:text-3xl font-black text-[#062b59] font-mono tabular-nums tracking-tight leading-none">
                 {unit.value}
