@@ -11,8 +11,10 @@ export default function BackgroundArtwork({ variant = 'hero' }) {
             alt="AITHON 2.0 Skyline Artwork"
             className="w-full h-full object-cover object-[center_36%] sm:object-[center_34%] md:object-[center_32%] select-none"
             style={{
-              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 60%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.12) 90%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 60%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.12) 90%, transparent 100%)',
+              WebkitMaskImage:
+                'linear-gradient(to bottom, transparent 0%, black 14%, black 56%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.08) 84%, transparent 95%)',
+              maskImage:
+                'linear-gradient(to bottom, transparent 0%, black 14%, black 56%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.08) 84%, transparent 95%)',
             }}
             loading="eager"
             fetchPriority="high"
@@ -28,7 +30,7 @@ export default function BackgroundArtwork({ variant = 'hero' }) {
           <div className="absolute inset-y-0 right-0 w-16 sm:w-32 md:w-48 bg-gradient-to-l from-[#fef6eb] via-[#fef6eb]/60 to-transparent pointer-events-none" />
 
           {/* Soft Bottom Gradient to faint the reflection into #fef6eb */}
-          <div className="absolute bottom-0 inset-x-0 h-24 sm:h-36 md:h-44 bg-gradient-to-t from-[#fef6eb] via-[#fef6eb]/80 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 inset-x-0 h-28 sm:h-44 bg-gradient-to-t from-[#fef6eb] via-[#fef6eb]/80 to-transparent pointer-events-none" />
         </div>
       </div>
     )

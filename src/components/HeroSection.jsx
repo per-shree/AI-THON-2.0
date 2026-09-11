@@ -82,7 +82,7 @@ export default function HeroSection() {
         </div>
 
         {/* Action Buttons - Distinctly positioned and mobile responsive */}
-        <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full sm:w-auto relative z-20 mb-2 sm:mb-4 px-2 sm:px-0">
+        <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full sm:w-auto relative z-20 mb-4 sm:mb-6 px-2 sm:px-0">
           <Link
             to="/register"
             className="flex-1 sm:flex-none px-5 xs:px-7 sm:px-10 py-2.5 sm:py-3.5 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-[11px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
@@ -98,6 +98,9 @@ export default function HeroSection() {
         </div>
 
       </div>
+
+      {/* Smooth Bottom Gradient Transition into the Sponsors section (#faf9f6) */}
+      <div className="absolute bottom-0 inset-x-0 h-24 sm:h-36 bg-gradient-to-b from-transparent via-[#fef6eb]/40 to-[#faf9f6] pointer-events-none z-10" />
     </section>
   )
 }

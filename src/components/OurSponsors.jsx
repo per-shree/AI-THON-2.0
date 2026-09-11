@@ -41,7 +41,7 @@ const sponsorsList = [
 
 export default function OurSponsors() {
   return (
-    <section id="our-sponsors" className="w-full bg-[#faf9f6] pt-4 sm:pt-6 lg:pt-8 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8">
+    <section id="our-sponsors" className="w-full bg-[#faf9f6] pt-8 sm:pt-12 lg:pt-16 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
