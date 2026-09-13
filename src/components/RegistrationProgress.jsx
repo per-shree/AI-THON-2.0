@@ -1,19 +1,20 @@
 import { CheckIcon } from './Icons'
 
 export default function RegistrationProgress({ currentStep, steps, onStepClick }) {
+  const totalSteps = steps.length
+  const progressPercent = totalSteps > 1 ? ((currentStep - 1) / (totalSteps - 1)) * 100 : 0
+
   return (
-    <div className="w-full mb-8 lg:mb-10">
-      <div className="relative flex items-center justify-between">
+    <div className="w-full mb-8 sm:mb-10 select-none">
+      <div className="relative flex items-center justify-between max-w-2xl mx-auto px-3 sm:px-6">
         {/* Background Track Line */}
-        <div className="absolute left-6 right-6 top-5 -translate-y-1/2 h-[2px] bg-[#edebe6] -z-0" />
+        <div className="absolute left-8 right-8 top-4 sm:top-5 -translate-y-1/2 h-[2px] bg-[#edebe6] -z-0" />
 
         {/* Active Progress Fill Line */}
         <div
-          className="absolute left-6 top-5 -translate-y-1/2 h-[2px] bg-[#2563eb] transition-all duration-500 ease-out -z-0"
+          className="absolute left-8 top-4 sm:top-5 -translate-y-1/2 h-[2.5px] bg-gradient-to-r from-[#062b59] via-[#1d4ed8] to-[#2563eb] transition-all duration-500 ease-out -z-0"
           style={{
-            width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 48px * ${
-              (currentStep - 1) / (steps.length - 1)
-            })`,
+            width: `calc(${progressPercent}% - ${(progressPercent / 100) * 40}px)`,
           }}
         />
 
@@ -25,7 +26,7 @@ export default function RegistrationProgress({ currentStep, steps, onStepClick }
           return (
             <div
               key={step.number}
-              className="flex flex-col items-center relative z-10 group"
+              className="flex flex-col items-center relative z-10"
             >
               {/* Circular Step Badge */}
               <button
@@ -33,40 +34,29 @@ export default function RegistrationProgress({ currentStep, steps, onStepClick }
                 disabled={isPending}
                 onClick={() => isCompleted && onStepClick && onStepClick(step.number)}
                 aria-label={`Step ${step.number}: ${step.title}`}
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[11px] sm:text-xs font-bold transition-all duration-300 ${
                   isCompleted
-                    ? 'bg-[#062b59] text-white cursor-pointer hover:bg-[#2563eb]'
+                    ? 'bg-[#062b59] text-white cursor-pointer hover:bg-[#2563eb] shadow-xs hover:scale-105'
                     : isActive
-                    ? 'bg-white text-[#2563eb] border-2 border-[#2563eb] ring-4 ring-blue-100 shadow-sm'
+                    ? 'bg-white text-[#2563eb] border-2 border-[#2563eb] ring-4 ring-blue-100 shadow-sm scale-110'
                     : 'bg-[#faf9f6] text-slate-400 border border-[#edebe6] cursor-not-allowed'
                 }`}
               >
                 {isCompleted ? (
-                  <CheckIcon className="w-5 h-5 text-white" />
+                  <CheckIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                 ) : (
-                  <span>{step.number}</span>
+                  <span>0{step.number}</span>
                 )}
               </button>
 
-              {/* Step Labels */}
-              <div className="mt-3 text-center">
+              {/* Step Title */}
+              <div className="mt-2 sm:mt-2.5 text-center">
                 <span
-                  className={`block text-[11px] font-bold uppercase tracking-wider ${
+                  className={`block text-[9.5px] sm:text-[11px] font-bold tracking-tight whitespace-nowrap transition-colors duration-200 ${
                     isActive
                       ? 'text-[#2563eb]'
                       : isCompleted
                       ? 'text-[#062b59]'
-                      : 'text-slate-400'
-                  }`}
-                >
-                  STEP {step.number}
-                </span>
-                <span
-                  className={`hidden sm:block text-xs font-semibold tracking-tight mt-0.5 max-w-[130px] ${
-                    isActive
-                      ? 'text-[#062b59]'
-                      : isCompleted
-                      ? 'text-slate-600'
                       : 'text-slate-400'
                   }`}
                 >

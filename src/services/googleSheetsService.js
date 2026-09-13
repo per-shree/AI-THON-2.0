@@ -71,34 +71,42 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     member2Name: member2.fullName || '',
     member2Email: member2.email || '',
     member2College: member2.college || '',
+    member2Course: member2.course || '',
+    member2Year: member2.year || '',
 
     // Teammate 2 (Member 3)
     member3Name: member3.fullName || '',
     member3Email: member3.email || '',
     member3College: member3.college || '',
+    member3Course: member3.course || '',
+    member3Year: member3.year || '',
 
     // Teammate 3 (Member 4)
     member4Name: member4.fullName || '',
     member4Email: member4.email || '',
     member4College: member4.college || '',
+    member4Course: member4.course || '',
+    member4Year: member4.year || '',
 
     // Teammate 4 (Member 5)
     member5Name: member5.fullName || '',
     member5Email: member5.email || '',
     member5College: member5.college || '',
+    member5Course: member5.course || '',
+    member5Year: member5.year || '',
 
     // Teammate 5 (Member 6)
     member6Name: member6.fullName || '',
     member6Email: member6.email || '',
     member6College: member6.college || '',
+    member6Course: member6.course || '',
+    member6Year: member6.year || '',
 
-    // Socials & Skills
-    github: formData.github || '',
-    linkedin: formData.linkedin || '',
-    portfolio: formData.portfolio || '',
-    skills: Array.isArray(formData.skills) ? formData.skills.join(', ') : (formData.skills || ''),
-    experience: formData.experience || '',
-    referral: formData.referral || '',
+    // Idea PPT Submission & Payment
+    pptFileName: formData.pptFileName || '',
+    paymentAmount: '₹50',
+    paymentStatus: formData.paymentStatus || '₹50 Successful',
+    paymentUtr: formData.paymentUtr || '',
 
     // Status
     status: 'Pending Review',
