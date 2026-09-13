@@ -282,6 +282,9 @@ export function AdminProvider({ children }) {
         ...membersList,
       ],
       registeredAt: ts,
+      pptDriveUrl: registrationData.pptDriveUrl || '',
+      pptFileName: registrationData.pptFileName || '',
+      paymentStatus: registrationData.paymentStatus || '₹50 Paid',
       reviewHistory: [],
     }
 

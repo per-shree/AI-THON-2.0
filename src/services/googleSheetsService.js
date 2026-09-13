@@ -48,6 +48,20 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
   const member5 = teamSizeNum >= 5 ? members[3] || {} : {}
   const member6 = teamSizeNum >= 6 ? members[4] || {} : {}
 
+  const resolveCourse = (course, courseOther) => {
+    if ((course === 'Other' || course === 'Other Tech Stream') && courseOther && courseOther.trim()) {
+      return courseOther.trim()
+    }
+    return course || ''
+  }
+
+  const resolvedLeadCourse = resolveCourse(formData.leadCourse, formData.leadCourseOther)
+  const resolvedMember2Course = resolveCourse(member2.course, member2.courseOther)
+  const resolvedMember3Course = resolveCourse(member3.course, member3.courseOther)
+  const resolvedMember4Course = resolveCourse(member4.course, member4.courseOther)
+  const resolvedMember5Course = resolveCourse(member5.course, member5.courseOther)
+  const resolvedMember6Course = resolveCourse(member6.course, member6.courseOther)
+
   return {
     // Unique Identifiers
     timestamp: formattedTimestamp,
@@ -63,7 +77,7 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     leadEmail: formData.leadEmail || '',
     leadPhone: formData.leadPhone || '',
     leadCollege: formData.leadCollege || '',
-    leadCourse: formData.leadCourse || '',
+    leadCourse: resolvedLeadCourse,
     leadYear: formData.leadYear || '',
     leadCity: formData.leadCity || '',
 
@@ -71,39 +85,43 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     member2Name: member2.fullName || '',
     member2Email: member2.email || '',
     member2College: member2.college || '',
-    member2Course: member2.course || '',
+    member2Course: resolvedMember2Course,
     member2Year: member2.year || '',
 
     // Teammate 2 (Member 3)
     member3Name: member3.fullName || '',
     member3Email: member3.email || '',
     member3College: member3.college || '',
-    member3Course: member3.course || '',
+    member3Course: resolvedMember3Course,
     member3Year: member3.year || '',
 
     // Teammate 3 (Member 4)
     member4Name: member4.fullName || '',
     member4Email: member4.email || '',
     member4College: member4.college || '',
-    member4Course: member4.course || '',
+    member4Course: resolvedMember4Course,
     member4Year: member4.year || '',
 
     // Teammate 4 (Member 5)
     member5Name: member5.fullName || '',
     member5Email: member5.email || '',
     member5College: member5.college || '',
-    member5Course: member5.course || '',
+    member5Course: resolvedMember5Course,
     member5Year: member5.year || '',
 
     // Teammate 5 (Member 6)
     member6Name: member6.fullName || '',
     member6Email: member6.email || '',
     member6College: member6.college || '',
-    member6Course: member6.course || '',
+    member6Course: resolvedMember6Course,
     member6Year: member6.year || '',
 
-    // Idea PPT Submission & Payment
+    // Idea PPT Submission, Selected Track & Payment
+    selectedTrack: formData.selectedTrack || '',
     pptFileName: formData.pptFileName || '',
+    pptBase64: formData.pptBase64 || '',
+    pptMimeType: formData.pptMimeType || '',
+    pptFileSize: formData.pptFileSize || '',
     paymentAmount: '₹50',
     paymentStatus: formData.paymentStatus || '₹50 Successful',
     paymentUtr: formData.paymentUtr || '',
@@ -218,17 +236,23 @@ export async function submitRegistrationToGoogleSheet(formData, teamId, registra
       })
     }
 
-    if (responseData && responseData.teamId && responseData.registrationId) {
-      finalTeamId = responseData.teamId
-      finalRegId = responseData.registrationId
-      console.log('[GoogleSheets] Server confirmed unique IDs:', finalTeamId, finalRegId)
+    let pptUrl = ''
+    if (responseData) {
+      if (responseData.teamId) finalTeamId = responseData.teamId
+      if (responseData.registrationId) finalRegId = responseData.registrationId
+      if (responseData.pptUrl) pptUrl = responseData.pptUrl
+      console.log('[GoogleSheets] Server confirmed unique IDs & PPT:', finalTeamId, finalRegId, pptUrl)
     }
 
     console.log('[GoogleSheets] Successfully posted to Google Sheet for team:', finalTeamId)
     return {
-      success: true,
+      success: responseData ? responseData.success !== false : true,
+      paymentVerified: responseData ? responseData.paymentVerified !== false : true,
+      paymentRequired: responseData ? Boolean(responseData.paymentRequired) : false,
+      error: responseData?.error || '',
       teamId: finalTeamId,
       registrationId: finalRegId,
+      pptUrl: pptUrl,
     }
   } catch (err) {
     console.error('[GoogleSheets] Network error posting to Google Sheet:', err)
@@ -237,6 +261,7 @@ export async function submitRegistrationToGoogleSheet(formData, teamId, registra
       error: err.message,
       teamId: finalTeamId,
       registrationId: finalRegId,
+      pptUrl: '',
     }
   }
 }

@@ -12,9 +12,13 @@ import {
   UploadCloud,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
+  XCircle,
+  X,
+  HelpCircle,
+  RefreshCw,
   Copy,
   Check,
-  QrCode,
   ShieldCheck,
   Sparkles,
   ArrowRight,
@@ -25,6 +29,8 @@ import {
   GraduationCap,
   Calendar,
   FileCode,
+  ExternalLink,
+  Layers,
 } from 'lucide-react'
 import {
   UserIcon,
@@ -44,23 +50,77 @@ const STEPS = [
 ]
 
 const YEAR_OPTIONS = [
-  '1st Year (FE / Freshman)',
-  '2nd Year (SE / Sophomore)',
-  '3rd Year (TE / Junior)',
-  '4th Year (BE / Senior)',
-  'Diploma / Other',
+  '1st Year (FE / 1st Year UG / Diploma)',
+  '2nd Year (SE / 2nd Year UG / Diploma)',
+  '3rd Year (TE / 3rd Year UG / Diploma)',
+  '4th Year (BE / Final Year 4-Yr UG)',
+  '5th Year (Final Year MBBS / B.A. LL.B / Pharm.D)',
 ]
 
 const COURSE_OPTIONS = [
-  'B.E. / B.Tech Computer Engineering',
-  'B.E. / B.Tech Artificial Intelligence & Data Science (AIDS)',
-  'B.E. / B.Tech Information Technology (IT)',
-  'B.E. / B.Tech Electronics & Telecommunication (E&TC)',
-  'B.E. / B.Tech Electrical / Mechanical / Civil',
-  'MCA / M.Tech / MSc Computer Science',
-  'Diploma Engineering',
-  'Other Tech Stream',
+  'Engineering & Technology (B.E. / B.Tech / Diploma)',
+  'Medical, Dental & Healthcare (MBBS / BDS / B.Sc Nursing / BPT)',
+  'Pharmacy & Life Sciences (B.Pharm / Pharm.D)',
+  'Legal Studies (LL.B / B.A. LL.B / B.B.A. LL.B)',
+  'Business, Management & Finance (BBA / B.Com / B.A. Econ)',
+  'Arts, Humanities, Social Sciences & Media (B.A. / B.M.M.)',
+  'Design, Animation & Fine Arts (B.Des / B.FA)',
+  'Agricultural Sciences & Forestry (B.Sc. Agriculture)',
+  'Polytechnic & Technical Diploma Streams',
+  'Other',
 ]
+
+// 23 Official Hackathon Competition Tracks
+export const TRACK_OPTIONS = [
+  'Track 01: AI in Healthcare & Medicine',
+  'Track 02: AI in Dental Science & Diagnostics',
+  'Track 03: AI in Pharmacy & Drug Discovery',
+  'Track 04: LegalTech, AI Ethics & Law',
+  'Track 05: FinTech & Financial Intelligence',
+  'Track 06: EdTech & Smart Learning',
+  'Track 07: AI in Film, Animation & Storytelling',
+  'Track 08: UI/UX & Accessible Design',
+  'Track 09: Industrial Automation & Robotics',
+  'Track 10: Smart Energy & CleanTech',
+  'Track 11: Aerospace, Telemetry & SpaceTech',
+  'Track 12: AgriTech & Smart Farming',
+  'Track 13: Environmental AI & Sustainability',
+  'Track 14: E-Commerce & Retail Automation',
+  'Track 15: Supply Chain & Logistics Intelligence',
+  'Track 16: Cybersecurity, Forensics & Cyber Law',
+  'Track 17: Smart Cities & Urban Mobility',
+  'Track 18: Disaster Management & Public Safety',
+  'Track 19: Mental Health & Psychology AI',
+  'Track 20: Sports Analytics & Performance Tech',
+  'Track 21: Hospitality, Tourism & Service AI',
+  'Track 22: Social Good & Civic Innovation',
+  'Track 23: Open Innovation (Unrestricted Domain)',
+]
+
+export const isOtherCourse = (course) =>
+  course === 'Other' ||
+  course === 'Other Tech Stream' ||
+  course === 'Other (Please specify)' ||
+  (typeof course === 'string' && course.startsWith('Other'))
+
+// Dynamic loader for Razorpay Standard Checkout Popup SDK
+export const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      resolve(true)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
+
+// Official Razorpay Payment URL with ₹50 evaluation fee
+export const RAZORPAY_PAYMENT_URL = 'https://rzp.io/rzp/bZeYKo8'
 
 export default function Registration() {
   const { registerTeam, getNextSerialTeamId, syncNextSerialNum } = useAdmin()
@@ -70,11 +130,42 @@ export default function Registration() {
   const [step4View, setStep4View] = useState('review') // 'review' | 'payment'
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isReadingPpt, setIsReadingPpt] = useState(false)
+  const [isOpeningRazorpay, setIsOpeningRazorpay] = useState(false)
+  const [autoPaidId, setAutoPaidId] = useState('')
+  const [drivePptUrl, setDrivePptUrl] = useState('')
   const [registrationId, setRegistrationId] = useState('')
   const [teamId, setTeamId] = useState('')
   const [copiedUpi, setCopiedUpi] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [paymentModal, setPaymentModal] = useState(null)
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false)
+  const [utrError, setUtrError] = useState('')
+  const [isReportingProblem, setIsReportingProblem] = useState(false)
+  const [reportSentMessage, setReportSentMessage] = useState('')
   const fileInputRef = useRef(null)
+
+  // Auto-detect return from Razorpay redirect with transaction ID / payment ID
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const payId =
+        params.get('razorpay_payment_id') ||
+        params.get('payment_id') ||
+        params.get('razorpay_payment_link_id') ||
+        params.get('utr')
+
+      if (payId) {
+        setFormData((prev) => ({
+          ...prev,
+          paymentUtr: payId,
+        }))
+        setPaymentConfirmed(true)
+        setCurrentStep(4)
+        setStep4View('payment')
+      }
+    } catch (_) {}
+  }, [])
 
   // Pre-fetch live next serial ID from Google Sheets
   useEffect(() => {
@@ -100,23 +191,27 @@ export default function Registration() {
     leadPhone: '',
     leadCollege: '',
     leadCourse: '',
+    leadCourseOther: '',
     leadYear: '',
     leadCity: '',
 
     // Step 2: Team Members Details (Min 4, Max 6 total = Lead + 3 to 5 teammates)
     teamSize: '4', // default 4 members
     members: [
-      { fullName: '', email: '', college: '', course: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', year: '' },
+      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
     ],
 
-    // Step 3: PPT Submission
+    // Step 3: PPT Submission & Track Selection
+    selectedTrack: '',
     pptFileName: '',
     pptFileSize: '',
     pptUploadedAt: '',
+    pptBase64: '',
+    pptMimeType: '',
 
     // Step 4: Review Confirmation & Payment
     confirmedReview: false,
@@ -207,7 +302,11 @@ export default function Registration() {
     }
 
     if (!formData.leadCollege.trim()) errs.leadCollege = 'College / University name is required'
-    if (!formData.leadCourse.trim()) errs.leadCourse = 'Course or branch is required'
+    if (!formData.leadCourse.trim()) {
+      errs.leadCourse = 'Course or branch is required'
+    } else if (isOtherCourse(formData.leadCourse) && !formData.leadCourseOther?.trim()) {
+      errs.leadCourseOther = 'Please specify your course or branch'
+    }
     if (!formData.leadYear) errs.leadYear = 'Select your year of study'
     if (!formData.leadCity.trim()) errs.leadCity = 'City is required'
 
@@ -236,6 +335,8 @@ export default function Registration() {
       }
       if (!member.course?.trim()) {
         errs[`member_${i}_course`] = `Course / Branch is required`
+      } else if (isOtherCourse(member.course) && !member.courseOther?.trim()) {
+        errs[`member_${i}_courseOther`] = `Please specify Teammate ${i + 1}'s course or branch`
       }
       if (!member.year?.trim()) {
         errs[`member_${i}_year`] = `Year of study is required`
@@ -246,9 +347,12 @@ export default function Registration() {
     return Object.keys(errs).length === 0
   }
 
-  // Validate Step 3: PPT Upload
+  // Validate Step 3: Track Selection & PPT Upload
   const validateStep3 = () => {
     const errs = {}
+    if (!formData.selectedTrack || !formData.selectedTrack.trim()) {
+      errs.selectedTrack = 'Please select your competition track out of the 23 tracks before proceeding'
+    }
     if (!formData.pptFileName) {
       errs.ppt = 'Please upload your completed presentation (.ppt or .pptx) before proceeding'
     }
@@ -284,12 +388,28 @@ export default function Registration() {
         ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
         : `${Math.round(file.size / 1024)} KB`
 
-    setFormData((prev) => ({
-      ...prev,
-      pptFileName: file.name,
-      pptFileSize: formattedSize,
-      pptUploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    }))
+    setIsReadingPpt(true)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const base64Data = reader.result
+      setFormData((prev) => ({
+        ...prev,
+        pptFileName: file.name,
+        pptFileSize: formattedSize,
+        pptUploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        pptBase64: base64Data,
+        pptMimeType: file.type || 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      }))
+      setIsReadingPpt(false)
+    }
+    reader.onerror = () => {
+      setErrors((prev) => ({
+        ...prev,
+        ppt: 'Failed to read presentation file. Please try selecting the file again.',
+      }))
+      setIsReadingPpt(false)
+    }
+    reader.readAsDataURL(file)
 
     setErrors((prev) => {
       const next = { ...prev }
@@ -355,9 +475,60 @@ export default function Registration() {
     window.scrollTo({ top: 120, behavior: 'smooth' })
   }
 
+  // Report payment problem helper
+  const handleReportPaymentProblem = async (reason) => {
+    setIsSendingReport(true)
+    setReportSentMessage('')
+    try {
+      const payloadData = {
+        ...formData,
+        paymentStatus: 'Rejected',
+        paymentRejected: true,
+        paymentUtr: `REPORTED_ISSUE: ${reason || 'Payment Cancelled or Declined'}`,
+      }
+      await submitRegistrationToGoogleSheet(
+        payloadData,
+        teamId || 'TEAM-HOLD',
+        registrationId || 'AI25-HOLD'
+      )
+      setReportSentMessage('Payment issue noted! A Payment Assistance email has been sent to ' + (formData.leadEmail || 'your email') + ' with coordinator contacts.')
+    } catch (e) {
+      console.warn('Could not dispatch payment issue report:', e)
+      setReportSentMessage('Payment issue recorded. Please contact support at ai.veer2k26@gmail.com.')
+    } finally {
+      setIsSendingReport(false)
+    }
+  }
+
   // Final Registration & Payment Submission
-  const handleFinalSubmit = async (e) => {
-    if (e) e.preventDefault()
+  const handleFinalSubmit = async (e, overrideUtr) => {
+    if (e && e.preventDefault) e.preventDefault()
+
+    // 🛡️ STRICT VALIDATION: Form cannot be submitted without actual verified payment
+    const rawUtr = (overrideUtr || formData.paymentUtr || '').trim()
+    if (!rawUtr || rawUtr.length < 6) {
+      setUtrError('Payment reference or 12-digit UTR is strictly required to confirm registration.')
+      setPaymentModal({
+        isOpen: true,
+        type: 'missing_utr',
+        title: '₹50 Payment Verification Required',
+        message: 'Without actual payment confirmation, your registration cannot be submitted. Please complete the ₹50 evaluation fee on Razorpay and enter your 12-digit UPI UTR or Razorpay Payment ID.',
+      })
+      return
+    }
+
+    if (!paymentConfirmed && !overrideUtr) {
+      setUtrError('Please check the confirmation box verifying that you have completed payment.')
+      setPaymentModal({
+        isOpen: true,
+        type: 'unconfirmed',
+        title: 'Payment Confirmation Check Required',
+        message: 'Please tick the confirmation checkbox certifying that your team has paid the ₹50 fee on Razorpay/UPI.',
+      })
+      return
+    }
+
+    setUtrError('')
     setIsSubmitting(true)
 
     // 1. Determine next serial ID baseline
@@ -382,10 +553,28 @@ export default function Registration() {
     setTeamId(currentTeamId)
 
     try {
+      // Resolve any 'Other' branches to the user-specified branch text
+      const finalLeadCourse =
+        isOtherCourse(formData.leadCourse) && formData.leadCourseOther?.trim()
+          ? formData.leadCourseOther.trim()
+          : formData.leadCourse
+
+      const finalMembers = formData.members.map((m) => ({
+        ...m,
+        course:
+          isOtherCourse(m.course) && m.courseOther?.trim()
+            ? m.courseOther.trim()
+            : m.course,
+      }))
+
       // 2. Submit to Google Sheets (Target Account: ai.veer2k26@gmail.com)
       const payloadData = {
         ...formData,
+        paymentUtr: rawUtr,
+        leadCourse: finalLeadCourse,
+        members: finalMembers,
         paymentStatus: '₹50 Successful',
+        paymentConfirmed: true,
       }
 
       const result = await submitRegistrationToGoogleSheet(
@@ -393,6 +582,18 @@ export default function Registration() {
         currentTeamId,
         currentRegId
       )
+
+      // 🛡️ Check if server flagged payment as unverified / rejected
+      if (result && result.paymentVerified === false) {
+        setPaymentModal({
+          isOpen: true,
+          type: 'rejected',
+          title: 'Payment Unverified / Registration On Hold',
+          message: result.error || 'Your ₹50 payment could not be verified. Official confirmation email held until payment is completed.',
+        })
+        setIsSubmitting(false)
+        return
+      }
 
       if (result && result.teamId && result.registrationId) {
         currentTeamId = result.teamId
@@ -405,13 +606,18 @@ export default function Registration() {
         }
       }
 
+      if (result && result.pptUrl) {
+        setDrivePptUrl(result.pptUrl)
+      }
+
       // 3. Sync to local AdminContext for instant admin roster view
       if (registerTeam) {
         registerTeam({
-          ...formData,
+          ...payloadData,
           registrationId: currentRegId,
           teamId: currentTeamId,
           paymentStatus: '₹50 Paid',
+          pptDriveUrl: result?.pptUrl || '',
         })
       }
 
@@ -432,9 +638,73 @@ export default function Registration() {
     }
   }
 
-  // Copy UPI ID helper
+  // Trigger Embedded Razorpay Standard Checkout Popup
+  const handleRazorpayPopupPay = async () => {
+    setIsOpeningRazorpay(true)
+    try {
+      const isLoaded = await loadRazorpayScript()
+      const razorpayKey =
+        import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TbdQP6aRj2Uab8'
+
+      if (!isLoaded || !window.Razorpay || !razorpayKey) {
+        // Fallback: If Razorpay SDK can't be loaded or no key is provided in env, open direct payment page
+        window.open(RAZORPAY_PAYMENT_URL, '_blank')
+        setIsOpeningRazorpay(false)
+        return
+      }
+
+      const options = {
+        key: razorpayKey,
+        amount: 5000, // ₹50.00 (in paise)
+        currency: 'INR',
+        name: 'AiTHON 2.0',
+        description: 'First PPT Evaluation Fee (₹50)',
+        prefill: {
+          name: formData.leadFullName || '',
+          email: formData.leadEmail || '',
+          contact: formData.leadPhone || '',
+        },
+        notes: {
+          teamName: formData.teamName || 'Team',
+          teamSize: String(formData.teamSize || 4),
+          track: formData.selectedTrack || 'General AI Track',
+        },
+        theme: {
+          color: '#062b59',
+        },
+        handler: function (response) {
+          const payId = response.razorpay_payment_id
+          if (payId) {
+            setFormData((prev) => ({ ...prev, paymentUtr: payId }))
+            setPaymentConfirmed(true)
+            setAutoPaidId(payId)
+            handleFinalSubmit(null, payId)
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsOpeningRazorpay(false)
+          },
+        },
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.on('payment.failed', function (resp) {
+        setIsOpeningRazorpay(false)
+        alert('Payment not completed: ' + (resp?.error?.description || 'You can also pay via the QR code or link below.'))
+      })
+      rzp.open()
+    } catch (err) {
+      console.warn('Razorpay checkout popup error:', err)
+      window.open(RAZORPAY_PAYMENT_URL, '_blank')
+    } finally {
+      setIsOpeningRazorpay(false)
+    }
+  }
+
+  // Copy Razorpay link helper
   const handleCopyUpi = () => {
-    navigator.clipboard.writeText('ai.veer2k26@okaxis')
+    navigator.clipboard.writeText(RAZORPAY_PAYMENT_URL)
     setCopiedUpi(true)
     setTimeout(() => setCopiedUpi(false), 2500)
   }
@@ -491,27 +761,97 @@ export default function Registration() {
             STEP 01 — TEAM LEAD DETAILS
             ================================================== */}
         {currentStep === 1 && (
-          <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
-            {/* Step Card Header */}
-            <div className="pb-4 border-b border-[#edebe6] flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563eb] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 inline-block mb-1.5">
-                  STEP 01 OF 04
+          <div className="space-y-6 animate-fadeIn">
+            {/* Academic Eligibility Guidelines Card */}
+            <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#edebe6]">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-[#2563eb]" />
+                  <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-[#062b59]">
+                    Eligibility Criteria (UG & Diploma Only)
+                  </h3>
+                </div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 self-start sm:self-auto">
+                  National Level AI Hackathon
                 </span>
-                <h2 className="text-lg sm:text-xl font-black text-[#062b59] uppercase tracking-tight">
-                  Team Lead Details
-                </h2>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-[#faf9f6] border border-[#edebe6] flex items-center justify-center text-[#2563eb]">
-                <UserIcon className="w-5 h-5" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Eligible Categories Box */}
+                <div className="p-4 rounded-xl bg-emerald-50/40 border border-emerald-200/80 space-y-2.5">
+                  <div className="flex items-center gap-2 text-emerald-900">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider">
+                      Eligible Academic Categories (UG & Diploma Only)
+                    </span>
+                  </div>
+                  <ul className="text-xs text-slate-700 space-y-1.5 pl-5 list-disc marker:text-emerald-600 font-medium">
+                    <li><strong>Engineering & Technology</strong> (B.E. / B.Tech / Diploma)</li>
+                    <li><strong>Medical, Dental & Healthcare</strong> (MBBS / BDS / B.Sc Nursing / BPT)</li>
+                    <li><strong>Pharmacy & Life Sciences</strong> (B.Pharm / Pharm.D)</li>
+                    <li><strong>Legal Studies</strong> (LL.B / B.A. LL.B / B.B.A. LL.B)</li>
+                    <li><strong>Business, Management & Finance</strong> (BBA / B.Com / B.A. Econ)</li>
+                    <li><strong>Arts, Humanities, Social Sciences & Media</strong> (B.A. / B.M.M.)</li>
+                    <li><strong>Design, Animation & Fine Arts</strong> (B.Des / B.FA)</li>
+                    <li><strong>Agricultural Sciences & Forestry</strong> (B.Sc. Agriculture)</li>
+                    <li><strong>Polytechnic & Technical Diploma Streams</strong></li>
+                  </ul>
+                </div>
+
+                {/* Ineligible Candidates Box */}
+                <div className="p-4 rounded-xl bg-rose-50/40 border border-rose-200/80 space-y-2.5 flex flex-col justify-between">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2 text-rose-900">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider">
+                        ✕ Ineligible Candidates (Strictly Not Allowed)
+                      </span>
+                    </div>
+                    <ul className="text-xs text-slate-700 space-y-2 pl-5 list-disc marker:text-rose-600 font-medium">
+                      <li>
+                        <strong className="text-rose-950">Postgraduate / Master's Students:</strong><br />
+                        <span className="text-slate-600 text-[11px]">M.E. / M.Tech / MBA / M.Sc / M.Pharm / LL.M / MD / MS / MDS</span>
+                      </li>
+                      <li>
+                        <strong className="text-rose-950">Doctoral & Post-Doctoral:</strong><br />
+                        <span className="text-slate-600 text-[11px]">Ph.D. / Post-Doc Researchers</span>
+                      </li>
+                      <li>
+                        <strong className="text-rose-950">Working Professionals:</strong><br />
+                        <span className="text-slate-600 text-[11px]">Corporate & Industry Employees</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-2.5 border-t border-rose-200/70 text-[11px] text-rose-800 font-medium leading-relaxed">
+                    ⚠️ Valid College / University ID card confirming active UG / Diploma enrollment is mandatory during check-in.
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Form Fields */}
-            <div className="space-y-5">
-              {/* Team Name */}
-              <div className="p-4 rounded-xl bg-[#fef6eb]/70 border border-[#f5ede4]">
-                <FormInput
+            {/* Team Lead Details Card */}
+            <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6">
+              {/* Step Card Header */}
+              <div className="pb-4 border-b border-[#edebe6] flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563eb] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 inline-block mb-1.5">
+                    STEP 01 OF 04
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-black text-[#062b59] uppercase tracking-tight">
+                    Team Lead Details
+                  </h2>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-[#faf9f6] border border-[#edebe6] flex items-center justify-center text-[#2563eb]">
+                  <UserIcon className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="space-y-5">
+                {/* Team Name */}
+                <div className="p-4 rounded-xl bg-[#fef6eb]/70 border border-[#f5ede4]">
+                  <FormInput
                   label="Team Name"
                   name="teamName"
                   value={formData.teamName}
@@ -615,6 +955,21 @@ export default function Registration() {
                     error={errors.leadYear}
                   />
                 </div>
+
+                {/* Specify custom branch if 'Other' is selected */}
+                {isOtherCourse(formData.leadCourse) && (
+                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 animate-fadeIn space-y-1">
+                    <FormInput
+                      label="Specify Course / Branch Name"
+                      name="leadCourseOther"
+                      value={formData.leadCourseOther || ''}
+                      onChange={handleChange}
+                      placeholder="e.g. B.Tech Robotics & Automation / BCA / MCA / BSc AI"
+                      required
+                      error={errors.leadCourseOther}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -630,7 +985,8 @@ export default function Registration() {
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
         {/* ==================================================
             STEP 02 — TEAM MEMBER DETAILS
@@ -783,6 +1139,20 @@ export default function Registration() {
                           error={errors[`member_${idx}_year`]}
                         />
                       </div>
+
+                      {/* Specify custom branch for teammate if 'Other' is selected */}
+                      {isOtherCourse(memberData.course) && (
+                        <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 animate-fadeIn space-y-1">
+                          <FormInput
+                            label={`Specify Teammate ${idx + 1}'s Course / Branch Name`}
+                            value={memberData.courseOther || ''}
+                            onChange={(e) => handleMemberChange(idx, 'courseOther', e.target.value)}
+                            placeholder="e.g. B.Tech Robotics & Automation / BCA / MCA / BSc IT"
+                            required
+                            error={errors[`member_${idx}_courseOther`]}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -842,25 +1212,25 @@ export default function Registration() {
                   </div>
                   <div>
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ea580c] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 inline-block mb-1">
-                      Official Format
+                      Official Presentation Template
                     </span>
                     <h3 className="text-sm sm:text-base font-extrabold text-[#062b59]">
-                      AiTHON 2.0 Presentation Template (.PPTX)
+                      AITHON 2.0 Official Presentation Format (.PPTX)
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Includes 5 structured slides: Problem, Proposed AI Architecture, Tech Stack, & Demo Plan.
+                      Includes the mandatory slide structure: Problem Statement, Proposed AI Architecture, Tech Stack, & Demo Plan.
                     </p>
                   </div>
                 </div>
 
                 {/* Direct Download Button */}
                 <a
-                  href="/aithon_idea_template.pptx"
-                  download="AiTHON_2.0_Idea_Submission_Template.pptx"
+                  href="/AITHON_2.0_Presentation.pptx"
+                  download="AITHON_2.0_Presentation.pptx"
                   className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm shrink-0 hover:shadow-md cursor-pointer group"
                 >
                   <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-                  <span>Download PPT Format</span>
+                  <span>Download PPT Template</span>
                 </a>
               </div>
 
@@ -885,6 +1255,70 @@ export default function Registration() {
               </div>
             </div>
 
+            {/* Track Selection Section (Select out of 23 Tracks) */}
+            <div className="space-y-3 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <label
+                  htmlFor="selectedTrack"
+                  className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center gap-2"
+                >
+                  <Layers className="w-4 h-4 text-[#2563eb]" />
+                  <span>Select Competition Track (Out of 23 Tracks) <span className="text-[#ea580c] font-bold">*</span></span>
+                </label>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Matches your PPT solution domain
+                </span>
+              </div>
+
+              <div className="relative">
+                <select
+                  id="selectedTrack"
+                  name="selectedTrack"
+                  value={formData.selectedTrack}
+                  onChange={handleChange}
+                  className={`w-full py-3.5 px-4 pr-10 rounded-xl bg-white border text-xs sm:text-sm font-semibold transition-all appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563eb] ${
+                    errors.selectedTrack
+                      ? 'border-rose-300 ring-2 ring-rose-100 text-rose-900'
+                      : formData.selectedTrack
+                      ? 'border-[#2563eb] text-[#062b59] shadow-xs'
+                      : 'border-[#edebe6] text-slate-500 hover:border-slate-300'
+                  }`}
+                >
+                  <option value="" disabled>
+                    — Choose your Hackathon Track (Select 1 of 23 Tracks) —
+                  </option>
+                  {TRACK_OPTIONS.map((track, idx) => (
+                    <option key={idx} value={track} className="text-[#062b59] font-medium py-1">
+                      {track}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                  <ArrowRight className="w-4 h-4 rotate-90" />
+                </div>
+              </div>
+
+              {errors.selectedTrack && (
+                <p className="text-xs font-semibold text-rose-600 flex items-center gap-1 mt-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.selectedTrack}</span>
+                </p>
+              )}
+
+              {formData.selectedTrack && (
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-blue-50/70 border border-blue-200/70 text-xs text-[#062b59]">
+                  <CheckCircle2 className="w-4 h-4 text-[#2563eb] shrink-0" />
+                  <div className="flex-1">
+                    <span className="font-bold">Chosen Track: </span>
+                    <span className="font-extrabold text-[#2563eb]">{formData.selectedTrack}</span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded border border-blue-200 text-slate-600">
+                    Track Selected
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Drag & Drop Upload Section */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between">
@@ -901,7 +1335,18 @@ export default function Registration() {
                 className="hidden"
               />
 
-              {!formData.pptFileName ? (
+              {isReadingPpt ? (
+                /* Loading State while reading file */
+                <div className="border-2 border-dashed border-[#2563eb] rounded-2xl p-8 sm:p-10 text-center bg-blue-50/50 flex flex-col items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-[#edebe6] flex items-center justify-center text-[#2563eb] shadow-xs">
+                    <span className="w-6 h-6 border-2 border-[#2563eb] border-t-transparent rounded-full animate-spin" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-[#062b59]">Processing presentation file...</p>
+                    <p className="text-xs text-slate-500">Preparing presentation for automatic Google Drive sync</p>
+                  </div>
+                </div>
+              ) : !formData.pptFileName ? (
                 /* Empty Upload Zone */
                 <div
                   onDragOver={handleDragOver}
@@ -938,16 +1383,16 @@ export default function Registration() {
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-[#062b59] truncate block">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-extrabold text-[#062b59] truncate max-w-xs block">
                           ✓ {formData.pptFileName}
                         </span>
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded uppercase shrink-0">
-                          Uploaded
+                          Ready for Drive
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        {formData.pptFileSize} • Ready for evaluation
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">
+                        {formData.pptFileSize} • Saved to Drive folder as <strong>{teamId ? `${teamId}.pptx` : 'TEAM-[ID].pptx'}</strong>
                       </p>
                     </div>
                   </div>
@@ -1053,7 +1498,9 @@ export default function Registration() {
                     </div>
                     <div>
                       <span className="text-slate-400 block font-semibold text-[11px] uppercase">College & Course</span>
-                      <span className="text-slate-700 font-medium">{formData.leadCollege} ({formData.leadCourse} • {formData.leadYear})</span>
+                      <span className="text-slate-700 font-medium">
+                        {formData.leadCollege} ({isOtherCourse(formData.leadCourse) && formData.leadCourseOther?.trim() ? formData.leadCourseOther.trim() : formData.leadCourse} • {formData.leadYear})
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1092,14 +1539,14 @@ export default function Registration() {
                           <span className="text-slate-400">• {m.email}</span>
                         </div>
                         <span className="text-slate-500 text-[11px] font-medium sm:text-right">
-                          {m.college} ({m.course} • {m.year})
+                          {m.college} ({isOtherCourse(m.course) && m.courseOther?.trim() ? m.courseOther.trim() : m.course} • {m.year})
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Summary Card 3: Uploaded PPT */}
+                {/* Summary Card 3: Uploaded PPT & Selected Track */}
                 <div className="p-4 sm:p-5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-3">
                   <div className="flex items-center justify-between pb-2.5 border-b border-emerald-200/60">
                     <div className="flex items-center gap-2">
@@ -1107,7 +1554,7 @@ export default function Registration() {
                         3
                       </span>
                       <h3 className="text-xs sm:text-sm font-bold text-[#062b59] uppercase">
-                        Idea Presentation Submission
+                        Idea Presentation & Track
                       </h3>
                     </div>
                     <button
@@ -1115,19 +1562,41 @@ export default function Registration() {
                       onClick={() => setCurrentStep(3)}
                       className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
                     >
-                      Edit File
+                      Edit Submission
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs">
-                      <FileText className="w-4 h-4 text-emerald-700 shrink-0" />
-                      <span className="font-bold text-[#062b59]">{formData.pptFileName || 'Uploaded PPT'}</span>
-                      <span className="text-slate-400">({formData.pptFileSize})</span>
+                  <div className="space-y-2.5">
+                    {/* Chosen Competition Track */}
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-emerald-200/80 text-xs">
+                      <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-slate-400 font-semibold text-[11px] block uppercase">Competition Track</span>
+                        <span className="font-extrabold text-[#062b59] truncate block">
+                          {formData.selectedTrack || 'No Track Selected'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase shrink-0">
+                        Track Verified
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase">
-                      Ready for Evaluation
-                    </span>
+
+                    {/* Uploaded PPT File Details */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                      <div className="flex items-center gap-2 text-xs">
+                        <FileText className="w-4 h-4 text-emerald-700 shrink-0" />
+                        <span className="font-bold text-[#062b59]">{formData.pptFileName || 'Uploaded PPT'}</span>
+                        <span className="text-slate-400">({formData.pptFileSize})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-emerald-200">
+                          Drive Name: {teamId ? `${teamId}.pptx` : 'TEAM-[ID].pptx'}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase">
+                          Ready
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1182,9 +1651,9 @@ export default function Registration() {
 
             {/* SUB-VIEW 2: PAYMENT SECTION */}
             {step4View === 'payment' && (
-              <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6">
-                {/* Header */}
-                <div className="pb-4 border-b border-[#edebe6] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="bg-white border border-[#edebe6] rounded-2xl p-6 sm:p-8 shadow-xs space-y-6 max-w-xl mx-auto">
+                {/* Clean Header */}
+                <div className="pb-4 border-b border-[#edebe6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ea580c] bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200 inline-block mb-1.5">
                       STEP 04 OF 04 • EVALUATION FEE
@@ -1193,144 +1662,130 @@ export default function Registration() {
                       First PPT Evaluation Fee
                     </h2>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold self-start sm:self-auto">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Official AiTHON Evaluation Fee</span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold self-start sm:self-auto">
+                    <span>Team Fee:</span>
+                    <span className="text-base font-black text-emerald-600">₹50</span>
+                    <span className="text-[11px] text-emerald-700 font-medium">({formData.teamName || 'Team'})</span>
                   </div>
                 </div>
 
-                {/* Prominent ₹50 / Team Callout Box */}
-                <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#062b59] via-[#0f3c75] to-[#062b59] text-white shadow-md relative overflow-hidden">
-                  <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pr-6 pointer-events-none">
-                    <CreditCard className="w-32 h-32 text-white" />
-                  </div>
-
-                  <div className="relative z-10 space-y-2">
-                    <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-orange-400 bg-orange-950/60 px-2.5 py-0.5 rounded border border-orange-500/30 inline-block">
-                      ONE-TIME TEAM FEE
-                    </span>
-
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-                        ₹50
+                {/* Clean Single-Column Payment & Auto-Detection Card */}
+                <div className="space-y-5">
+                  {/* Instant Razorpay Popup Checkout Button */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-blue-900 flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-blue-600" />
+                        <span>Instant Razorpay Payment (Auto-Detection)</span>
                       </span>
-                      <span className="text-sm sm:text-base text-blue-200 font-bold uppercase tracking-wider">
-                        / Team
+                      <span className="text-[10px] font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        Auto-Verify
                       </span>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-blue-100 font-medium max-w-lg leading-relaxed">
-                      <strong>Important:</strong> The amount is ₹50 per team (covers evaluation for all <strong>{formData.teamSize} members</strong> of {formData.teamName}, NOT per member).
-                    </p>
-                  </div>
-                </div>
+                    <button
+                      type="button"
+                      onClick={handleRazorpayPopupPay}
+                      disabled={isOpeningRazorpay || isSubmitting}
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-[#062b59] hover:bg-[#1d4ed8] text-white font-extrabold text-sm uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer disabled:opacity-60"
+                    >
+                      {isOpeningRazorpay ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Opening Razorpay Checkout...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Pay ₹50 with Razorpay Popup</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
 
-                {/* Themed UPI & QR Payment Options */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                  {/* Left Column: Official QR Code */}
-                  <div className="p-5 rounded-xl bg-[#faf9f6] border border-[#edebe6] flex flex-col items-center text-center space-y-3">
-                    <span className="text-[11px] font-bold text-[#062b59] uppercase tracking-wider">
-                      Scan with any UPI App
-                    </span>
-
-                    {/* Styled Mock/Official QR Code Container */}
-                    <div className="w-48 h-48 bg-white p-3 rounded-xl border border-[#edebe6] shadow-2xs flex flex-col items-center justify-center relative group">
-                      {/* SVG Stylized QR Code for ai.veer2k26@okaxis */}
-                      <svg
-                        className="w-full h-full text-[#062b59]"
-                        viewBox="0 0 100 100"
-                        fill="currentColor"
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1">
+                      <p className="text-[11px] text-blue-700 font-medium">
+                        Opens secure checkout popup. Payment ID is auto-detected and confirmed instantly!
+                      </p>
+                      <a
+                        href={RAZORPAY_PAYMENT_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-900 hover:text-blue-700 underline underline-offset-2 shrink-0"
                       >
-                        {/* QR Corners */}
-                        <path d="M5 5h30v30H5V5zm5 5v20h20V10H10zm5 5h10v10H15V15zM65 5h30v30H65V5zm5 5v20h20V10H70zm5 5h10v10H75V15zM5 65h30v30H5V65zm5 5v20h20V70H10zm5 5h10v10H15V75z" />
-                        {/* QR Data Pattern Simulation */}
-                        <rect x="42" y="10" width="6" height="6" />
-                        <rect x="52" y="10" width="6" height="6" />
-                        <rect x="42" y="22" width="6" height="6" />
-                        <rect x="48" y="30" width="8" height="8" />
-                        <rect x="12" y="42" width="6" height="6" />
-                        <rect x="24" y="48" width="6" height="6" />
-                        <rect x="36" y="42" width="6" height="6" />
-                        <rect x="46" y="46" width="8" height="8" fill="#2563eb" />
-                        <rect x="58" y="42" width="6" height="6" />
-                        <rect x="70" y="48" width="6" height="6" />
-                        <rect x="82" y="42" width="6" height="6" />
-                        <rect x="42" y="65" width="6" height="6" />
-                        <rect x="52" y="72" width="6" height="6" />
-                        <rect x="62" y="65" width="6" height="6" />
-                        <rect x="72" y="72" width="6" height="6" />
-                        <rect x="85" y="65" width="6" height="6" />
-                        <rect x="42" y="85" width="6" height="6" />
-                        <rect x="52" y="85" width="6" height="6" />
-                        <rect x="62" y="85" width="6" height="6" />
-                        <rect x="75" y="85" width="6" height="6" />
-                        <rect x="85" y="85" width="6" height="6" />
-                      </svg>
-
-                      {/* Small Center Brand Emblem */}
-                      <div className="absolute inset-0 m-auto w-9 h-9 rounded-md bg-[#062b59] text-white flex items-center justify-center font-black text-[9px] shadow-sm border border-white">
-                        ₹50
-                      </div>
+                        <span>Direct Link</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
-
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      GPay • PhonePe • Paytm • BHIM
-                    </span>
                   </div>
 
-                  {/* Right Column: Copyable UPI ID & UTR verification */}
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-xl bg-[#faf9f6] border border-[#edebe6] space-y-2">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Official Evaluation UPI ID:
-                      </span>
-                      <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white border border-[#edebe6]">
-                        <code className="text-xs sm:text-sm font-bold text-[#062b59] font-mono">
-                          ai.veer2k26@okaxis
-                        </code>
-                        <button
-                          type="button"
-                          onClick={handleCopyUpi}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-bold text-[#2563eb] hover:bg-blue-50 transition-colors cursor-pointer"
-                        >
-                          {copiedUpi ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="text-emerald-600">Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+                  {/* Auto-Captured Success Notification */}
+                  {autoPaidId && (
+                    <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Payment Verified: <strong className="font-mono">{autoPaidId}</strong> • Submitting registration automatically...</span>
                     </div>
+                  )}
 
-                    {/* Transaction Reference / UTR Input */}
+                  <div className="relative flex py-1 items-center">
+                    <div className="flex-grow border-t border-slate-200"></div>
+                    <span className="flex-shrink mx-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                      OR ENTER PAYMENT REFERENCE MANUALLY
+                    </span>
+                    <div className="flex-grow border-t border-slate-200"></div>
+                  </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between">
-                        <span>Transaction Reference / UTR <span className="text-slate-400 font-normal normal-case">(Optional)</span></span>
+                        <span>
+                          Transaction Reference / UTR ID <span className="text-red-600 font-bold">*</span>
+                        </span>
+                        {formData.paymentUtr && formData.paymentUtr.trim().length >= 6 && (
+                          <span className="text-[11px] font-bold text-emerald-600 normal-case flex items-center gap-0.5">
+                            ✓ Entered
+                          </span>
+                        )}
                       </label>
                       <input
                         type="text"
                         name="paymentUtr"
                         value={formData.paymentUtr}
-                        onChange={handleChange}
-                        placeholder="e.g. 12-digit UTR from payment screen"
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#edebe6] text-sm font-sans focus:outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20"
+                        onChange={(e) => {
+                          handleChange(e)
+                          if (utrError) setUtrError('')
+                        }}
+                        placeholder="e.g. 12-digit UTR from GPay / PhonePe / Paytm / Razorpay"
+                        className={`w-full px-4 py-2.5 rounded-lg bg-white border text-sm font-sans focus:outline-none transition-all ${
+                          utrError
+                            ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20'
+                            : 'border-[#edebe6] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
+                        }`}
                       />
+                      {utrError && (
+                        <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{utrError}</span>
+                        </p>
+                      )}
                       <span className="text-[11px] text-slate-500 block">
-                        Keep your payment confirmation screenshot handy for reporting.
+                        Enter the 12-digit UPI UTR number or Razorpay Payment ID from your receipt.
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-[11px] text-emerald-900 font-medium">
-                      ✓ Instant verification: Clicking confirm will register your team and mark the ₹50 evaluation fee as submitted.
-                    </div>
+                    {/* Payment Confirmation Checkbox */}
+                    <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none hover:bg-blue-50/40 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={paymentConfirmed}
+                        onChange={(e) => {
+                          setPaymentConfirmed(e.target.checked)
+                          if (utrError) setUtrError('')
+                        }}
+                        className="mt-0.5 w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer"
+                      />
+                      <span className="text-xs text-slate-700 font-medium leading-relaxed">
+                        I confirm that our team has completed the <strong className="text-[#062b59]">₹50 evaluation fee</strong>.
+                      </span>
+                    </label>
                   </div>
-                </div>
 
                 {/* Action Buttons */}
                 <div className="pt-4 border-t border-[#edebe6] flex items-center justify-between gap-4">
@@ -1350,16 +1805,16 @@ export default function Registration() {
                     type="button"
                     disabled={isSubmitting}
                     onClick={handleFinalSubmit}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#062b59] to-[#1d4ed8] hover:from-[#1d4ed8] hover:to-[#2563eb] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
+                    className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-[#062b59] hover:bg-[#1d4ed8] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
                     {isSubmitting ? (
                       <>
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Submitting Registration...</span>
+                        <span>Verifying & Submitting...</span>
                       </>
                     ) : (
                       <>
-                        <span>Confirm ₹50 Payment & Complete</span>
+                        <span>Verify ₹50 & Complete Registration</span>
                         <CheckCircle2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                       </>
                     )}
@@ -1410,11 +1865,19 @@ export default function Registration() {
                 </div>
               </div>
 
+              <div className="pb-3 border-b border-[#edebe6] text-xs">
+                <span className="text-slate-400 block font-bold text-[11px] uppercase">Competition Track</span>
+                <span className="text-sm font-extrabold text-[#062b59] flex items-center gap-1.5 mt-0.5">
+                  <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
+                  <span>{formData.selectedTrack || 'Track Selected'}</span>
+                </span>
+              </div>
+
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-slate-400 block font-bold text-[11px] uppercase">PPT Submission</span>
-                  <span className="font-bold text-emerald-700 flex items-center gap-1 text-xs sm:text-sm">
-                    <span>✓</span> Received ({formData.pptFileName || 'PPTX'})
+                  <span className="font-bold text-emerald-700 flex items-center gap-1 text-xs sm:text-sm truncate">
+                    <span>✓</span> {formData.pptFileName || (teamId ? `${teamId}.pptx` : 'Uploaded')}
                   </span>
                 </div>
                 <div>
@@ -1452,7 +1915,7 @@ export default function Registration() {
                 Evaluation results, slot allotment, and jury round schedules will be posted here.
               </p>
               <a
-                href="https://chat.whatsapp.com/sample-aithon-group"
+                href="https://chat.whatsapp.com/HRvMvxxB2NUIvw5zMiTsQ9"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs uppercase tracking-wider transition-all mt-1 cursor-pointer"
@@ -1478,6 +1941,129 @@ export default function Registration() {
               >
                 Back to Homepage
               </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================
+            PAYMENT ALERT & PROBLEM POPUP MODAL
+            ================================================== */}
+        {paymentModal && paymentModal.isOpen && (
+          <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-[#edebe6] space-y-5 relative animate-scaleIn">
+              {/* Close Icon */}
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentModal(null)
+                  setReportSentMessage('')
+                }}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Modal Header */}
+              <div className="flex items-start gap-4">
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                    paymentModal.type === 'rejected' || paymentModal.type === 'problem'
+                      ? 'bg-rose-100 text-rose-600 border border-rose-200'
+                      : 'bg-amber-100 text-amber-600 border border-amber-200'
+                  }`}
+                >
+                  {paymentModal.type === 'rejected' || paymentModal.type === 'problem' ? (
+                    <XCircle className="w-6 h-6 stroke-[2.2]" />
+                  ) : (
+                    <AlertTriangle className="w-6 h-6 stroke-[2.2]" />
+                  )}
+                </div>
+                <div className="space-y-1 pr-6">
+                  <h3 className="text-lg font-black text-[#062b59] tracking-tight">
+                    {paymentModal.title || 'Payment Verification Required'}
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {paymentModal.message}
+                  </p>
+                </div>
+              </div>
+
+              {/* Report Sent Status Banner if triggered */}
+              {reportSentMessage && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{reportSentMessage}</span>
+                </div>
+              )}
+
+              {/* Troubleshooting / Assistance Options */}
+              {paymentModal.type === 'problem' && !reportSentMessage && (
+                <div className="space-y-2 p-3.5 rounded-xl bg-[#faf9f6] border border-[#edebe6] text-xs">
+                  <span className="font-bold text-[#062b59] block uppercase tracking-wider text-[10.5px]">
+                    Select What Happened:
+                  </span>
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      disabled={isSendingReport}
+                      onClick={() => handleReportPaymentProblem('Cancelled by User / Closed Window')}
+                      className="w-full text-left px-3 py-2 rounded-lg bg-white hover:bg-rose-50 border border-[#edebe6] hover:border-rose-300 text-slate-700 hover:text-rose-700 font-medium transition-colors cursor-pointer flex items-center justify-between"
+                    >
+                      <span>1. I cancelled / closed the payment tab by accident</span>
+                      <span className="text-[10px] text-slate-400 font-mono">Notify & Help</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSendingReport}
+                      onClick={() => handleReportPaymentProblem('Bank / UPI App Declined')}
+                      className="w-full text-left px-3 py-2 rounded-lg bg-white hover:bg-rose-50 border border-[#edebe6] hover:border-rose-300 text-slate-700 hover:text-rose-700 font-medium transition-colors cursor-pointer flex items-center justify-between"
+                    >
+                      <span>2. My bank / UPI app transaction declined</span>
+                      <span className="text-[10px] text-slate-400 font-mono">Notify & Help</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSendingReport}
+                      onClick={() => handleReportPaymentProblem('Money Debited but UTR not received')}
+                      className="w-full text-left px-3 py-2 rounded-lg bg-white hover:bg-amber-50 border border-[#edebe6] hover:border-amber-300 text-slate-700 hover:text-amber-800 font-medium transition-colors cursor-pointer flex items-center justify-between"
+                    >
+                      <span>3. Money debited from my account but no UTR shown</span>
+                      <span className="text-[10px] text-slate-400 font-mono">Notify & Help</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Policy Reminder */}
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
+                ⚠️ <strong>Committee Policy:</strong> Without actual confirmed payment of ₹50, the application cannot be sent for jury evaluation, and official registration confirmation will not be issued.
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentModal(null)
+                    setReportSentMessage('')
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  I'll Enter UTR
+                </button>
+
+                <a
+                  href={RAZORPAY_PAYMENT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setPaymentModal(null)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#062b59] to-[#2563eb] hover:from-[#1d4ed8] hover:to-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm hover:shadow cursor-pointer"
+                >
+                  <span>Pay ₹50 on Razorpay &rarr;</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
           </div>
         )}
