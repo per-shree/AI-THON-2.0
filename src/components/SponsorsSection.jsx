@@ -3,19 +3,10 @@ import { ExternalLink, Handshake } from 'lucide-react'
 export default function SponsorsSection() {
   const sponsors = [
     {
-      name: 'SCOPE',
-      logo: '/scope_logo.png',
-      url: 'https://sumagoinfotech.com/',
-      tier: 'TITLE SPONSOR',
-      desc: 'Sumago Center Of Practical Excellence',
-      isActive: true,
-      isLargeLogo: true
-    },
-    {
       name: 'Sumago Infotech Pvt. Ltd.',
       logo: '/sumago_logo.png',
       url: 'https://sumagoinfotech.com/',
-      tier: 'POWERED BY',
+      tier: 'ASSOCIATE SPONSOR',
       desc: 'Official Technology Partner',
       isActive: true,
       isLargeLogo: true,

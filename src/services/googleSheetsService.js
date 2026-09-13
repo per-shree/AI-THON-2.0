@@ -38,13 +38,15 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     hour12: true,
   })
 
-  const rawSize = parseInt(formData.teamSize || '3', 10)
-  const teamSizeNum = Math.min(4, Math.max(1, isNaN(rawSize) ? 3 : rawSize))
+  const rawSize = parseInt(formData.teamSize || '4', 10)
+  const teamSizeNum = Math.min(6, Math.max(4, isNaN(rawSize) ? 4 : rawSize))
   const members = formData.members || []
 
   const member2 = teamSizeNum >= 2 ? members[0] || {} : {}
   const member3 = teamSizeNum >= 3 ? members[1] || {} : {}
   const member4 = teamSizeNum >= 4 ? members[2] || {} : {}
+  const member5 = teamSizeNum >= 5 ? members[3] || {} : {}
+  const member6 = teamSizeNum >= 6 ? members[4] || {} : {}
 
   return {
     // Unique Identifiers
@@ -79,6 +81,16 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     member4Name: member4.fullName || '',
     member4Email: member4.email || '',
     member4College: member4.college || '',
+
+    // Teammate 4 (Member 5)
+    member5Name: member5.fullName || '',
+    member5Email: member5.email || '',
+    member5College: member5.college || '',
+
+    // Teammate 5 (Member 6)
+    member6Name: member6.fullName || '',
+    member6Email: member6.email || '',
+    member6College: member6.college || '',
 
     // Socials & Skills
     github: formData.github || '',

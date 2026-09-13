@@ -14,7 +14,7 @@ export default function RegistrationInfo() {
     },
     {
       label: 'Team Size',
-      value: '2–4 Members',
+      value: '4–6 Members',
       icon: UsersIcon,
     },
     {

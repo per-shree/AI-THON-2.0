@@ -242,7 +242,7 @@ export default function ContactSection() {
                     <Users className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-[#062b59]">2 to 4 Members / Team</span>
+                    <span className="font-bold text-[#062b59]">4 to 6 Members / Team</span>
                     <span className="text-slate-500 block text-xs">Undergraduate & Diploma Engineers</span>
                   </div>
                 </div>

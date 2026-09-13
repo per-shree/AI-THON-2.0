@@ -6,7 +6,7 @@ export default function GuidelinesSection() {
     },
     {
       title: 'TEAM FORMATION',
-      content: 'Teams must consist of 2 to 4 members. Interdisciplinary teams from different departments are encouraged.',
+      content: 'Teams must consist of 4 to 6 members. Interdisciplinary teams from different departments are encouraged.',
     },
     {
       title: 'REGISTRATION',

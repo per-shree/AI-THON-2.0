@@ -43,27 +43,8 @@ export default function HeroSection() {
             />
           </div>
 
-          {/* Powered by Sumago Infotech Pvt. Ltd. - Reduced Size Badge */}
-          <div className="mt-2 sm:mt-2.5 md:mt-3 mb-3.5 sm:mb-4 md:mb-5 flex justify-center w-full">
-            <a
-              href="https://sumagoinfotech.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group/powered inline-flex items-center gap-1.5 sm:gap-2 px-2.5 xs:px-3 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-white/95 hover:bg-white border border-[#edebe6] hover:border-blue-400 shadow-2xs hover:shadow-xs transition-all duration-200"
-            >
-              <span className="text-[8px] xs:text-[8.5px] sm:text-[9.5px] md:text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover/powered:text-blue-600 transition-colors">
-                Powered by
-              </span>
-              <img
-                src="/sumago_logo.png"
-                alt="Sumago Infotech Pvt. Ltd."
-                className="h-3.5 xs:h-4 sm:h-[18px] md:h-5 w-auto object-contain group-hover/powered:scale-[1.02] transition-transform duration-200"
-              />
-            </a>
-          </div>
-          
-          {/* Tagline - Prominent vertical spacing separating clearly from Powered By badge */}
-          <p className="mt-4 sm:mt-5 md:mt-6 text-[13px] xs:text-[15px] sm:text-base md:text-lg lg:text-xl xl:text-2xl font-black text-[#ea580c] tracking-wide sm:tracking-normal uppercase leading-tight break-words">
+          {/* Tagline - Bold theme message */}
+          <p className="mt-3 sm:mt-4 md:mt-5 text-[13px] xs:text-[15px] sm:text-base md:text-lg lg:text-xl xl:text-2xl font-black text-[#ea580c] tracking-wide sm:tracking-normal uppercase leading-tight break-words">
             BUILD. INNOVATE. TRANSFORM.
           </p>
         </div>

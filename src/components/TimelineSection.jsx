@@ -1,7 +1,7 @@
 export default function TimelineSection() {
   const steps = [
     { num: '01', title: 'REGISTRATION', desc: 'Online portal opens for team applications' },
-    { num: '02', title: 'TEAM FORMATION', desc: 'Assemble 2–4 members & select track preference' },
+    { num: '02', title: 'TEAM FORMATION', desc: 'Assemble 4–6 members & select track preference' },
     { num: '03', title: 'CHALLENGE REVEAL', desc: 'Detailed problem statements & track datasets released' },
     { num: '04', title: 'HACKATHON BEGINS', desc: '12-hour continuous development at AVCOE' },
     { num: '05', title: 'DEVELOPMENT', desc: 'Rapid prototyping, model training & software build' },

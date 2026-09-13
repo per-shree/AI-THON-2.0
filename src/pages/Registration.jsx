@@ -104,8 +104,10 @@ export default function Registration() {
 
     // Step 2: Team Details
     teamName: '',
-    teamSize: '3', // default 3 members (Lead + 2 members)
+    teamSize: '4', // default 4 members (Lead + 3 members)
     members: [
+      { fullName: '', email: '', college: '' },
+      { fullName: '', email: '', college: '' },
       { fullName: '', email: '', college: '' },
       { fullName: '', email: '', college: '' },
       { fullName: '', email: '', college: '' },
@@ -143,10 +145,10 @@ export default function Registration() {
     }
   }
 
-  // Handle Team Size change (Max 4 members)
+  // Handle Team Size change (Min 4, Max 6 members)
   const handleTeamSizeChange = (sizeStr) => {
     const parsed = parseInt(sizeStr, 10)
-    const clamped = Math.min(4, Math.max(1, isNaN(parsed) ? 3 : parsed))
+    const clamped = Math.min(6, Math.max(4, isNaN(parsed) ? 4 : parsed))
     setFormData((prev) => ({
       ...prev,
       teamSize: clamped.toString(),
@@ -234,7 +236,7 @@ export default function Registration() {
       errs.teamName = 'Team name must be at least 3 characters'
     }
 
-    const teamSizeNum = parseInt(formData.teamSize, 10) || 3
+    const teamSizeNum = parseInt(formData.teamSize, 10) || 4
     const membersNeeded = teamSizeNum - 1
 
     for (let i = 0; i < membersNeeded; i++) {
@@ -367,8 +369,10 @@ export default function Registration() {
       leadYear: '',
       leadCity: '',
       teamName: '',
-      teamSize: '3',
+      teamSize: '4',
       members: [
+        { fullName: '', email: '', college: '' },
+        { fullName: '', email: '', college: '' },
         { fullName: '', email: '', college: '' },
         { fullName: '', email: '', college: '' },
         { fullName: '', email: '', college: '' },
@@ -389,8 +393,8 @@ export default function Registration() {
     setCurrentStep(1)
   }
 
-  const teamSizeNum = Math.min(4, Math.max(1, parseInt(formData.teamSize, 10) || 3))
-  const additionalMembersCount = Math.min(3, Math.max(0, teamSizeNum - 1))
+  const teamSizeNum = Math.min(6, Math.max(4, parseInt(formData.teamSize, 10) || 4))
+  const additionalMembersCount = Math.min(5, Math.max(3, teamSizeNum - 1))
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
@@ -730,13 +734,13 @@ export default function Registration() {
                           />
                         </div>
 
-                        {/* Team Size Selector (2, 3, 4) */}
+                        {/* Team Size Selector (4, 5, 6) */}
                         <div className="flex flex-col space-y-1.5">
                           <label className="text-xs font-bold uppercase tracking-wider text-[#062b59]">
                             Team Size <span className="text-[#ea580c] font-bold">*</span>
                           </label>
                           <div className="grid grid-cols-3 gap-2.5">
-                            {['2', '3', '4'].map((size) => {
+                            {['4', '5', '6'].map((size) => {
                               const isSelected = formData.teamSize === size
                               return (
                                 <button

@@ -2,17 +2,10 @@ import { ExternalLink } from 'lucide-react'
 
 const sponsorsList = [
   {
-    name: 'SCOPE',
-    logo: '/scope_logo.png',
-    url: 'https://sumagoinfotech.com/',
-    role: 'TITLE SPONSOR',
-    desc: 'Sumago Center Of Practical Excellence — Igniting Minds, Enhancing Skills through practical technical training.',
-  },
-  {
     name: 'Sumago Infotech Pvt. Ltd.',
     logo: '/sumago_logo.png',
     url: 'https://sumagoinfotech.com/',
-    role: 'POWERED BY',
+    role: 'ASSOCIATE SPONSOR',
     desc: 'Premier software development and IT consulting company driving technological innovation for AITHON 2.0.',
   },
   {

@@ -11,7 +11,7 @@ export default function FaqSection() {
     },
     {
       q: 'What is the team size?',
-      a: 'Teams must consist of 2 to 4 members. Interdisciplinary teams are encouraged.',
+      a: 'Teams must consist of 4 to 6 members. Interdisciplinary teams are encouraged.',
     },
     {
       q: 'Is AITHON open for everyone?',

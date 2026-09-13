@@ -257,7 +257,7 @@ export function AdminProvider({ children }) {
     }
 
     const membersList = (registrationData.members || [])
-      .slice(0, Math.max(0, parseInt(registrationData.teamSize || '3') - 1))
+      .slice(0, Math.max(0, parseInt(registrationData.teamSize || '4') - 1))
       .map((m, idx) => ({
         name: m.fullName || `Member ${idx + 2}`,
         email: m.email || '',
@@ -271,7 +271,7 @@ export function AdminProvider({ children }) {
       track: registrationData.skills?.[0] || 'Artificial Intelligence',
       status: 'pending',
       college: registrationData.leadCollege,
-      membersCount: parseInt(registrationData.teamSize || '3'),
+      membersCount: parseInt(registrationData.teamSize || '4'),
       lead: {
         name: registrationData.leadFullName,
         email: registrationData.leadEmail,
@@ -290,7 +290,7 @@ export function AdminProvider({ children }) {
     setStats((prev) => ({
       ...prev,
       totalTeams: { ...prev.totalTeams, value: prev.totalTeams.value + 1 },
-      totalParticipants: { ...prev.totalParticipants, value: prev.totalParticipants.value + parseInt(registrationData.teamSize || '3') },
+      totalParticipants: { ...prev.totalParticipants, value: prev.totalParticipants.value + parseInt(registrationData.teamSize || '4') },
       pendingReview: { ...prev.pendingReview, value: prev.pendingReview.value + 1 },
     }))
     setNotifications((prev) => [
