@@ -383,6 +383,11 @@ function doGet(e) {
     var ss = getTargetSpreadsheet();
     var sheet = ss ? ss.getSheetByName("Registrations") : null;
 
+    // ⚡ 1. Direct GET-based Round 2 payment submission (High-reliability fallback)
+    if (e && e.parameter && e.parameter.action === "confirmRound2Payment") {
+      return handleDirectRound2Confirmation(e.parameter, sheet);
+    }
+
     // Check if client is looking up team details for the Grand Finale Payment Portal
     if (e && e.parameter && (e.parameter.action === "getTeamDetails" || e.parameter.teamId || e.parameter.email)) {
       var queryTeamId = String(e.parameter.teamId || e.parameter.id || "").trim().toUpperCase();
@@ -1845,9 +1850,23 @@ function handleRazorpayWebhook(data, sheet) {
  */
 function handleDirectRound2Confirmation(data, sheet) {
   try {
-    var targetTeamId = String(data.teamId || "").trim().toUpperCase();
-    var targetEmail = String(data.leadEmail || "").trim().toLowerCase();
-    var utr = String(data.paymentUtr || data.paymentId || "").trim();
+    if (!sheet) {
+      var ss = getTargetSpreadsheet();
+      sheet = ss ? ss.getSheetByName("Registrations") : null;
+    }
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Registrations sheet not found" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Ensure sheet has at least 49 columns
+    if (sheet.getMaxColumns() < 49) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), 49 - sheet.getMaxColumns());
+    }
+
+    var targetTeamId = String(data.teamId || data.id || "").trim().toUpperCase();
+    var targetEmail = String(data.leadEmail || data.email || "").trim().toLowerCase();
+    var utr = String(data.paymentUtr || data.paymentId || data.utr || "").trim();
+    var cleanTarget = targetTeamId.replace(/[^A-Z0-9]/gi, "");
 
     var lastRow = sheet.getLastRow();
     if (lastRow <= 1) {
@@ -1857,15 +1876,38 @@ function handleDirectRound2Confirmation(data, sheet) {
     var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
     var matchRow = -1;
 
-    for (var i = 0; i < values.length; i++) {
-      var row = values[i];
-      var rTeamId = String(row[1] || "").trim().toUpperCase();
-      var rRegId = String(row[2] || "").trim().toUpperCase();
-      var rEmail = String(row[6] || "").trim().toLowerCase();
+    // PASS 1: Strictly match by Team ID or Registration ID first
+    if (targetTeamId || cleanTarget) {
+      for (var i = 0; i < values.length; i++) {
+        var row = values[i];
+        var rTeamId = String(row[1] || "").trim().toUpperCase();
+        var rRegId = String(row[2] || "").trim().toUpperCase();
+        var cleanRTeam = rTeamId.replace(/[^A-Z0-9]/gi, "");
+        var cleanRReg = rRegId.replace(/[^A-Z0-9]/gi, "");
 
-      if ((targetTeamId && (rTeamId === targetTeamId || rRegId === targetTeamId)) || (targetEmail && rEmail === targetEmail)) {
-        matchRow = i + 2;
-        break;
+        if (rTeamId === targetTeamId || rRegId === targetTeamId) {
+          matchRow = i + 2;
+          break;
+        }
+        if (cleanTarget && (cleanRTeam === cleanTarget || cleanRReg === cleanTarget)) {
+          matchRow = i + 2;
+          break;
+        }
+        if (cleanTarget.length >= 3 && (cleanRTeam.indexOf(cleanTarget) !== -1 || cleanRReg.indexOf(cleanTarget) !== -1)) {
+          matchRow = i + 2;
+          break;
+        }
+      }
+    }
+
+    // PASS 2: Fallback to Leader Email ONLY if Team ID was not provided or not matched
+    if (matchRow === -1 && targetEmail) {
+      for (var j = 0; j < values.length; j++) {
+        var rEmail = String(values[j][6] || "").trim().toLowerCase();
+        if (rEmail === targetEmail) {
+          matchRow = j + 2;
+          break;
+        }
       }
     }
 
@@ -1896,6 +1938,9 @@ function handleDirectRound2Confirmation(data, sheet) {
     r2UtrCell.clearDataValidations();
     r2UtrCell.setNumberFormat("@");
     r2UtrCell.setValue(cleanUtr ? ("'" + cleanUtr) : "-");
+
+    // Immediately flush spreadsheet changes to ensure instant persistence
+    SpreadsheetApp.flush();
 
     Logger.log("✓ Recorded Round 2 UTR for " + targetTeamId + " at Row " + matchRow + ": " + cleanUtr + " (Fee: ₹" + rawAmount + ")");
 

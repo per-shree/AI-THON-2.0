@@ -185,24 +185,50 @@ export default function FinalePayment() {
     await syncPaymentToGoogleSheet(cleanUtr)
   }
 
-  // Sync payment immediately to Google Sheet Column 47
+  // Sync payment immediately to Google Sheet Column 48
   const syncPaymentToGoogleSheet = async (paymentId) => {
     try {
       const sheetUrl = getGoogleSheetUrl()
       const payload = {
         action: 'confirmRound2Payment',
         teamId: teamData.teamId,
-        leadEmail: teamData.leadEmail,
         paymentId: paymentId,
         paymentUtr: paymentId,
         amount: lockedFee,
+        ...(!teamData.teamId && teamData.leadEmail ? { leadEmail: teamData.leadEmail } : {}),
       }
 
-      await fetch(sheetUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload),
+      // 1. Primary: POST request with text/plain body
+      try {
+        await fetch(sheetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+        })
+      } catch (postErr) {
+        console.warn('[FinalePayment] Standard POST blocked or redirected, retrying no-cors:', postErr)
+        try {
+          await fetch(sheetUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload),
+          })
+        } catch (noCorsErr) {
+          console.warn('[FinalePayment] no-cors POST attempt error:', noCorsErr)
+        }
+      }
+
+      // 2. High-reliability GET beacon fallback:
+      // Even if POST has CORS redirect limitations in strict mobile browsers, GET directly executes handleDirectRound2Confirmation
+      const queryParams = new URLSearchParams({
+        action: 'confirmRound2Payment',
+        teamId: teamData.teamId,
+        paymentUtr: paymentId,
+        amount: String(lockedFee),
+        ...(!teamData.teamId && teamData.leadEmail ? { leadEmail: teamData.leadEmail } : {}),
       })
+      fetch(`${sheetUrl}?${queryParams.toString()}`, { mode: 'no-cors' }).catch(() => {})
 
       setPaidInfo({
         paymentId: paymentId,
