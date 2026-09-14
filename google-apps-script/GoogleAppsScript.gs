@@ -35,6 +35,9 @@ var UPI_VPA = "9404665180@centralbank";
 // Update this to your deployed domain (e.g. "https://aithon2026.vercel.app") or custom domain
 var WEBSITE_URL = "https://aithon2-0.xyz";
 
+// Official AITHON 2.0 Brand Logo for Email Headers
+var LOGO_IMAGE_URL = "https://aithon2-0.xyz/aithon-hero-logo.png";
+
 /**
  * ROUND 2 / GRAND FINALE FINAL PAYMENT FORM & FEE STRUCTURE:
  * - 4 Members = ₹800 (4 × ₹200)
@@ -1391,14 +1394,21 @@ function sendPptAcceptanceEmail(data) {
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
     '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">' +
+    '    <!-- Brand Logo Header -->' +
+    '    <tr>' +
+    '      <td style="background-color: #ffffff; padding: 26px 20px 20px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">' +
+    '        <a href="' + WEBSITE_URL + '" target="_blank" style="text-decoration: none; display: inline-block;">' +
+    '          <img src="' + LOGO_IMAGE_URL + '" alt="AITHON 2.0 - National Level AI Hackathon" width="280" style="width: 280px; max-width: 85%; height: auto; border: 0; display: block; margin: 0 auto;" />' +
+    '        </a>' +
+    '      </td>' +
+    '    </tr>' +
     '    <!-- Brand Header -->' +
     '    <tr>' +
-    '      <td style="background: linear-gradient(135deg, #062b59 0%, #1e3a8a 100%); padding: 32px 24px; text-align: center; color: #ffffff;">' +
-    '        <div style="display: inline-block; background-color: rgba(34,197,94,0.25); border: 1px solid #4ade80; color: #bbf7d0; padding: 5px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;">' +
+    '      <td style="background: linear-gradient(135deg, #062b59 0%, #1e3a8a 100%); padding: 26px 24px; text-align: center; color: #ffffff;">' +
+    '        <div style="display: inline-block; background-color: rgba(34,197,94,0.25); border: 1px solid #4ade80; color: #bbf7d0; padding: 5px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
     '          PPT Shortlisted • Grand Finale' +
     '        </div>' +
-    '        <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">AITHON 2.0</h1>' +
-    '        <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px; font-weight: 500;">Dept. of Artificial Intelligence & Data Science • AVCOE Sangamner</div>' +
+    '        <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 4px; font-weight: 500;">Dept. of Artificial Intelligence &amp; Data Science • AVCOE Sangamner</div>' +
     '      </td>' +
     '    </tr>' +
     '    <!-- Main Content -->' +
@@ -1574,14 +1584,21 @@ function sendPptRejectionEmail(data) {
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
     '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.07); border: 1px solid #e2e8f0;">' +
+    '    <!-- Brand Logo Header -->' +
+    '    <tr>' +
+    '      <td style="background-color: #ffffff; padding: 26px 20px 20px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">' +
+    '        <a href="' + WEBSITE_URL + '" target="_blank" style="text-decoration: none; display: inline-block;">' +
+    '          <img src="' + LOGO_IMAGE_URL + '" alt="AITHON 2.0 - National Level AI Hackathon" width="280" style="width: 280px; max-width: 85%; height: auto; border: 0; display: block; margin: 0 auto;" />' +
+    '        </a>' +
+    '      </td>' +
+    '    </tr>' +
     '    <!-- Brand Header -->' +
     '    <tr>' +
-    '      <td style="background-color: #062b59; padding: 32px 24px; text-align: center; color: #ffffff;">' +
+    '      <td style="background-color: #062b59; padding: 26px 24px; text-align: center; color: #ffffff;">' +
     '        <div style="display: inline-block; background-color: rgba(148,163,184,0.2); border: 1px solid #94a3b8; color: #cbd5e1; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
     '          National Level AI Hackathon' +
     '        </div>' +
-    '        <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">AITHON 2.0</h1>' +
-    '        <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px; font-weight: 500;">Dept. of Artificial Intelligence & Data Science • AVCOE Sangamner</div>' +
+    '        <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 4px; font-weight: 500;">Dept. of Artificial Intelligence &amp; Data Science • AVCOE Sangamner</div>' +
     '      </td>' +
     '    </tr>' +
     '    <!-- Main Content -->' +
@@ -1695,13 +1712,20 @@ function sendConfirmationEmail(data) {
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
     '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.07); border: 1px solid #e2e8f0;">' +
+    '    <!-- Brand Logo Header -->' +
     '    <tr>' +
-    '      <td style="background-color: #062b59; padding: 32px 24px; text-align: center; color: #ffffff;">' +
+    '      <td style="background-color: #ffffff; padding: 26px 20px 20px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">' +
+    '        <a href="' + WEBSITE_URL + '" target="_blank" style="text-decoration: none; display: inline-block;">' +
+    '          <img src="' + LOGO_IMAGE_URL + '" alt="AITHON 2.0 - National Level AI Hackathon" width="280" style="width: 280px; max-width: 85%; height: auto; border: 0; display: block; margin: 0 auto;" />' +
+    '        </a>' +
+    '      </td>' +
+    '    </tr>' +
+    '    <tr>' +
+    '      <td style="background-color: #062b59; padding: 26px 24px; text-align: center; color: #ffffff;">' +
     '        <div style="display: inline-block; background-color: rgba(37,99,235,0.3); border: 1px solid #38bdf8; color: #93c5fd; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
     '          National Level AI Hackathon' +
     '        </div>' +
-    '        <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">AITHON 2.0</h1>' +
-    '        <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px; font-weight: 500;">Dept. of Artificial Intelligence & Data Science • AVCOE Sangamner</div>' +
+    '        <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 4px; font-weight: 500;">Dept. of Artificial Intelligence &amp; Data Science • AVCOE Sangamner</div>' +
     '      </td>' +
     '    </tr>' +
     '    <tr>' +
@@ -1850,13 +1874,20 @@ function sendPaymentProblemEmail(data) {
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
     '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.07); border: 1px solid #e2e8f0;">' +
+    '    <!-- Brand Logo Header -->' +
     '    <tr>' +
-    '      <td style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); padding: 32px 24px; text-align: center; color: #ffffff;">' +
+    '      <td style="background-color: #ffffff; padding: 26px 20px 20px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">' +
+    '        <a href="' + WEBSITE_URL + '" target="_blank" style="text-decoration: none; display: inline-block;">' +
+    '          <img src="' + LOGO_IMAGE_URL + '" alt="AITHON 2.0 - National Level AI Hackathon" width="280" style="width: 280px; max-width: 85%; height: auto; border: 0; display: block; margin: 0 auto;" />' +
+    '        </a>' +
+    '      </td>' +
+    '    </tr>' +
+    '    <tr>' +
+    '      <td style="background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); padding: 26px 24px; text-align: center; color: #ffffff;">' +
     '        <div style="display: inline-block; background-color: rgba(255,255,255,0.2); border: 1px solid #fca5a5; color: #ffffff; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
     '          Action Required • Payment Pending' +
     '        </div>' +
-    '        <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">AITHON 2.0</h1>' +
-    '        <div style="font-size: 12px; color: #fecaca; margin-top: 6px; font-weight: 500;">Registration On Hold • Payment Confirmation Required</div>' +
+    '        <div style="font-size: 12.5px; color: #fecaca; margin-top: 4px; font-weight: 500;">Registration On Hold • Payment Confirmation Required</div>' +
     '      </td>' +
     '    </tr>' +
     '    <tr>' +
@@ -2332,14 +2363,21 @@ function sendGrandFinaleTicketEmail(data) {
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
     '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">' +
+    '    <!-- Brand Logo Header -->' +
+    '    <tr>' +
+    '      <td style="background-color: #ffffff; padding: 26px 20px 20px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">' +
+    '        <a href="' + WEBSITE_URL + '" target="_blank" style="text-decoration: none; display: inline-block;">' +
+    '          <img src="' + LOGO_IMAGE_URL + '" alt="AITHON 2.0 - National Level AI Hackathon" width="280" style="width: 280px; max-width: 85%; height: auto; border: 0; display: block; margin: 0 auto;" />' +
+    '        </a>' +
+    '      </td>' +
+    '    </tr>' +
     '    <!-- Header -->' +
     '    <tr>' +
-    '      <td style="background: linear-gradient(135deg, #062b59 0%, #0f766e 100%); padding: 36px 24px; text-align: center; color: #ffffff;">' +
-    '        <div style="display: inline-block; background-color: rgba(34,197,94,0.25); border: 1px solid #4ade80; color: #bbf7d0; padding: 5px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">' +
+    '      <td style="background: linear-gradient(135deg, #062b59 0%, #0f766e 100%); padding: 28px 24px; text-align: center; color: #ffffff;">' +
+    '        <div style="display: inline-block; background-color: rgba(34,197,94,0.25); border: 1px solid #4ade80; color: #bbf7d0; padding: 5px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
     '          OFFICIAL GRAND FINALE PASS' +
     '        </div>' +
-    '        <h1 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">AITHON 2.0</h1>' +
-    '        <div style="font-size: 13px; color: #ccfbf1; margin-top: 6px; font-weight: 500;">Dept. of Artificial Intelligence & Data Science • AVCOE Sangamner</div>' +
+    '        <div style="font-size: 13px; color: #ccfbf1; margin-top: 4px; font-weight: 500;">Dept. of Artificial Intelligence &amp; Data Science • AVCOE Sangamner</div>' +
     '      </td>' +
     '    </tr>' +
     '    <!-- Body -->' +
