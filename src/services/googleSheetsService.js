@@ -126,10 +126,27 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     paymentStatus: formData.paymentStatus || 'Pending Verification (₹50)',
     paymentUtr: formData.paymentUtr || '',
 
+    // Step progress & Action
+    step: formData.step || 0,
+    action: formData.action || 'submitRegistration',
+
     // Status
     status: 'Pending Review',
     targetAccount: 'ai.veer2k26@gmail.com',
   }
+}
+
+/**
+ * Real-time incremental step sync: Allocates Team ID at Step 1 and syncs progress
+ * (Step 1: Lead details, Step 2: Member details, Step 3: PPT Submission)
+ */
+export async function syncRegistrationStep(formData, stepNumber, teamId, registrationId) {
+  const stepPayload = {
+    ...formData,
+    step: stepNumber,
+    action: 'syncStep',
+  }
+  return submitRegistrationToGoogleSheet(stepPayload, teamId, registrationId)
 }
 
 /**
@@ -158,8 +175,9 @@ export async function fetchNextSerialId() {
     }
 
     const data = await res.json()
-    if (data && data.nextSerialNum) {
-      const num = parseInt(data.nextSerialNum, 10)
+    const rawNum = data.nextSerialNum || data.nextSerial
+    if (rawNum) {
+      const num = parseInt(rawNum, 10)
       if (!isNaN(num) && num >= 101) {
         if (typeof window !== 'undefined') {
           try {
@@ -172,7 +190,7 @@ export async function fetchNextSerialId() {
         return {
           nextNum: num,
           teamId: data.nextTeamId || `TEAM-${num}`,
-          registrationId: data.nextRegistrationId || `AI25-${num}`,
+          registrationId: data.nextRegistrationId || `AI26-${num}`,
         }
       }
     }
@@ -208,15 +226,16 @@ export async function submitRegistrationToGoogleSheet(formData, teamId, registra
 
   let finalTeamId = teamId
   let finalRegId = registrationId
+  let pptUrl = ''
+  let responseData = null
 
   try {
     // 1. Try standard CORS fetch to parse the confirmed unique IDs returned by Apps Script
-    let responseData = null
     try {
       const res = await fetch(scriptUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify(payload),
       })
@@ -230,18 +249,36 @@ export async function submitRegistrationToGoogleSheet(formData, teamId, registra
         method: 'POST',
         mode: 'no-cors',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          'Content-Type': 'text/plain',
         },
         body: JSON.stringify(payload),
       })
     }
 
-    let pptUrl = ''
-    if (responseData) {
-      if (responseData.teamId) finalTeamId = responseData.teamId
-      if (responseData.registrationId) finalRegId = responseData.registrationId
+    // 3. Sync confirmed IDs: If direct POST returned json, use it
+    if (responseData && responseData.teamId) {
+      finalTeamId = responseData.teamId
+      finalRegId = responseData.registrationId || finalRegId
       if (responseData.pptUrl) pptUrl = responseData.pptUrl
       console.log('[GoogleSheets] Server confirmed unique IDs & PPT:', finalTeamId, finalRegId, pptUrl)
+    } else if (payload.leadEmail) {
+      // 4. Fallback verification: If direct POST response was opaque (no-cors), query backend GET to obtain the exact server-assigned IDs
+      try {
+        const separator = scriptUrl.includes('?') ? '&' : '?'
+        const verifyUrl = `${scriptUrl}${separator}action=getTeamDetails&email=${encodeURIComponent(payload.leadEmail)}&_t=${Date.now()}`
+        const verifyRes = await fetch(verifyUrl)
+        if (verifyRes.ok) {
+          const verified = await verifyRes.json()
+          if (verified && verified.success && verified.teamId) {
+            finalTeamId = verified.teamId
+            finalRegId = verified.registrationId || finalRegId
+            if (verified.pptDriveLink) pptUrl = verified.pptDriveLink
+            console.log('[GoogleSheets] Retrieved verified server-assigned ID via GET verification:', finalTeamId, finalRegId)
+          }
+        }
+      } catch (verifyErr) {
+        console.warn('[GoogleSheets] Post-registration verification lookup notice:', verifyErr)
+      }
     }
 
     console.log('[GoogleSheets] Successfully posted to Google Sheet for team:', finalTeamId)

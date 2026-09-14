@@ -183,11 +183,29 @@ function doPost(e) {
       return handleDirectRound2Confirmation(data, sheet);
     }
 
-    // Ensure sequential IDs if not provided
-    if (!data.teamId || !data.registrationId) {
+    // =========================================================================
+    // 🛡️ 2. ATOMIC REAL-TIME REGISTRATION ALLOCATION & ROW SYNC
+    // =========================================================================
+    // Check if this team has already started registration / drafting in the sheet
+    var existingRow = findTeamRow(sheet, data.teamId, data.leadEmail);
+
+    if (existingRow !== -1) {
+      // Team already exists in the sheet - preserve their allocated IDs!
+      var sheetTeamId = String(sheet.getRange(existingRow, 2).getValue() || "").trim();
+      var sheetRegId = String(sheet.getRange(existingRow, 3).getValue() || "").trim();
+      if (sheetTeamId && sheetTeamId !== "-" && sheetTeamId.indexOf("HOLD") === -1) {
+        data.teamId = sheetTeamId;
+      }
+      if (sheetRegId && sheetRegId !== "-" && sheetRegId.indexOf("HOLD") === -1) {
+        data.registrationId = sheetRegId;
+      }
+      Logger.log("✓ Real-time updating existing row " + existingRow + " for " + data.teamId);
+    } else {
+      // First time starting registration: Atomically allocate the next serial ID under ScriptLock!
       var nextSerial = getLiveNextSerial(sheet);
-      data.teamId = data.teamId || ("TEAM-" + nextSerial);
-      data.registrationId = data.registrationId || ("AI25-" + nextSerial);
+      data.teamId = "TEAM-" + nextSerial;
+      data.registrationId = "AI26-" + nextSerial;
+      Logger.log("🛡️ Atomically allocated new Team ID: " + data.teamId + " (" + data.registrationId + ")");
     }
 
     // 📁 STORE PPT IN GOOGLE DRIVE & RENAME AUTOMATICALLY AS TEAM ID
@@ -230,6 +248,16 @@ function doPost(e) {
         Logger.log("Google Drive upload error: " + driveErr.toString());
         pptDriveUrl = "Upload error: " + driveErr.toString();
       }
+    } else if (existingRow !== -1) {
+      // If PPT was already uploaded previously, preserve existing Drive link & filename
+      var existingPpt = String(sheet.getRange(existingRow, 39).getValue() || "").trim();
+      var existingFileName = String(sheet.getRange(existingRow, 40).getValue() || "").trim();
+      if (existingPpt && existingPpt !== "-") {
+        pptDriveUrl = existingPpt;
+        if (!data.pptFileName && existingFileName) {
+          data.pptFileName = existingFileName;
+        }
+      }
     }
 
     var timestamp = data.timestamp || Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm:ss a");
@@ -256,11 +284,38 @@ function doPost(e) {
       data.leadPhone
     );
 
-    // 🛡️ SUBMISSION RECORDING (MANUAL VERIFICATION REQUIRED — AUTO-DETECTION DISABLED)
+    // 🛡️ SUBMISSION & REAL-TIME STATUS RECORDING
     var utrStr = data.paymentUtr ? String(data.paymentUtr).trim() : "";
+    if (!utrStr && existingRow !== -1) {
+      var prevUtr = String(sheet.getRange(existingRow, 43).getValue() || "").trim().replace(/^'/, "");
+      if (prevUtr && prevUtr !== "-") {
+        utrStr = prevUtr;
+      }
+    }
+
+    var stepNum = parseInt(data.step, 10) || 0;
     var evalFeeStatus = "Pending Verification";
+    if (utrStr && utrStr.length >= 6) {
+      evalFeeStatus = "Pending Verification";
+    } else if (stepNum > 0 && stepNum < 4) {
+      evalFeeStatus = "In Progress (Step " + stepNum + ")";
+    }
+
     var pptStatusCol = "Pending Review";
+    if (existingRow !== -1) {
+      var prevPptStatus = String(sheet.getRange(existingRow, 44).getValue() || "").trim();
+      if (prevPptStatus && prevPptStatus !== "-") {
+        pptStatusCol = prevPptStatus;
+      }
+    }
+
     var emailSentCol = "Not Sent (Pending Manual Verification)";
+    if (existingRow !== -1) {
+      var prevEmailStatus = String(sheet.getRange(existingRow, 49).getValue() || "").trim();
+      if (prevEmailStatus && prevEmailStatus.indexOf("Verified") !== -1) {
+        emailSentCol = prevEmailStatus;
+      }
+    }
 
     // 48-column row aligned with HEADERS
     var row = [
@@ -268,7 +323,7 @@ function doPost(e) {
       data.teamId || "N/A",                    // Col 2: Team ID
       data.registrationId || "N/A",            // Col 3: Registration ID
       data.teamName || "N/A",                  // Col 4: Team Name
-      data.teamSize,                           // Col 5: Team Size
+      data.teamSize || "4",                    // Col 5: Team Size
       data.leadFullName || "N/A",              // Col 6: Leader Full Name
       data.leadEmail || "N/A",                 // Col 7: Leader Email
       phone,                                   // Col 8: Leader Phone
@@ -315,27 +370,39 @@ function doPost(e) {
       emailSentCol                             // Col 49: Email Notification Status
     ];
 
-    sheet.appendRow(row);
+    var targetRow = existingRow !== -1 ? existingRow : (sheet.getLastRow() + 1);
 
-    var lastRow = sheet.getLastRow();
-    var rowRange = sheet.getRange(lastRow, 1, 1, row.length);
+    if (existingRow !== -1) {
+      sheet.getRange(existingRow, 1, 1, row.length).setValues([row]);
+      Logger.log("✓ Real-time updated row " + existingRow + " for " + data.teamId);
+    } else {
+      sheet.appendRow(row);
+      targetRow = sheet.getLastRow();
+      Logger.log("✓ Real-time allocated & appended row " + targetRow + " for " + data.teamId);
+    }
+
+    var rowRange = sheet.getRange(targetRow, 1, 1, row.length);
     rowRange.setVerticalAlignment("middle");
     rowRange.setFontFamily("Plus Jakarta Sans");
     rowRange.setFontSize(10);
 
-    // Style Col 42 as amber (Pending Verification) and apply dropdown
+    // Style Col 42 and apply dropdown
     try {
       var evalRule = SpreadsheetApp.newDataValidation()
         .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
         .setAllowInvalid(true)
         .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
         .build();
-      sheet.getRange(lastRow, 42).setDataValidation(evalRule);
-      sheet.getRange(lastRow, 42).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
+      sheet.getRange(targetRow, 42).setDataValidation(evalRule);
+      if (evalFeeStatus === "Pending Verification") {
+        sheet.getRange(targetRow, 42).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
+      } else {
+        sheet.getRange(targetRow, 42).setBackground("#f1f5f9").setFontColor("#475569").setFontWeight("normal");
+      }
 
       // Strictly ensure Column 43 (Eval Payment UTR) has NO dropdown and is formatted as Plain Text
-      sheet.getRange(lastRow, 43).clearDataValidations();
-      sheet.getRange(lastRow, 43).setNumberFormat("@");
+      sheet.getRange(targetRow, 43).clearDataValidations();
+      sheet.getRange(targetRow, 43).setNumberFormat("@");
 
       // Set Column 47 (Round 2 Payment Status) dropdown: Pending Verification / Verified / Rejected
       var r2Rule = SpreadsheetApp.newDataValidation()
@@ -343,20 +410,22 @@ function doPost(e) {
         .setAllowInvalid(true)
         .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
         .build();
-      sheet.getRange(lastRow, 47).setDataValidation(r2Rule);
+      sheet.getRange(targetRow, 47).setDataValidation(r2Rule);
 
       // Strictly ensure Column 48 (Round 2 Payment UTR) has NO dropdown and is formatted as Plain Text
-      sheet.getRange(lastRow, 48).clearDataValidations();
-      sheet.getRange(lastRow, 48).setNumberFormat("@");
+      sheet.getRange(targetRow, 48).clearDataValidations();
+      sheet.getRange(targetRow, 48).setNumberFormat("@");
     } catch (styleErr) {}
-
-    // NOTE: Auto-email trigger is disabled. Emails are only sent when an admin manually marks Col 42 as Verified/Paid.
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      underReview: true,
+      allocated: existingRow === -1,
+      updated: existingRow !== -1,
+      underReview: evalFeeStatus === "Pending Verification",
       paymentVerified: false,
-      message: "Registration received. We will review your payment shortly in 24hr will get confirmation. By confirming via Google Sheet mail will get trigger.",
+      message: existingRow === -1
+        ? "Team ID allocated successfully and synced to sheet."
+        : "Registration details updated in real time.",
       teamId: data.teamId,
       registrationId: data.registrationId,
       pptUrl: pptDriveUrl,
@@ -388,26 +457,44 @@ function doGet(e) {
       return handleDirectRound2Confirmation(e.parameter, sheet);
     }
 
-    // Check if client is looking up team details for the Grand Finale Payment Portal
-    if (e && e.parameter && (e.parameter.action === "getTeamDetails" || e.parameter.teamId || e.parameter.email)) {
+    // ⚡ 2. Check for next available serial ID query (e.g. action=getNextId)
+    if (e && e.parameter && (e.parameter.action === "getNextId" || e.parameter.action === "nextSerial")) {
+      var nextSerial = sheet ? getLiveNextSerial(sheet) : 101;
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "active",
+        nextSerial: nextSerial,
+        nextSerialNum: nextSerial,
+        nextTeamId: "TEAM-" + nextSerial,
+        nextRegistrationId: "AI26-" + nextSerial,
+        timestamp: Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm:ss a")
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Check if client is looking up team details for the Grand Finale Payment Portal or Post-Registration Verification
+    if (e && e.parameter && (e.parameter.action === "getTeamDetails" || e.parameter.teamId || e.parameter.email || e.parameter.utr)) {
       var queryTeamId = String(e.parameter.teamId || e.parameter.id || "").trim().toUpperCase();
       var queryEmail = String(e.parameter.email || e.parameter.leadEmail || "").trim().toLowerCase();
+      var queryUtr = String(e.parameter.utr || e.parameter.paymentUtr || "").trim().replace(/[^A-Za-z0-9]/g, "");
       var cleanQuery = queryTeamId.replace(/[^A-Z0-9]/gi, "");
 
-      if (sheet && (queryTeamId || queryEmail || cleanQuery)) {
+      if (sheet && (queryTeamId || queryEmail || queryUtr || cleanQuery)) {
         var lastRow = sheet.getLastRow();
         if (lastRow > 1) {
           var rows = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
-          for (var i = 0; i < rows.length; i++) {
+          // Search backwards so that the most recent registration matching email/UTR is returned
+          for (var i = rows.length - 1; i >= 0; i--) {
             var r = rows[i];
             var rTeamId = String(r[1] || "").trim().toUpperCase();
             var rRegId = String(r[2] || "").trim().toUpperCase();
             var rEmail = String(r[6] || "").trim().toLowerCase();
+            var rUtr = String(r[42] || "").trim().replace(/[^A-Za-z0-9]/g, "");
             var cleanRTeam = rTeamId.replace(/[^A-Z0-9]/gi, "");
             var cleanRReg = rRegId.replace(/[^A-Z0-9]/gi, "");
 
             var isMatch = false;
-            if (queryTeamId) {
+            if (queryEmail && rEmail === queryEmail) {
+              isMatch = true;
+            } else if (queryTeamId) {
               if (rTeamId === queryTeamId || rRegId === queryTeamId) {
                 isMatch = true;
               } else if (cleanQuery && (cleanRTeam === cleanQuery || cleanRReg === cleanQuery)) {
@@ -415,10 +502,8 @@ function doGet(e) {
               } else if (cleanQuery.length >= 3 && (cleanRTeam.indexOf(cleanQuery) !== -1 || cleanRReg.indexOf(cleanQuery) !== -1)) {
                 isMatch = true;
               }
-            } else if (queryEmail) {
-              if (rEmail === queryEmail) {
-                isMatch = true;
-              }
+            } else if (queryUtr && rUtr && rUtr === queryUtr) {
+              isMatch = true;
             }
 
             if (isMatch) {
@@ -469,6 +554,7 @@ function doGet(e) {
       service: "AITHON 2.0 Registration & PPT Drive Webhook",
       account: "ai.veer2k26@gmail.com",
       nextSerial: nextSerial,
+      nextSerialNum: nextSerial,
       nextTeamId: "TEAM-" + nextSerial,
       nextRegistrationId: "AI26-" + nextSerial,
       pptFolderId: PPT_FOLDER_ID,
@@ -485,27 +571,83 @@ function doGet(e) {
 }
 
 /**
- * Calculates live next serial ID from sheet rows
+ * Finds existing row number (1-indexed) for a team by Team ID or Leader Email
+ */
+function findTeamRow(sheet, teamId, email) {
+  if (!sheet) return -1;
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return -1;
+
+  var targetTeamId = teamId ? String(teamId).trim().toUpperCase() : "";
+  var targetEmail = email ? String(email).trim().toLowerCase() : "";
+
+  if (targetTeamId.indexOf("HOLD") !== -1 || targetTeamId.indexOf("XXX") !== -1) {
+    targetTeamId = "";
+  }
+
+  if (!targetTeamId && !targetEmail) return -1;
+
+  var values = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+  for (var i = values.length - 1; i >= 0; i--) {
+    var rTeam = String(values[i][1] || "").trim().toUpperCase();
+    var rEmail = String(values[i][6] || "").trim().toLowerCase();
+
+    if (targetTeamId && rTeam && rTeam === targetTeamId) {
+      return i + 2;
+    }
+    if (targetEmail && rEmail && rEmail === targetEmail) {
+      return i + 2;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Checks if a Team ID is already registered in the sheet
+ */
+function isTeamIdTaken(sheet, teamId) {
+  if (!sheet || !teamId) return false;
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return false;
+  var target = String(teamId).trim().toUpperCase();
+  var teamCol = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  for (var i = 0; i < teamCol.length; i++) {
+    if (String(teamCol[i][0]).trim().toUpperCase() === target) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Calculates live next serial ID from sheet rows (scans both Col 2 and Col 3)
+ * Guarantees atomic strictly sequential serial numbering (starting at 101)
  */
 function getLiveNextSerial(sheet) {
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return 101;
 
-  var teamIdColValues = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  var idColValues = sheet.getRange(2, 2, lastRow - 1, 2).getValues();
   var maxSerial = 100;
 
-  for (var i = 0; i < teamIdColValues.length; i++) {
-    var val = String(teamIdColValues[i][0]).trim();
-    var match = val.match(/(?:TEAM-?|AI2[56]-?|AI\d{2}-?)(\d+)/i);
-    if (match && match[1]) {
-      var num = parseInt(match[1], 10);
-      if (!isNaN(num) && num > maxSerial) {
-        maxSerial = num;
-      }
+  for (var i = 0; i < idColValues.length; i++) {
+    var teamVal = String(idColValues[i][0] || "").trim();
+    var regVal = String(idColValues[i][1] || "").trim();
+
+    var match1 = teamVal.match(/(?:TEAM-?|AI2[56]-?|AI\d{2}-?)(\d+)/i);
+    if (match1 && match1[1]) {
+      var n1 = parseInt(match1[1], 10);
+      if (!isNaN(n1) && n1 > maxSerial) maxSerial = n1;
+    }
+
+    var match2 = regVal.match(/(?:TEAM-?|AI2[56]-?|AI\d{2}-?)(\d+)/i);
+    if (match2 && match2[1]) {
+      var n2 = parseInt(match2[1], 10);
+      if (!isNaN(n2) && n2 > maxSerial) maxSerial = n2;
     }
   }
 
-  return Math.max(maxSerial + 1, 100 + lastRow);
+  return maxSerial + 1;
 }
 
 /**

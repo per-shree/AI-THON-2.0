@@ -223,7 +223,7 @@ export function AdminProvider({ children }) {
     } catch (e) {
       console.warn('localStorage read error:', e)
     }
-    return `AI25-${nextNum}`
+    return `AI26-${nextNum}`
   }
 
   // ─── PUBLIC REGISTRATION ACTION ──────────────────────────────────────────
@@ -232,7 +232,7 @@ export function AdminProvider({ children }) {
     const teamId = registrationData.teamId || getNextSerialTeamId()
     const teamNumMatch = teamId.match(/\d+/)
     const currentNum = teamNumMatch ? parseInt(teamNumMatch[0], 10) : 101
-    const leadId = registrationData.registrationId || `AI25-${currentNum}`
+    const leadId = registrationData.registrationId || `AI26-${currentNum}`
 
     // Advance next serial number strictly to currentNum + 1 for subsequent registration
     syncNextSerialNum(currentNum + 1)
