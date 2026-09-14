@@ -52,11 +52,11 @@ const sponsorsList = [
     desc: 'Premier computer education, technical training, and skill development institute in Sangamner.',
   },
   {
-    name: 'Qwicit',
+    name: 'Qwicit Technologies',
     logo: '/qwicit_logo.png',
     url: 'https://qwicit.com/',
-    role: 'ASSOCIATE PARTNER',
-    desc: "There's no limit to ideas.! — Innovative digital solutions and modern technology consultancy.",
+    role: 'Technology & Payment Gateway Partner',
+    desc: "There's no limit to ideas.! — Powering digital solutions and seamless payment gateway infrastructure for AITHON 2.0.",
   },
   {
     name: 'Shravya Studios',

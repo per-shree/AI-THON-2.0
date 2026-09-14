@@ -66,11 +66,11 @@ export default function SponsorsSection() {
       isLargeLogo: true
     },
     {
-      name: 'Qwicit',
+      name: 'Qwicit Technologies',
       logo: '/qwicit_logo.png',
       url: 'https://qwicit.com/',
-      tier: 'ASSOCIATE PARTNER',
-      desc: 'Digital & IT Solutions',
+      tier: 'TECH & PAYMENT PARTNER',
+      desc: 'Technology & Payment Gateway',
       isActive: true,
       isLargeLogo: true
     },
