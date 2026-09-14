@@ -32,7 +32,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { getGoogleSheetUrl } from '../services/googleSheetsService'
 
-const OFFICIAL_UPI_ID = 'shreeugale123-3@oksbi'
+const OFFICIAL_UPI_ID = '9404665180@centralbank'
 
 // Official static QR codes for Grand Finale fee tiers
 const FINALE_QR_MAP = {

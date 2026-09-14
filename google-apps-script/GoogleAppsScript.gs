@@ -29,7 +29,7 @@ var SPREADSHEET_ID = "1uBkGnCNJ8dIRhLUY9N4zbTWSh5VEy-p-fbnTkfUNt6k";
 var WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/HRvMvxxB2NUIvw5zMiTsQ9";
 
 // UPI VPA for Direct Payments & QR Codes
-var UPI_VPA = "shreeugale123-3@oksbi";
+var UPI_VPA = "9404665180@centralbank";
 
 // Official Website Domain (used to generate private Grand Finale payment portal link in acceptance emails)
 // Update this to your deployed domain (e.g. "https://aithon2026.vercel.app") or custom domain
