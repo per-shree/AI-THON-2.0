@@ -25,25 +25,20 @@ import {
   Building2,
   Check,
   Download,
+  QrCode,
+  Copy,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { getGoogleSheetUrl } from '../services/googleSheetsService'
 
-// Helper to dynamically load Razorpay Checkout SDK
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && window.Razorpay) {
-      resolve(true)
-      return
-    }
-    const script = document.createElement('script')
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-    script.async = true
-    script.onload = () => resolve(true)
-    script.onerror = () => resolve(false)
-    document.body.appendChild(script)
-  })
+const OFFICIAL_UPI_ID = 'shreeugale123-3@oksbi'
+
+// Official static QR codes for Grand Finale fee tiers
+const FINALE_QR_MAP = {
+  800: '/qr-800.jpg',
+  1000: '/qr-1000.jpg',
+  1200: '/qr-1200.jpg',
 }
 
 export default function FinalePayment() {
@@ -75,6 +70,14 @@ export default function FinalePayment() {
   const [isPaying, setIsPaying] = useState(false)
   const [paidInfo, setPaidInfo] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [utrInput, setUtrInput] = useState('')
+  const [copiedUpi, setCopiedUpi] = useState(false)
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText(OFFICIAL_UPI_ID)
+    setCopiedUpi(true)
+    setTimeout(() => setCopiedUpi(false), 2500)
+  }
 
   // Calculate locked fee strictly based on team size (Team Size × ₹200)
   const teamSize = teamData.teamSize || 4
@@ -103,13 +106,30 @@ export default function FinalePayment() {
           round2PaymentStatus: data.round2PaymentStatus || 'Pending',
         })
 
-        // Check if already paid
+        // Check if already confirmed or pending review in Google Sheets
         const status = String(data.round2PaymentStatus || '').toLowerCase()
-        if (status.includes('paid') || status.includes('verified') || status.includes('confirmed')) {
+        const isConfirmed =
+          (status.includes('paid') ||
+            status.includes('verified') ||
+            status.includes('confirmed') ||
+            status.includes('approved')) &&
+          !status.includes('pending') &&
+          !status.includes('hold')
+        const isPending = status.includes('pending')
+
+        if (isConfirmed) {
           setPaidInfo({
             paymentId: data.round2PaymentStatus,
             amount: data.round2FeeAmount || (parseInt(data.teamSize, 10) * 200),
             teamId: data.teamId,
+            isConfirmed: true,
+          })
+        } else if (isPending) {
+          setPaidInfo({
+            paymentId: data.round2PaymentStatus,
+            amount: data.round2FeeAmount || (parseInt(data.teamSize, 10) * 200),
+            teamId: data.teamId,
+            isConfirmed: false,
           })
         }
       } else {
@@ -128,69 +148,22 @@ export default function FinalePayment() {
     }
   }, [paramTeamId])
 
-  // Trigger Embedded Razorpay Standard Checkout (Same as Evaluation Round)
-  const handlePayGrandFinaleFee = async () => {
+  // Confirm Round 2 Payment via UPI UTR
+  const handleConfirmFinalePayment = async () => {
     if (!teamData.teamId) {
       setErrorMsg('Please enter a valid Team ID to proceed.')
       return
     }
 
+    const cleanUtr = utrInput.trim()
+    if (!cleanUtr || cleanUtr.length < 6) {
+      setErrorMsg('Please enter a valid 12-digit UPI UTR number from your payment receipt.')
+      return
+    }
+
     setIsPaying(true)
     setErrorMsg('')
-
-    try {
-      const isLoaded = await loadRazorpayScript()
-      const razorpayKey =
-        import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TbdQP6aRj2Uab8'
-
-      if (!isLoaded || !window.Razorpay) {
-        throw new Error('Razorpay secure checkout SDK could not be loaded. Please check your internet connection.')
-      }
-
-      const options = {
-        key: razorpayKey,
-        amount: lockedFee * 100, // in paise (e.g. 80000 for ₹800)
-        currency: 'INR',
-        name: 'AiTHON 2.0 Grand Finale',
-        description: `Workstation Registration Fee (${teamSize} Members) - ${teamData.teamId}`,
-        prefill: {
-          name: teamData.leadFullName || '',
-          email: teamData.leadEmail || '',
-          contact: teamData.leadPhone || '',
-        },
-        notes: {
-          teamId: teamData.teamId,
-          teamName: teamData.teamName,
-          teamSize: String(teamSize),
-          feeType: 'grand_finale',
-        },
-        theme: {
-          color: '#062b59',
-        },
-        handler: async function (response) {
-          const paymentId = response.razorpay_payment_id
-          if (paymentId) {
-            await syncPaymentToGoogleSheet(paymentId)
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsPaying(false)
-          },
-        },
-      }
-
-      const rzp = new window.Razorpay(options)
-      rzp.on('payment.failed', function (resp) {
-        setIsPaying(false)
-        setErrorMsg('Payment could not be completed: ' + (resp?.error?.description || 'Transaction cancelled.'))
-      })
-      rzp.open()
-    } catch (err) {
-      console.error('[FinalePayment] Error opening checkout:', err)
-      setErrorMsg(err.message || 'Failed to initialize payment.')
-      setIsPaying(false)
-    }
+    await syncPaymentToGoogleSheet(cleanUtr)
   }
 
   // Sync payment immediately to Google Sheet Column 47
@@ -216,6 +189,7 @@ export default function FinalePayment() {
         paymentId: paymentId,
         amount: lockedFee,
         teamId: teamData.teamId,
+        isConfirmed: false,
       })
     } catch (err) {
       console.warn('[FinalePayment] Sheet sync notice:', err)
@@ -223,6 +197,7 @@ export default function FinalePayment() {
         paymentId: paymentId,
         amount: lockedFee,
         teamId: teamData.teamId,
+        isConfirmed: false,
       })
     } finally {
       setIsPaying(false)
@@ -259,126 +234,176 @@ export default function FinalePayment() {
 
         {paidInfo ? (
           /* ================================================================ */
-          /* 🎟️ SUCCESS VIEW: OFFICIAL GRAND FINALE ENTRY PASS TICKET         */
+          /* ⏱️ UNDER REVIEW VIEW: 24-HOUR MANUAL REVIEW & CONFIRMATION        */
           /* ================================================================ */
-          <div className="space-y-6 animate-fadeIn">
-            {/* Success Alert Banner */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center shadow-xs space-y-2">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 mb-1">
-                <CheckCircle className="w-8 h-8" />
-              </div>
-              <span className="inline-block text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-white px-3 py-0.5 rounded-full border border-emerald-200 shadow-xs">
-                Payment Verified • Workstation Locked
+          <div className="bg-white border border-[#edebe6] rounded-2xl p-6 sm:p-10 shadow-sm text-center space-y-6 animate-fadeIn max-w-2xl mx-auto">
+            {/* Glowing Clock / Review Badge */}
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-inner border-2 ${
+              paidInfo.isConfirmed
+                ? 'bg-emerald-100 text-emerald-600 border-emerald-300'
+                : 'bg-amber-100 text-amber-600 border-amber-300'
+            }`}>
+              {paidInfo.isConfirmed ? (
+                <CheckCircle className="w-10 h-10 stroke-[2.5]" />
+              ) : (
+                <Clock className="w-10 h-10 stroke-[2.5]" />
+              )}
+            </div>
+
+            {/* Header Text */}
+            <div className="space-y-1.5 text-center">
+              <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
+                paidInfo.isConfirmed
+                  ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  : 'text-amber-700 bg-amber-50 border-amber-200'
+              }`}>
+                {paidInfo.isConfirmed
+                  ? 'PAYMENT CONFIRMED • SEAT LOCKED'
+                  : 'SUBMISSION UNDER REVIEW • 24 HOURS'}
               </span>
-              <h2 className="text-xl sm:text-2xl font-black text-[#062b59]">
-                Grand Finale Seat Officially Confirmed!
+              <h2 className="text-2xl sm:text-3xl font-black text-[#062b59] uppercase tracking-tight">
+                {paidInfo.isConfirmed
+                  ? 'Grand Finale Seat Confirmed!'
+                  : 'We will review your payment shortly in 24hr will get confirmation'}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto">
-                We have verified your Grand Finale registration fee of{' '}
-                <strong className="text-emerald-700 font-bold">₹{paidInfo.amount}</strong>. Your physical seat and workstation at AVCOE Sangamner are locked.
+              <p className="text-sm text-slate-600 font-medium max-w-md mx-auto">
+                {paidInfo.isConfirmed
+                  ? 'Your payment was officially approved by the organizing committee.'
+                  : 'Your Grand Finale fee submission and 12-digit UTR have been received.'}
               </p>
             </div>
 
-            {/* Official Pass Ticket Card (Printable) */}
-            <div className="bg-white border border-[#edebe6] rounded-2xl shadow-sm overflow-hidden">
-              {/* Ticket Brand Header */}
-              <div className="bg-[#062b59] text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-[#ea580c]">
-                <div>
-                  <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">
-                    Amrutvahini College of Engineering, Sangamner
+            {/* Prominent 24-Hour Review Banner */}
+            {!paidInfo.isConfirmed ? (
+              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50/70 to-amber-50 border-2 border-amber-300 text-left space-y-2 shadow-xs">
+                <div className="flex items-start gap-3.5">
+                  <Clock className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h3 className="text-base sm:text-lg font-black text-amber-950 uppercase tracking-tight">
+                      We will review your payment shortly in 24hr will get confirmation
+                    </h3>
+                    <p className="text-xs sm:text-sm text-amber-900 font-medium leading-relaxed">
+                      Your 12-digit UTR (<strong className="font-mono text-amber-950">{paidInfo.paymentId}</strong>) for the Grand Finale workstation fee of <strong className="font-bold text-amber-950">₹{paidInfo.amount}</strong> has been received. Our organizing committee is manually reviewing your payment against bank records.
+                    </p>
                   </div>
-                  <h3 className="text-lg sm:text-2xl font-black tracking-tight">
-                    {teamData.teamName}
-                  </h3>
-                  <p className="text-xs text-slate-300 mt-0.5 font-medium">
-                    Team Leader: {teamData.leadFullName} ({teamData.leadEmail})
-                  </p>
                 </div>
+              </div>
+            ) : (
+              <div className="p-5 sm:p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-left space-y-2 shadow-xs">
+                <div className="flex items-start gap-3.5">
+                  <CheckCircle className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h3 className="text-base sm:text-lg font-black text-emerald-950 uppercase tracking-tight">
+                      Payment Confirmed & Verified by Organizing Committee
+                    </h3>
+                    <p className="text-xs sm:text-sm text-emerald-900 font-medium leading-relaxed">
+                      Your workstation for <strong>{teamSize} members</strong> has been officially locked for the offline Grand Finale at AVCOE Sangamner.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-                <div className="text-left sm:text-right shrink-0">
-                  <div className="text-[10px] text-slate-300 uppercase font-bold tracking-wider">Official Team ID</div>
-                  <div className="font-mono text-xl sm:text-2xl font-black text-[#ea580c] bg-white/10 px-3 py-1 rounded-lg inline-block mt-0.5 border border-white/10">
+            {/* Ticket Notice - Only visible once payment is confirmed */}
+            {paidInfo.isConfirmed && (
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-left space-y-1 text-xs text-emerald-950">
+                <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                  <Mail className="w-4 h-4 text-emerald-600" />
+                  <span>Grand Finale Hall Ticket & Workstation Entry Pass Dispatched</span>
+                </div>
+                <p className="text-[11.5px] text-emerald-800 pl-5 leading-relaxed">
+                  Your official printable <strong>Grand Finale Hall Ticket & Workstation Entry Pass</strong> has been emailed to: <strong className="text-emerald-950 font-mono">{teamData.leadEmail || 'your email'}</strong>.
+                </p>
+              </div>
+            )}
+
+            {/* Submission Summary Card */}
+            <div className="p-5 rounded-2xl bg-[#faf9f6] border border-[#edebe6] text-left space-y-3 shadow-2xs">
+              <div className="grid grid-cols-2 gap-3 pb-3 border-b border-[#edebe6] text-xs">
+                <div>
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Team ID</span>
+                  <span className="text-base sm:text-lg font-black text-[#ea580c] font-mono tracking-tight">
                     {teamData.teamId}
-                  </div>
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Team Name</span>
+                  <span className="text-sm sm:text-base font-extrabold text-[#062b59]">
+                    {teamData.teamName}
+                  </span>
                 </div>
               </div>
 
-              {/* Ticket Details Grid */}
-              <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-3 gap-6 border-b border-[#edebe6] text-xs">
-                <div>
-                  <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
-                    Competition Track
-                  </span>
-                  <strong className="text-sm font-black text-[#062b59] block mt-1">
-                    {teamData.selectedTrack}
-                  </strong>
-                </div>
+              <div className="pb-3 border-b border-[#edebe6] text-xs">
+                <span className="text-slate-400 block font-bold text-[11px] uppercase">Competition Track</span>
+                <span className="text-sm font-extrabold text-[#062b59] flex items-center gap-1.5 mt-0.5">
+                  <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
+                  <span>{teamData.selectedTrack}</span>
+                </span>
+              </div>
 
+              <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
-                    Verified Team Size
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Grand Finale Fee</span>
+                  <span className="font-extrabold text-[#062b59] text-sm">
+                    ₹{paidInfo.amount} ({teamSize} Members)
                   </span>
-                  <strong className="text-sm font-black text-[#062b59] block mt-1">
-                    {teamSize} Members Registered
-                  </strong>
                 </div>
-
                 <div>
-                  <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
-                    Registration Fee Status
-                  </span>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <strong className="text-sm font-black text-emerald-700">
-                      ₹{paidInfo.amount} Paid ({paidInfo.paymentId})
-                    </strong>
-                  </div>
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Payment Status</span>
+                  {paidInfo.isConfirmed ? (
+                    <span className="font-bold text-emerald-700 flex items-center gap-1 text-xs sm:text-sm">
+                      <CheckCircle className="w-3.5 h-3.5" /> Confirmed • Workstation Locked
+                    </span>
+                  ) : (
+                    <span className="font-bold text-amber-700 flex items-center gap-1 text-xs sm:text-sm">
+                      <Clock className="w-3.5 h-3.5" /> Under Review (Pending Verification)
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Reporting & Venue Section */}
-              <div className="p-6 sm:p-8 bg-[#faf9f6] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                <div className="space-y-1.5 text-xs text-slate-600">
-                  <div className="flex items-center gap-2 font-black text-[#062b59] text-sm">
-                    <MapPin className="w-4 h-4 text-[#ea580c] shrink-0" />
-                    <span>Dept. of AI & DS, AVCOE Sangamner, Ahmednagar, MH - 422608</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-4 text-slate-500 text-[11px] font-medium pt-1">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-[#2563eb]" /> Friday, 23 October 2026
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-[#2563eb]" /> 08:30 AM IST Sharp
-                    </span>
-                  </div>
+              {paidInfo.paymentId && (
+                <div className="pt-2 text-xs border-t border-[#edebe6] flex items-center justify-between">
+                  <span className="text-slate-400 font-bold text-[11px] uppercase">Submitted UTR</span>
+                  <span className="font-mono font-bold text-slate-800 bg-white px-2.5 py-1 rounded border border-[#edebe6]">
+                    {paidInfo.paymentId}
+                  </span>
                 </div>
+              )}
+            </div>
 
-                {/* Print Ticket Button */}
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="px-5 py-2.5 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm hover:shadow-md shrink-0 cursor-pointer"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Print Ticket</span>
-                </button>
+            {/* Reporting & Venue Section */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2 text-left">
+              <div className="flex items-center gap-2 font-bold text-[#062b59]">
+                <MapPin className="w-4 h-4 text-[#ea580c] shrink-0" />
+                <span>Dept. of AI & DS, AVCOE Sangamner, Ahmednagar, MH - 422608</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 text-slate-500 text-[11px] font-medium pt-0.5">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#2563eb]" /> Friday, 23 October 2026
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#2563eb]" /> 08:30 AM IST Sharp
+                </span>
               </div>
             </div>
 
-            {/* Email dispatch notice */}
-            <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-[#2563eb] shrink-0" />
-                <span>
-                  Official Grand Finale Entry Pass has also been dispatched to your leader inbox:{' '}
-                  <strong>{teamData.leadEmail}</strong>.
-                </span>
-              </div>
+            {/* Action Buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                Print / Save Slip
+              </button>
+
               <Link
                 to="/"
-                className="text-xs font-bold text-[#2563eb] hover:underline shrink-0"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 text-center shadow-xs cursor-pointer"
               >
-                Return to Home &rarr;
+                Back to Homepage
               </Link>
             </div>
           </div>
@@ -482,8 +507,8 @@ export default function FinalePayment() {
                 </div>
               </div>
 
-              {/* Right Column: Amount Locked & Razorpay Pay Button (2 Cols) */}
-              <div className="md:col-span-2 bg-gradient-to-br from-white via-white to-orange-50/30 border border-[#edebe6] rounded-2xl p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+              {/* Right Column: Amount Locked & UPI Payment (2 Cols) */}
+              <div className="md:col-span-2 bg-gradient-to-br from-white via-white to-orange-50/30 border border-[#edebe6] rounded-2xl p-6 sm:p-7 shadow-xs flex flex-col justify-between space-y-5">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-[#edebe6]">
                     <span className="text-[10px] font-black uppercase tracking-wider text-[#ea580c] bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
@@ -502,44 +527,75 @@ export default function FinalePayment() {
                     </p>
                   </div>
 
-                  {/* Payment Methods Supported */}
-                  <div className="pt-3 border-t border-[#edebe6] space-y-2 text-[11px] text-slate-600">
-                    <div className="font-bold text-slate-700">Accepted Instant Modes:</div>
-                    <div className="flex flex-wrap gap-1.5 text-[10px] font-semibold text-slate-600">
-                      <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Google Pay</span>
-                      <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">PhonePe</span>
-                      <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Paytm</span>
-                      <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">UPI / QR</span>
-                      <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Cards / NetBanking</span>
+                  {/* QR Code & UPI Details */}
+                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-center space-y-3">
+                    <div className="inline-block p-3 sm:p-4 bg-white rounded-2xl border-2 border-blue-300 shadow-md">
+                      <img
+                        src={FINALE_QR_MAP[lockedFee] || '/qr-800.jpg'}
+                        alt={`Scan to pay ₹${lockedFee} via UPI - Shree A. Ugale (${OFFICIAL_UPI_ID})`}
+                        className="w-56 h-auto sm:w-64 md:w-72 max-w-full mx-auto rounded-xl object-contain shadow-xs"
+                        loading="eager"
+                      />
                     </div>
+                    <div className="text-xs">
+                      <span className="text-slate-400 font-bold text-[10px] uppercase block">Official UPI ID</span>
+                      <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-blue-200 text-xs font-mono font-bold text-[#062b59]">
+                        <span>{OFFICIAL_UPI_ID}</span>
+                        <button
+                          type="button"
+                          onClick={handleCopyUpi}
+                          className="text-[#2563eb] hover:text-[#062b59] p-0.5 cursor-pointer"
+                          title="Copy UPI ID"
+                        >
+                          {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* UTR Entry Field */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] block">
+                      Enter 12-Digit UPI UTR / Reference ID *
+                    </label>
+                    <input
+                      type="text"
+                      value={utrInput}
+                      onChange={(e) => setUtrInput(e.target.value)}
+                      placeholder="e.g. 12-digit UTR from GPay / PhonePe / Paytm"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#edebe6] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20 text-xs font-mono font-bold text-slate-800 transition-all"
+                    />
+                    <span className="text-[10.5px] text-slate-500 block">
+                      Pay ₹{lockedFee} to the QR/UPI above and paste the 12-digit UTR receipt number here.
+                    </span>
                   </div>
                 </div>
 
-                {/* Pay Button matching root website CTA style */}
-                <div className="mt-6 space-y-3">
+                {/* Confirm Button */}
+                <div className="mt-4 space-y-2">
                   <button
                     type="button"
-                    onClick={handlePayGrandFinaleFee}
+                    onClick={handleConfirmFinalePayment}
                     disabled={isPaying || isLoading || !teamData.teamId}
                     className="w-full py-3.5 px-6 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
                     {isPaying ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Opening Razorpay...</span>
+                        <span>Submitting for 24-Hr Review...</span>
                       </>
                     ) : (
                       <>
-                        <CreditCard className="w-4 h-4" />
-                        <span>Pay ₹{lockedFee} Now</span>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Confirm ₹{lockedFee} Payment & Lock Workstation</span>
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
                   </button>
 
-                  <div className="text-center text-[10px] text-slate-500 flex items-center justify-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Instant automatic sheet update & ticket email</span>
+                  <div className="text-center text-[10.5px] text-slate-500 flex items-center justify-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>We will review your payment shortly in 24hr will get confirmation.</span>
                   </div>
                 </div>
               </div>

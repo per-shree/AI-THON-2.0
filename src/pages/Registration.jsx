@@ -31,6 +31,8 @@ import {
   FileCode,
   ExternalLink,
   Layers,
+  Clock,
+  QrCode,
 } from 'lucide-react'
 import {
   UserIcon,
@@ -103,24 +105,9 @@ export const isOtherCourse = (course) =>
   course === 'Other (Please specify)' ||
   (typeof course === 'string' && course.startsWith('Other'))
 
-// Dynamic loader for Razorpay Standard Checkout Popup SDK
-export const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && window.Razorpay) {
-      resolve(true)
-      return
-    }
-    const script = document.createElement('script')
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-    script.async = true
-    script.onload = () => resolve(true)
-    script.onerror = () => resolve(false)
-    document.body.appendChild(script)
-  })
-}
-
-// Official Razorpay Payment URL with ₹50 evaluation fee
-export const RAZORPAY_PAYMENT_URL = 'https://rzp.io/rzp/bZeYKo8'
+// Official UPI Payment Configuration for ₹50 Evaluation Fee
+export const OFFICIAL_UPI_ID = 'shreeugale123-3@oksbi'
+export const OFFICIAL_UPI_URI = 'upi://pay?pa=shreeugale123-3@oksbi&pn=AITHON%202.0&am=50&cu=INR&tn=AITHON%20Registration'
 
 export default function Registration() {
   const { registerTeam, getNextSerialTeamId, syncNextSerialNum } = useAdmin()
@@ -131,8 +118,6 @@ export default function Registration() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isReadingPpt, setIsReadingPpt] = useState(false)
-  const [isOpeningRazorpay, setIsOpeningRazorpay] = useState(false)
-  const [autoPaidId, setAutoPaidId] = useState('')
   const [drivePptUrl, setDrivePptUrl] = useState('')
   const [registrationId, setRegistrationId] = useState('')
   const [teamId, setTeamId] = useState('')
@@ -141,31 +126,9 @@ export default function Registration() {
   const [paymentModal, setPaymentModal] = useState(null)
   const [paymentConfirmed, setPaymentConfirmed] = useState(false)
   const [utrError, setUtrError] = useState('')
-  const [isReportingProblem, setIsReportingProblem] = useState(false)
+  const [isSendingReport, setIsSendingReport] = useState(false)
   const [reportSentMessage, setReportSentMessage] = useState('')
   const fileInputRef = useRef(null)
-
-  // Auto-detect return from Razorpay redirect with transaction ID / payment ID
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search)
-      const payId =
-        params.get('razorpay_payment_id') ||
-        params.get('payment_id') ||
-        params.get('razorpay_payment_link_id') ||
-        params.get('utr')
-
-      if (payId) {
-        setFormData((prev) => ({
-          ...prev,
-          paymentUtr: payId,
-        }))
-        setPaymentConfirmed(true)
-        setCurrentStep(4)
-        setStep4View('payment')
-      }
-    } catch (_) {}
-  }, [])
 
   // Pre-fetch live next serial ID from Google Sheets
   useEffect(() => {
@@ -512,7 +475,7 @@ export default function Registration() {
         isOpen: true,
         type: 'missing_utr',
         title: '₹50 Payment Verification Required',
-        message: 'Without actual payment confirmation, your registration cannot be submitted. Please complete the ₹50 evaluation fee on Razorpay and enter your 12-digit UPI UTR or Razorpay Payment ID.',
+        message: 'Without actual payment confirmation, your registration cannot be submitted. Please complete the ₹50 evaluation fee via UPI and enter your 12-digit UPI UTR number.',
       })
       return
     }
@@ -523,7 +486,7 @@ export default function Registration() {
         isOpen: true,
         type: 'unconfirmed',
         title: 'Payment Confirmation Check Required',
-        message: 'Please tick the confirmation checkbox certifying that your team has paid the ₹50 fee on Razorpay/UPI.',
+        message: 'Please tick the confirmation checkbox certifying that your team has completed the ₹50 fee via UPI.',
       })
       return
     }
@@ -573,7 +536,7 @@ export default function Registration() {
         paymentUtr: rawUtr,
         leadCourse: finalLeadCourse,
         members: finalMembers,
-        paymentStatus: '₹50 Successful',
+        paymentStatus: 'Pending Verification (₹50)',
         paymentConfirmed: true,
       }
 
@@ -582,18 +545,6 @@ export default function Registration() {
         currentTeamId,
         currentRegId
       )
-
-      // 🛡️ Check if server flagged payment as unverified / rejected
-      if (result && result.paymentVerified === false) {
-        setPaymentModal({
-          isOpen: true,
-          type: 'rejected',
-          title: 'Payment Unverified / Registration On Hold',
-          message: result.error || 'Your ₹50 payment could not be verified. Official confirmation email held until payment is completed.',
-        })
-        setIsSubmitting(false)
-        return
-      }
 
       if (result && result.teamId && result.registrationId) {
         currentTeamId = result.teamId
@@ -616,7 +567,7 @@ export default function Registration() {
           ...payloadData,
           registrationId: currentRegId,
           teamId: currentTeamId,
-          paymentStatus: '₹50 Paid',
+          paymentStatus: 'Pending Verification',
           pptDriveUrl: result?.pptUrl || '',
         })
       }
@@ -625,7 +576,7 @@ export default function Registration() {
         syncNextSerialNum(currentNum + 1)
       }
 
-      // 4. Advance to Step 05: Completed
+      // 4. Advance to Step 05: Completed (Under 24-Hour Review)
       setCurrentStep(5)
       window.scrollTo({ top: 100, behavior: 'smooth' })
     } catch (err) {
@@ -638,73 +589,9 @@ export default function Registration() {
     }
   }
 
-  // Trigger Embedded Razorpay Standard Checkout Popup
-  const handleRazorpayPopupPay = async () => {
-    setIsOpeningRazorpay(true)
-    try {
-      const isLoaded = await loadRazorpayScript()
-      const razorpayKey =
-        import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TbdQP6aRj2Uab8'
-
-      if (!isLoaded || !window.Razorpay || !razorpayKey) {
-        // Fallback: If Razorpay SDK can't be loaded or no key is provided in env, open direct payment page
-        window.open(RAZORPAY_PAYMENT_URL, '_blank')
-        setIsOpeningRazorpay(false)
-        return
-      }
-
-      const options = {
-        key: razorpayKey,
-        amount: 5000, // ₹50.00 (in paise)
-        currency: 'INR',
-        name: 'AiTHON 2.0',
-        description: 'First PPT Evaluation Fee (₹50)',
-        prefill: {
-          name: formData.leadFullName || '',
-          email: formData.leadEmail || '',
-          contact: formData.leadPhone || '',
-        },
-        notes: {
-          teamName: formData.teamName || 'Team',
-          teamSize: String(formData.teamSize || 4),
-          track: formData.selectedTrack || 'General AI Track',
-        },
-        theme: {
-          color: '#062b59',
-        },
-        handler: function (response) {
-          const payId = response.razorpay_payment_id
-          if (payId) {
-            setFormData((prev) => ({ ...prev, paymentUtr: payId }))
-            setPaymentConfirmed(true)
-            setAutoPaidId(payId)
-            handleFinalSubmit(null, payId)
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsOpeningRazorpay(false)
-          },
-        },
-      }
-
-      const rzp = new window.Razorpay(options)
-      rzp.on('payment.failed', function (resp) {
-        setIsOpeningRazorpay(false)
-        alert('Payment not completed: ' + (resp?.error?.description || 'You can also pay via the QR code or link below.'))
-      })
-      rzp.open()
-    } catch (err) {
-      console.warn('Razorpay checkout popup error:', err)
-      window.open(RAZORPAY_PAYMENT_URL, '_blank')
-    } finally {
-      setIsOpeningRazorpay(false)
-    }
-  }
-
-  // Copy Razorpay link helper
+  // Copy UPI ID helper
   const handleCopyUpi = () => {
-    navigator.clipboard.writeText(RAZORPAY_PAYMENT_URL)
+    navigator.clipboard.writeText(OFFICIAL_UPI_ID)
     setCopiedUpi(true)
     setTimeout(() => setCopiedUpi(false), 2500)
   }
@@ -1651,7 +1538,7 @@ export default function Registration() {
 
             {/* SUB-VIEW 2: PAYMENT SECTION */}
             {step4View === 'payment' && (
-              <div className="bg-white border border-[#edebe6] rounded-2xl p-6 sm:p-8 shadow-xs space-y-6 max-w-xl mx-auto">
+              <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
                 {/* Clean Header */}
                 <div className="pb-4 border-b border-[#edebe6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
@@ -1669,123 +1556,162 @@ export default function Registration() {
                   </div>
                 </div>
 
-                {/* Clean Single-Column Payment & Auto-Detection Card */}
+                {/* Clean UPI Payment Card */}
                 <div className="space-y-5">
-                  {/* Instant Razorpay Popup Checkout Button */}
-                  <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-blue-900 flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-blue-600" />
-                        <span>Instant Razorpay Payment (Auto-Detection)</span>
-                      </span>
-                      <span className="text-[10px] font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                        Auto-Verify
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleRazorpayPopupPay}
-                      disabled={isOpeningRazorpay || isSubmitting}
-                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-[#062b59] hover:bg-[#1d4ed8] text-white font-extrabold text-sm uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer disabled:opacity-60"
-                    >
-                      {isOpeningRazorpay ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Opening Razorpay Checkout...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Pay ₹50 with Razorpay Popup</span>
-                          <ExternalLink className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1">
-                      <p className="text-[11px] text-blue-700 font-medium">
-                        Opens secure checkout popup. Payment ID is auto-detected and confirmed instantly!
-                      </p>
-                      <a
-                        href={RAZORPAY_PAYMENT_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-900 hover:text-blue-700 underline underline-offset-2 shrink-0"
-                      >
-                        <span>Direct Link</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Auto-Captured Success Notification */}
-                  {autoPaidId && (
-                    <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Payment Verified: <strong className="font-mono">{autoPaidId}</strong> • Submitting registration automatically...</span>
-                    </div>
-                  )}
-
-                  <div className="relative flex py-1 items-center">
-                    <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink mx-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                      OR ENTER PAYMENT REFERENCE MANUALLY
-                    </span>
-                    <div className="flex-grow border-t border-slate-200"></div>
-                  </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between">
-                        <span>
-                          Transaction Reference / UTR ID <span className="text-red-600 font-bold">*</span>
+                  {/* Official UPI Payment Box */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/60 border-2 border-blue-200/80 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-blue-100">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-[#062b59]" />
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#062b59]">
+                          Official UPI Payment (₹50)
                         </span>
-                        {formData.paymentUtr && formData.paymentUtr.trim().length >= 6 && (
-                          <span className="text-[11px] font-bold text-emerald-600 normal-case flex items-center gap-0.5">
-                            ✓ Entered
-                          </span>
-                        )}
-                      </label>
-                      <input
-                        type="text"
-                        name="paymentUtr"
-                        value={formData.paymentUtr}
-                        onChange={(e) => {
-                          handleChange(e)
-                          if (utrError) setUtrError('')
-                        }}
-                        placeholder="e.g. 12-digit UTR from GPay / PhonePe / Paytm / Razorpay"
-                        className={`w-full px-4 py-2.5 rounded-lg bg-white border text-sm font-sans focus:outline-none transition-all ${
-                          utrError
-                            ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20'
-                            : 'border-[#edebe6] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
-                        }`}
-                      />
-                      {utrError && (
-                        <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{utrError}</span>
-                        </p>
-                      )}
-                      <span className="text-[11px] text-slate-500 block">
-                        Enter the 12-digit UPI UTR number or Razorpay Payment ID from your receipt.
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-extrabold bg-emerald-600 text-white px-3 py-1 rounded-full uppercase tracking-wider self-start sm:self-auto">
+                        GPay • PhonePe • Paytm • Any UPI
                       </span>
                     </div>
 
-                    {/* Payment Confirmation Checkbox */}
-                    <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none hover:bg-blue-50/40 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={paymentConfirmed}
-                        onChange={(e) => {
-                          setPaymentConfirmed(e.target.checked)
-                          if (utrError) setUtrError('')
-                        }}
-                        className="mt-0.5 w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer"
-                      />
-                      <span className="text-xs text-slate-700 font-medium leading-relaxed">
-                        I confirm that our team has completed the <strong className="text-[#062b59]">₹50 evaluation fee</strong>.
-                      </span>
-                    </label>
+                    {/* Dedicated Full-Width UPI ID Box with One-Click Copy */}
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-blue-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-0.5 min-w-0">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Official Recipient UPI ID:
+                        </span>
+                        <div className="font-mono text-sm sm:text-base font-black text-[#062b59] tracking-tight select-all whitespace-nowrap overflow-x-auto">
+                          {OFFICIAL_UPI_ID}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyUpi}
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-xs"
+                      >
+                        {copiedUpi ? (
+                          <>
+                            <Check className="w-4 h-4 text-emerald-300" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            <span>Copy UPI ID</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* QR Code and Quick Instructions Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
+                      {/* Interactive QR Code (Enlarged & Centered) */}
+                      <div className="flex flex-col items-center text-center space-y-2.5">
+                        <div className="p-3 sm:p-3.5 bg-white rounded-2xl border-2 border-blue-300 shadow-md inline-block">
+                          <img
+                            src="/qr-50.jpg"
+                            alt="Scan to Pay ₹50 via UPI - Shree A. Ugale (shreeugale123-3@oksbi)"
+                            className="w-52 h-auto sm:w-60 md:w-64 max-w-full rounded-xl object-contain shadow-xs"
+                            loading="eager"
+                          />
+                        </div>
+                        <span className="text-[11px] sm:text-xs font-extrabold text-[#062b59] uppercase tracking-wider flex items-center gap-1.5 bg-white px-3.5 py-1 rounded-full border border-blue-200 shadow-2xs">
+                          <QrCode className="w-3.5 h-3.5 text-[#2563eb]" />
+                          <span>Scan to Pay ₹50 with Any UPI App</span>
+                        </span>
+                      </div>
+
+                      {/* Payment Instructions */}
+                      <div className="space-y-3 text-left">
+                        <div className="p-4 rounded-xl bg-white border border-blue-100 text-xs text-slate-700 space-y-2 shadow-2xs">
+                          <div className="font-extrabold text-[#062b59] uppercase tracking-wider text-[11px]">
+                            Quick Instructions:
+                          </div>
+                          <ol className="list-decimal pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed font-medium">
+                            <li>
+                              Scan the QR code or transfer ₹50 directly to <strong className="font-mono text-[#062b59] whitespace-nowrap">{OFFICIAL_UPI_ID}</strong>.
+                            </li>
+                            <li>
+                              From your payment confirmation receipt, copy the <strong>12-digit UPI UTR / Reference ID</strong>.
+                            </li>
+                            <li>
+                              Paste the 12-digit UTR number below and submit your team entry.
+                            </li>
+                          </ol>
+                        </div>
+
+                        {/* Direct Mobile Intent Link */}
+                        <a
+                          href={OFFICIAL_UPI_URI}
+                          className="sm:hidden inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-xl bg-blue-100 hover:bg-blue-200 text-[#062b59] text-xs font-bold transition-colors"
+                        >
+                          <span>Tap to Open Installed UPI App</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* UTR Input Section */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between">
+                      <span>
+                        Transaction Reference / 12-Digit UPI UTR <span className="text-red-600 font-bold">*</span>
+                      </span>
+                      {formData.paymentUtr && formData.paymentUtr.trim().length >= 6 && (
+                        <span className="text-[11px] font-bold text-emerald-600 normal-case flex items-center gap-0.5">
+                          ✓ Entered
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      name="paymentUtr"
+                      value={formData.paymentUtr}
+                      onChange={(e) => {
+                        handleChange(e)
+                        if (utrError) setUtrError('')
+                      }}
+                      placeholder="e.g. 12-digit UTR from GPay / PhonePe / Paytm"
+                      className={`w-full px-4 py-2.5 rounded-lg bg-white border text-sm font-sans focus:outline-none transition-all ${
+                        utrError
+                          ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20'
+                          : 'border-[#edebe6] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
+                      }`}
+                    />
+                    {utrError && (
+                      <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{utrError}</span>
+                      </p>
+                    )}
+                    <span className="text-[11px] text-slate-500 block">
+                      Enter the 12-digit UPI UTR number or transaction reference from your payment receipt.
+                    </span>
+                  </div>
+
+                  {/* Payment Confirmation Checkbox */}
+                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none hover:bg-blue-50/40 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={paymentConfirmed}
+                      onChange={(e) => {
+                        setPaymentConfirmed(e.target.checked)
+                        if (utrError) setUtrError('')
+                      }}
+                      className="mt-0.5 w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer"
+                    />
+                    <span className="text-xs text-slate-700 font-medium leading-relaxed">
+                      I confirm that our team has completed the <strong className="text-[#062b59]">₹50 evaluation fee</strong> and entered the correct 12-digit UTR.
+                    </span>
+                  </label>
+
+                  {/* 24-Hour Review Notice Callout */}
+                  <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/90 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
+                    <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Review Policy:</strong> Once you submit your UTR, your registration will be queued for manual verification. We will review your entry shortly (takes up to 24 hours) before confirming.
+                    </span>
+                  </div>
+                </div>
 
                 {/* Action Buttons */}
                 <div className="pt-4 border-t border-[#edebe6] flex items-center justify-between gap-4">
@@ -1810,12 +1736,12 @@ export default function Registration() {
                     {isSubmitting ? (
                       <>
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Verifying & Submitting...</span>
+                        <span>Submitting Entry...</span>
                       </>
                     ) : (
                       <>
-                        <span>Verify ₹50 & Complete Registration</span>
-                        <CheckCircle2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span>Submit Entry for Review (24 Hrs)</span>
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
                   </button>
@@ -1826,26 +1752,41 @@ export default function Registration() {
         )}
 
         {/* ==================================================
-            STEP 05 — COMPLETION (SUCCESS STATE)
+            STEP 05 — COMPLETION (UNDER 24-HOUR REVIEW STATE)
             ================================================== */}
         {currentStep === 5 && (
           <div className="bg-white border border-[#edebe6] rounded-2xl p-6 sm:p-10 shadow-sm text-center space-y-6 animate-fadeIn max-w-2xl mx-auto">
-            {/* Glowing Success Badge */}
-            <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner border-2 border-emerald-300">
-              <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
+            {/* Glowing Clock / Verification Badge */}
+            <div className="w-20 h-20 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto shadow-inner border-2 border-amber-300">
+              <Clock className="w-10 h-10 stroke-[2.5]" />
             </div>
 
             {/* Header Text */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                OFFICIAL REGISTRATION CONFIRMED
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                SUBMISSION UNDER REVIEW • 24 HOURS
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-[#062b59] uppercase tracking-tight">
-                Registration Completed
+                Registration Submitted — Under Review
               </h2>
               <p className="text-sm text-slate-600 font-medium max-w-md mx-auto">
-                Your team has been successfully registered for AiTHON 2.0.
+                Your team registration and presentation submission have been received.
               </p>
+            </div>
+
+            {/* Prominent 24-Hour Review Banner */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50/70 to-amber-50 border-2 border-amber-300 text-left space-y-2 shadow-xs">
+              <div className="flex items-start gap-3.5">
+                <Clock className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h3 className="text-base sm:text-lg font-black text-amber-950 uppercase tracking-tight">
+                    We will review your entry shortly it will take 24hrs..
+                  </h3>
+                  <p className="text-xs sm:text-sm text-amber-900 font-medium leading-relaxed">
+                    Your 12-digit UTR (<strong className="font-mono text-amber-950">{formData.paymentUtr || 'Submitted'}</strong>) and presentation submission have been logged. Our organizing committee is manually verifying your payment against bank records.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Registration Summary Card */}
@@ -1882,22 +1823,30 @@ export default function Registration() {
                 </div>
                 <div>
                   <span className="text-slate-400 block font-bold text-[11px] uppercase">Payment Status</span>
-                  <span className="font-bold text-emerald-700 flex items-center gap-1 text-xs sm:text-sm">
-                    <span>✓</span> ₹50 Successful
+                  <span className="font-bold text-amber-700 flex items-center gap-1 text-xs sm:text-sm">
+                    <Clock className="w-3.5 h-3.5" /> Pending Verification
                   </span>
                 </div>
               </div>
+
+              {formData.paymentUtr && (
+                <div className="pt-2 text-xs border-t border-[#edebe6] flex items-center justify-between">
+                  <span className="text-slate-400 font-bold text-[11px] uppercase">Submitted UTR</span>
+                  <span className="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-[#edebe6]">
+                    {formData.paymentUtr}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Email Notification Note */}
+            {/* Email Notification Notice */}
             <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 text-left space-y-1 text-xs text-slate-700">
               <div className="flex items-center gap-1.5 font-bold text-[#062b59]">
                 <MailIcon className="w-4 h-4 text-[#2563eb]" />
-                <span>Confirmation will be sent to the Team Leader's registered email address.</span>
+                <span>Confirmation Email Will Be Dispatched After Manual Verification</span>
               </div>
-              <p className="text-[11.5px] text-slate-600 pl-5">
-                The confirmation email will be sent from:{' '}
-                <strong className="text-[#062b59] font-mono">ai.veer2k26@gmail.com</strong>
+              <p className="text-[11.5px] text-slate-600 pl-5 leading-relaxed">
+                To ensure strict verification, confirmation emails will NOT trigger automatically. Once our committee manually verifies your ₹50 payment against bank records (within 24 hours), your official registration confirmation email will be dispatched to: <strong className="text-[#062b59] font-mono">{formData.leadEmail || 'your email'}</strong>.
               </p>
             </div>
 
@@ -2037,7 +1986,7 @@ export default function Registration() {
 
               {/* Policy Reminder */}
               <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
-                ⚠️ <strong>Committee Policy:</strong> Without actual confirmed payment of ₹50, the application cannot be sent for jury evaluation, and official registration confirmation will not be issued.
+                ⚠️ <strong>Committee Policy:</strong> Without valid UTR of ₹50 fee, the application cannot be verified by the organizing committee.
               </div>
 
               {/* Action Buttons */}
@@ -2048,21 +1997,10 @@ export default function Registration() {
                     setPaymentModal(null)
                     setReportSentMessage('')
                   }}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                 >
-                  I'll Enter UTR
+                  OK, I'll Enter UTR
                 </button>
-
-                <a
-                  href={RAZORPAY_PAYMENT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setPaymentModal(null)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#062b59] to-[#2563eb] hover:from-[#1d4ed8] hover:to-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm hover:shadow cursor-pointer"
-                >
-                  <span>Pay ₹50 on Razorpay &rarr;</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
               </div>
             </div>
           </div>

@@ -10,7 +10,7 @@ export default function GuidelinesSection() {
     },
     {
       title: 'ROUND 1: REGISTRATION & PPT SUBMISSION',
-      content: 'Teams must register on the portal, select 1 of the 23 competition tracks, and upload an Idea Presentation using the official AITHON PPT template (.pptx/.pdf, max 10MB). A nominal evaluation fee of ₹50 per team is required upon submission via Razorpay.',
+      content: 'Teams must register on the portal, select 1 of the 23 competition tracks, and upload an Idea Presentation using the official AITHON PPT template (.pptx/.pdf, max 10MB). A nominal evaluation fee of ₹50 per team is required upon submission via UPI.',
     },
     {
       title: 'ROUND 2: SHORTLISTING & FINALE CONFIRMATION',

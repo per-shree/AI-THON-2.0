@@ -123,7 +123,7 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     pptMimeType: formData.pptMimeType || '',
     pptFileSize: formData.pptFileSize || '',
     paymentAmount: '₹50',
-    paymentStatus: formData.paymentStatus || '₹50 Successful',
+    paymentStatus: formData.paymentStatus || 'Pending Verification (₹50)',
     paymentUtr: formData.paymentUtr || '',
 
     // Status
@@ -247,7 +247,8 @@ export async function submitRegistrationToGoogleSheet(formData, teamId, registra
     console.log('[GoogleSheets] Successfully posted to Google Sheet for team:', finalTeamId)
     return {
       success: responseData ? responseData.success !== false : true,
-      paymentVerified: responseData ? responseData.paymentVerified !== false : true,
+      underReview: responseData ? Boolean(responseData.underReview) : true,
+      paymentVerified: responseData ? Boolean(responseData.paymentVerified) : false,
       paymentRequired: responseData ? Boolean(responseData.paymentRequired) : false,
       error: responseData?.error || '',
       teamId: finalTeamId,
