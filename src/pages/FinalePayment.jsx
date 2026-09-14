@@ -48,9 +48,10 @@ export default function FinalePayment() {
   const paramTeamId = (searchParams.get('teamId') || searchParams.get('id') || '').trim().toUpperCase()
   const paramSize = parseInt(searchParams.get('size') || searchParams.get('teamSize') || '4', 10)
   const paramTeamName = (searchParams.get('teamName') || searchParams.get('team') || '').trim()
-  const paramLeadName = (searchParams.get('leadName') || searchParams.get('name') || '').trim()
+  const paramLeadName = (searchParams.get('leadName') || searchParams.get('name') || searchParams.get('leader') || searchParams.get('leaderName') || '').trim()
   const paramLeadEmail = (searchParams.get('email') || searchParams.get('leadEmail') || '').trim()
-  const paramTrack = (searchParams.get('track') || searchParams.get('selectedTrack') || '').trim()
+  const paramTrack = (searchParams.get('track') || searchParams.get('selectedTrack') || searchParams.get('domain') || '').trim()
+  const paramPhone = (searchParams.get('phone') || searchParams.get('leadPhone') || searchParams.get('mobile') || '').trim()
   const paramFee = parseInt(searchParams.get('fee') || searchParams.get('amount') || '0', 10)
 
   // State
@@ -60,7 +61,7 @@ export default function FinalePayment() {
     teamName: paramTeamName || 'Finalist Team',
     leadFullName: paramLeadName || 'Team Leader',
     leadEmail: paramLeadEmail || '',
-    leadPhone: '',
+    leadPhone: paramPhone || '',
     teamSize: paramSize >= 4 && paramSize <= 6 ? paramSize : 4,
     selectedTrack: paramTrack || 'General AI Track',
     round2PaymentStatus: 'Pending',
@@ -79,9 +80,9 @@ export default function FinalePayment() {
     setTimeout(() => setCopiedUpi(false), 2500)
   }
 
-  // Calculate locked fee strictly based on team size (Team Size × ₹200)
-  const teamSize = teamData.teamSize || 4
-  const lockedFee = paramFee > 0 ? paramFee : teamSize * 200
+  // Calculate locked fee strictly based on team size (Team Size × ₹200: 4 = ₹800, 5 = ₹1000, 6 = ₹1200)
+  const teamSize = teamData.teamSize >= 4 && teamData.teamSize <= 6 ? teamData.teamSize : (paramSize >= 4 && paramSize <= 6 ? paramSize : 4)
+  const lockedFee = teamSize * 200
 
   // Fetch live team details from Google Sheet
   const fetchLiveTeamData = async (targetId) => {
@@ -95,14 +96,18 @@ export default function FinalePayment() {
       const data = await res.json()
 
       if (data && data.success) {
+        const liveSize = parseInt(data.teamSize, 10) || teamSize || 4
+        const resolvedSize = liveSize >= 4 && liveSize <= 6 ? liveSize : 4
+
         setTeamData({
           teamId: data.teamId || targetId,
-          teamName: data.teamName || 'Finalist Team',
-          leadFullName: data.leadFullName || 'Team Leader',
-          leadEmail: data.leadEmail || '',
-          leadPhone: data.leadPhone || '',
-          teamSize: parseInt(data.teamSize, 10) || 4,
-          selectedTrack: data.selectedTrack || 'General AI Track',
+          registrationId: data.registrationId || '',
+          teamName: data.teamName || paramTeamName || 'Finalist Team',
+          leadFullName: data.leadFullName || paramLeadName || 'Team Leader',
+          leadEmail: data.leadEmail || paramLeadEmail || '',
+          leadPhone: data.leadPhone || paramPhone || '',
+          teamSize: resolvedSize,
+          selectedTrack: data.selectedTrack || paramTrack || 'General AI Track',
           round2PaymentStatus: data.round2PaymentStatus || 'Pending',
         })
 
@@ -120,15 +125,15 @@ export default function FinalePayment() {
         if (isConfirmed) {
           setPaidInfo({
             paymentId: data.round2PaymentStatus,
-            amount: data.round2FeeAmount || (parseInt(data.teamSize, 10) * 200),
-            teamId: data.teamId,
+            amount: data.round2FeeAmount || (resolvedSize * 200),
+            teamId: data.teamId || targetId,
             isConfirmed: true,
           })
         } else if (isPending) {
           setPaidInfo({
             paymentId: data.round2PaymentStatus,
-            amount: data.round2FeeAmount || (parseInt(data.teamSize, 10) * 200),
-            teamId: data.teamId,
+            amount: data.round2FeeAmount || (resolvedSize * 200),
+            teamId: data.teamId || targetId,
             isConfirmed: false,
           })
         }
@@ -145,8 +150,10 @@ export default function FinalePayment() {
   useEffect(() => {
     if (paramTeamId) {
       fetchLiveTeamData(paramTeamId)
+    } else if (paramLeadEmail) {
+      fetchLiveTeamData(paramLeadEmail)
     }
-  }, [paramTeamId])
+  }, [paramTeamId, paramLeadEmail])
 
   // Confirm Round 2 Payment via UPI UTR
   const handleConfirmFinalePayment = async () => {

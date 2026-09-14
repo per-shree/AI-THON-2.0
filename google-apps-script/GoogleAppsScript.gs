@@ -90,13 +90,14 @@ var HEADERS = [
   "PPT Drive Link",            // Col 39 (AM) - Direct Google Drive URL (Named as Team ID)
   "Original PPT File Name",    // Col 40 (AN)
   "Evaluation Fee (₹50)",      // Col 41 (AO) - ₹50
-  "Eval Fee Status",           // Col 42 (AP) - ₹50 Successful
-  "Eval Payment UTR",          // Col 43 (AQ)
+  "Eval Fee Status",           // Col 42 (AP) - Dropdown: Pending Verification / Verified / Rejected
+  "Eval Payment UTR",          // Col 43 (AQ) - Only Payment ID / UTR, No Dropdown
   "PPT Status",                // Col 44 (AR) - Selection / Rejection (Accepted / Rejected / Pending Review)
   "Round 2 Fee Amount",        // Col 45 (AS) - Calculated: Team Size × 200 (₹800, ₹1000, ₹1200)
   "Round 2 Payment Link",      // Col 46 (AT) - Non-Editable Payment Link
-  "Round 2 Payment Status",    // Col 47 (AU) - Pending / Paid
-  "Email Notification Status"  // Col 48 (AV) - Tracks email sent date/time to prevent duplicate emails
+  "Round 2 Payment Status",    // Col 47 (AU) - Dropdown: Pending Verification / Verified / Rejected
+  "Round 2 Payment UTR",       // Col 48 (AV) - Only Payment ID / UTR, No Dropdown
+  "Email Notification Status"  // Col 49 (AW) - Tracks email sent date/time to prevent duplicate emails
 ];
 
 function getTargetSpreadsheet() {
@@ -114,22 +115,38 @@ function getTargetSpreadsheet() {
  * Generates the private website payment portal link for Round 2
  * This link is unlisted and ONLY dispatched inside the Acceptance Email!
  */
-function getRound2PaymentLink(teamSize, teamId, leadEmail, teamName) {
+function getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, phone) {
   var size = parseInt(teamSize, 10) || 4;
+  if (size < 4) size = 4;
+  if (size > 6) size = 6;
   var fee = size * 200;
-  var base = (WEBSITE_URL || "").replace(/\/+$/, "");
+  var base = (WEBSITE_URL || "https://aithon2-0.xyz").replace(/\/+$/, "");
 
-  // If website URL is configured, build the private website payment portal URL:
-  if (base && base !== "") {
-    return base + "/finale-payment?teamId=" + encodeURIComponent(teamId || "") +
-           "&size=" + size +
-           "&fee=" + fee +
-           "&email=" + encodeURIComponent(leadEmail || "") +
-           "&teamName=" + encodeURIComponent(teamName || "");
+  var params = [
+    "teamId=" + encodeURIComponent(teamId || ""),
+    "id=" + encodeURIComponent(teamId || ""),
+    "size=" + size,
+    "teamSize=" + size,
+    "fee=" + fee,
+    "amount=" + fee,
+    "email=" + encodeURIComponent(leadEmail || ""),
+    "leadEmail=" + encodeURIComponent(leadEmail || ""),
+    "teamName=" + encodeURIComponent(teamName || ""),
+    "team=" + encodeURIComponent(teamName || ""),
+    "leadName=" + encodeURIComponent(leadName || ""),
+    "name=" + encodeURIComponent(leadName || ""),
+    "track=" + encodeURIComponent(selectedTrack || "General AI Track"),
+    "selectedTrack=" + encodeURIComponent(selectedTrack || "General AI Track")
+  ];
+  if (phone) {
+    var cleanPhone = String(phone).replace("'", "").trim();
+    if (cleanPhone) {
+      params.push("phone=" + encodeURIComponent(cleanPhone));
+      params.push("leadPhone=" + encodeURIComponent(cleanPhone));
+    }
   }
 
-  // Fallback to static link if website URL not configured
-  return ROUND_2_PAYMENT_LINKS[size] || ROUND_2_PAYMENT_LINKS[4];
+  return base + "/finale-payment?" + params.join("&");
 }
 
 /**
@@ -258,7 +275,15 @@ function doPost(e) {
     // Calculate Round 2 non-editable fee: teamSize * 200
     var teamSizeNum = parseInt(data.teamSize, 10) || 4;
     var round2FeeAmount = "₹" + (teamSizeNum * 200);
-    var round2Link = getRound2PaymentLink(teamSizeNum, data.teamId);
+    var round2Link = getRound2PaymentLink(
+      teamSizeNum,
+      data.teamId,
+      data.leadEmail,
+      data.teamName,
+      data.leadFullName,
+      data.selectedTrack,
+      data.leadPhone
+    );
 
     // 🛡️ SUBMISSION RECORDING (MANUAL VERIFICATION REQUIRED — AUTO-DETECTION DISABLED)
     var utrStr = data.paymentUtr ? String(data.paymentUtr).trim() : "";
@@ -314,8 +339,9 @@ function doPost(e) {
       pptStatusCol,                            // Col 44: PPT Status
       round2FeeAmount,                         // Col 45: Round 2 Fee Amount (teamSize * 200)
       round2Link,                              // Col 46: Round 2 Payment Link (Non-editable)
-      "Pending",                               // Col 47: Round 2 Payment Status
-      emailSentCol                             // Col 48: Email Notification Status
+      "Pending Verification",                  // Col 47: Round 2 Payment Status (Dropdown: Pending Verification / Verified / Rejected)
+      "-",                                     // Col 48: Round 2 Payment UTR (Only Payment ID / UTR, No Dropdown)
+      emailSentCol                             // Col 49: Email Notification Status
     ];
 
     sheet.appendRow(row);
@@ -339,6 +365,18 @@ function doPost(e) {
       // Strictly ensure Column 43 (Eval Payment UTR) has NO dropdown and is formatted as Plain Text
       sheet.getRange(lastRow, 43).clearDataValidations();
       sheet.getRange(lastRow, 43).setNumberFormat("@");
+
+      // Set Column 47 (Round 2 Payment Status) dropdown: Pending Verification / Verified / Rejected
+      var r2Rule = SpreadsheetApp.newDataValidation()
+        .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
+        .setAllowInvalid(true)
+        .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
+        .build();
+      sheet.getRange(lastRow, 47).setDataValidation(r2Rule);
+
+      // Strictly ensure Column 48 (Round 2 Payment UTR) has NO dropdown and is formatted as Plain Text
+      sheet.getRange(lastRow, 48).clearDataValidations();
+      sheet.getRange(lastRow, 48).setNumberFormat("@");
     } catch (styleErr) {}
 
     // NOTE: Auto-email trigger is disabled. Emails are only sent when an admin manually marks Col 42 as Verified/Paid.
@@ -375,20 +413,43 @@ function doGet(e) {
     var sheet = ss ? ss.getSheetByName("Registrations") : null;
 
     // Check if client is looking up team details for the Grand Finale Payment Portal
-    if (e && e.parameter && (e.parameter.action === "getTeamDetails" || e.parameter.teamId)) {
-      var queryTeamId = String(e.parameter.teamId || "").trim().toUpperCase();
-      var queryEmail = String(e.parameter.email || "").trim().toLowerCase();
+    if (e && e.parameter && (e.parameter.action === "getTeamDetails" || e.parameter.teamId || e.parameter.email)) {
+      var queryTeamId = String(e.parameter.teamId || e.parameter.id || "").trim().toUpperCase();
+      var queryEmail = String(e.parameter.email || e.parameter.leadEmail || "").trim().toLowerCase();
+      var cleanQuery = queryTeamId.replace(/[^A-Z0-9]/gi, "");
 
-      if (sheet && (queryTeamId || queryEmail)) {
+      if (sheet && (queryTeamId || queryEmail || cleanQuery)) {
         var lastRow = sheet.getLastRow();
         if (lastRow > 1) {
-          var rows = sheet.getRange(2, 1, lastRow - 1, 48).getValues();
+          var rows = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
           for (var i = 0; i < rows.length; i++) {
             var r = rows[i];
             var rTeamId = String(r[1] || "").trim().toUpperCase();
+            var rRegId = String(r[2] || "").trim().toUpperCase();
             var rEmail = String(r[6] || "").trim().toLowerCase();
-            if ((queryTeamId && rTeamId === queryTeamId) || (queryEmail && rEmail === queryEmail)) {
+            var cleanRTeam = rTeamId.replace(/[^A-Z0-9]/gi, "");
+            var cleanRReg = rRegId.replace(/[^A-Z0-9]/gi, "");
+
+            var isMatch = false;
+            if (queryTeamId) {
+              if (rTeamId === queryTeamId || rRegId === queryTeamId) {
+                isMatch = true;
+              } else if (cleanQuery && (cleanRTeam === cleanQuery || cleanRReg === cleanQuery)) {
+                isMatch = true;
+              } else if (cleanQuery.length >= 3 && (cleanRTeam.indexOf(cleanQuery) !== -1 || cleanRReg.indexOf(cleanQuery) !== -1)) {
+                isMatch = true;
+              }
+            } else if (queryEmail) {
+              if (rEmail === queryEmail) {
+                isMatch = true;
+              }
+            }
+
+            if (isMatch) {
               var size = parseInt(r[4], 10) || 4;
+              if (size < 4) size = 4;
+              if (size > 6) size = 6;
+              var finaleFee = size * 200;
               return ContentService.createTextOutput(JSON.stringify({
                 success: true,
                 teamId: r[1],
@@ -398,11 +459,22 @@ function doGet(e) {
                 leadFullName: r[5],
                 leadEmail: r[6],
                 leadPhone: String(r[7] || "").replace("'", ""),
+                leadCollege: r[8] || "",
+                leadCourse: r[9] || "",
+                leadYear: r[10] || "",
+                leadCity: r[11] || "",
                 selectedTrack: r[37] || "General AI Track",
+                pptDriveLink: r[38] || "",
+                pptFileName: r[39] || "",
+                evalFee: r[40] || "₹50",
+                evalFeeStatus: r[41] || "Pending Verification",
+                evalPaymentUtr: String(r[42] || "").replace("'", ""),
                 pptStatus: r[43] || "Pending Review",
-                round2FeeAmount: size * 200,
-                round2PaymentStatus: r[46] || "Pending",
-                ticketSent: String(r[47] || "").indexOf("Finale Ticket Sent") !== -1
+                round2FeeAmount: finaleFee,
+                round2PaymentLink: r[45] || "",
+                round2PaymentStatus: r[46] || "Pending Verification",
+                round2PaymentUtr: String(r[47] || "").replace("'", ""),
+                ticketSent: String(r[48] || "").indexOf("Finale Ticket Sent") !== -1
               })).setMimeType(ContentService.MimeType.JSON);
             }
           }
@@ -422,7 +494,7 @@ function doGet(e) {
       account: "ai.veer2k26@gmail.com",
       nextSerial: nextSerial,
       nextTeamId: "TEAM-" + nextSerial,
-      nextRegistrationId: "AI25-" + nextSerial,
+      nextRegistrationId: "AI26-" + nextSerial,
       pptFolderId: PPT_FOLDER_ID,
       columnsCount: HEADERS.length,
       timestamp: Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm:ss a")
@@ -448,7 +520,7 @@ function getLiveNextSerial(sheet) {
 
   for (var i = 0; i < teamIdColValues.length; i++) {
     var val = String(teamIdColValues[i][0]).trim();
-    var match = val.match(/(?:TEAM-?|AI25-?)(\d+)/i);
+    var match = val.match(/(?:TEAM-?|AI2[56]-?|AI\d{2}-?)(\d+)/i);
     if (match && match[1]) {
       var num = parseInt(match[1], 10);
       if (!isNaN(num) && num > maxSerial) {
@@ -494,13 +566,14 @@ function formatHeaderRow(sheet) {
     sheet.setColumnWidth(39, 280); // PPT Drive Link
     sheet.setColumnWidth(40, 200); // Original PPT File Name
     sheet.setColumnWidth(41, 120); // Evaluation Fee (₹50)
-    sheet.setColumnWidth(42, 140); // Eval Fee Status
-    sheet.setColumnWidth(43, 150); // Eval Payment UTR
+    sheet.setColumnWidth(42, 160); // Eval Fee Status
+    sheet.setColumnWidth(43, 160); // Eval Payment UTR
     sheet.setColumnWidth(44, 170); // PPT Status (Selection/Rejection)
     sheet.setColumnWidth(45, 150); // Round 2 Fee Amount
-    sheet.setColumnWidth(46, 290); // Round 2 Payment Link
-    sheet.setColumnWidth(47, 150); // Round 2 Payment Status
-    sheet.setColumnWidth(48, 260); // Email Notification Status
+    sheet.setColumnWidth(46, 300); // Round 2 Payment Link
+    sheet.setColumnWidth(47, 160); // Round 2 Payment Status
+    sheet.setColumnWidth(48, 160); // Round 2 Payment UTR
+    sheet.setColumnWidth(49, 260); // Email Notification Status
 
     // Apply Dropdown Data Validation to Column 44 (PPT Status) for all data rows
     var maxRows = Math.max(sheet.getMaxRows(), 100);
@@ -526,14 +599,19 @@ function formatHeaderRow(sheet) {
     utrRange.clearDataValidations();
     utrRange.setNumberFormat("@");
 
-    // Apply Dropdown Data Validation to Column 47 (Round 2 Payment Status) for all data rows
+    // Apply Dropdown Data Validation to Column 47 (Round 2 Payment Status) for all data rows: ONLY Pending Verification, Verified, Rejected
     var r2StatusRange = sheet.getRange(2, 47, maxRows - 1, 1);
     var r2Rule = SpreadsheetApp.newDataValidation()
-      .requireValueInList(["Pending", "Paid", "Verified", "Failed"], true)
+      .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
       .setAllowInvalid(true)
-      .setHelpText("Select 'Paid' or 'Verified' when Grand Finale payment is received.")
+      .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
       .build();
     r2StatusRange.setDataValidation(r2Rule);
+
+    // Strictly remove any dropdown data validation from Column 48 (Round 2 Payment UTR) - ONLY payment ID occurs
+    var r2UtrRange = sheet.getRange(2, 48, maxRows - 1, 1);
+    r2UtrRange.clearDataValidations();
+    r2UtrRange.setNumberFormat("@");
 
   } catch (e) {
     Logger.log("Column formatting notice: " + e.toString());
@@ -568,8 +646,8 @@ function updateSheetStructure() {
   headerRange.setValues([HEADERS]);
   formatHeaderRow(sheet);
 
-  Logger.log("✓ Google Sheet headers successfully updated to 48 columns with Selected Track and PPT Status dropdown!");
-  return "Sheet structure updated successfully to 48 columns!";
+  Logger.log("✓ Google Sheet headers successfully updated to 49 columns with Round 2 Payment UTR and dropdowns!");
+  return "Sheet structure updated successfully to 49 columns!";
 }
 
 /**
@@ -585,10 +663,12 @@ function onOpen() {
       .addItem("⚡ Quick Mark Team as Paid (Finale Col 47)", "quickMarkTeamPaidPrompt")
       .addItem("🎟️ Dispatch Finale Tickets to Paid Teams", "processAllPaidFinaleTeams")
       .addItem("📧 Process PPT Evaluations (Send Emails)", "processAllPptEvaluations")
+      .addSeparator()
+      .addItem("🔗 Regenerate All Round 2 Payment Links (Col 46)", "regenerateAllRound2PaymentLinks")
       .addItem("📋 View Unmatched Payments Sheet", "openUnmatchedPaymentsSheet")
       .addSeparator()
-      .addItem("🔄 Fix Eval Dropdowns (Col 42 & Col 43)", "fixEvalColumnsDropdownAndUtr")
-      .addItem("🛠️ Setup Sheet Columns & Dropdowns", "updateSheetStructure")
+      .addItem("🔄 Fix Sheet Dropdowns (Col 42, 43, 44, 47, 48)", "fixEvalColumnsDropdownAndUtr")
+      .addItem("🛠️ Setup Sheet Columns & Dropdowns (49 Cols)", "updateSheetStructure")
       .addItem("⚡ Enable Real-Time Edit Trigger", "installEditTrigger")
       .addToUi();
   } catch (e) {
@@ -597,7 +677,7 @@ function onOpen() {
 }
 
 /**
- * 🛠️ Fix Column 42 Dropdowns & Remove Dropdowns from Column 43 (Eval Payment UTR)
+ * 🛠️ Fix Column 42 & 47 Dropdowns, and Remove Dropdowns from Column 43 & 48 (Payment UTRs)
  */
 function fixEvalColumnsDropdownAndUtr() {
   try {
@@ -618,9 +698,29 @@ function fixEvalColumnsDropdownAndUtr() {
     sheet.getRange(2, 43, maxRows - 1, 1).clearDataValidations();
     sheet.getRange(2, 43, maxRows - 1, 1).setNumberFormat("@");
 
-    Logger.log("✓ Updated Column 42 dropdowns to [Pending Verification, Verified, Rejected] and cleared Column 43 dropdowns.");
+    // 3. Column 44: Dropdown with [Accepted, Rejected, Pending Review]
+    var pptRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(["Accepted", "Rejected", "Pending Review"], true)
+      .setAllowInvalid(false)
+      .setHelpText("Select 'Accepted' or 'Rejected' to evaluate team PPT.")
+      .build();
+    sheet.getRange(2, 44, maxRows - 1, 1).setDataValidation(pptRule);
+
+    // 4. Column 47: Dropdown with ONLY [Pending Verification, Verified, Rejected]
+    var r2Rule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
+      .setAllowInvalid(true)
+      .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
+      .build();
+    sheet.getRange(2, 47, maxRows - 1, 1).setDataValidation(r2Rule);
+
+    // 5. Column 48: Clear all dropdown data validations so only payment ID occurs
+    sheet.getRange(2, 48, maxRows - 1, 1).clearDataValidations();
+    sheet.getRange(2, 48, maxRows - 1, 1).setNumberFormat("@");
+
+    Logger.log("✓ Updated Column 42 & 47 dropdowns to [Pending Verification, Verified, Rejected] and cleared Column 43 & 48 UTR validations.");
     try {
-      SpreadsheetApp.getUi().alert("✓ Updated successfully!\n\n• Column 42 (Eval Fee Status): Dropdown now consists only of 'Pending Verification', 'Verified', and 'Rejected'.\n• Column 43 (Eval Payment UTR): All dropdowns removed so only the payment ID occurs.");
+      SpreadsheetApp.getUi().alert("✓ Updated successfully!\n\n• Column 42 & 47: Dropdown now consists only of 'Pending Verification', 'Verified', and 'Rejected'.\n• Column 43 & 48: All dropdowns removed so only Payment UTR occurs (plain text).");
     } catch (uiErr) {}
   } catch (err) {
     Logger.log("fixEvalColumnsDropdownAndUtr error: " + err.toString());
@@ -653,7 +753,7 @@ function quickVerifyRegistrationPaymentPrompt() {
     return;
   }
 
-  var values = sheet.getRange(2, 1, lastRow - 1, 48).getValues();
+  var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
   var matchRow = -1;
   var upperInput = input.toUpperCase();
   var lowerInput = input.toLowerCase();
@@ -673,7 +773,7 @@ function quickVerifyRegistrationPaymentPrompt() {
     return;
   }
 
-  var rowData = sheet.getRange(matchRow, 1, 1, 48).getValues()[0];
+  var rowData = sheet.getRange(matchRow, 1, 1, 49).getValues()[0];
   var teamId = rowData[1];
   var teamName = rowData[3];
 
@@ -717,7 +817,7 @@ function quickMarkTeamPaidPrompt() {
     return;
   }
 
-  var values = sheet.getRange(2, 1, lastRow - 1, 48).getValues();
+  var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
   var matchRow = -1;
   var upperInput = input.toUpperCase();
   var lowerInput = input.toLowerCase();
@@ -736,14 +836,17 @@ function quickMarkTeamPaidPrompt() {
     return;
   }
 
-  var rowData = sheet.getRange(matchRow, 1, 1, 48).getValues()[0];
+  var rowData = sheet.getRange(matchRow, 1, 1, 49).getValues()[0];
   var teamId = rowData[1];
   var teamName = rowData[3];
   var teamSize = parseInt(rowData[4], 10) || 4;
+  if (teamSize < 4) teamSize = 4;
+  if (teamSize > 6) teamSize = 6;
   var fee = teamSize * 200;
 
+  sheet.getRange(matchRow, 45).setValue("₹" + fee);
   sheet.getRange(matchRow, 47)
-    .setValue("✓ ₹" + fee + " Confirmed (Manual)")
+    .setValue("Verified")
     .setBackground("#dcfce7")
     .setFontColor("#166534")
     .setFontWeight("bold");
@@ -836,7 +939,7 @@ function installedOnEdit(e) {
  * Confirmation emails will ONLY be sent when Col 42 is manually marked as "Verified", "Paid", "Approved", or "Successful".
  */
 function processEvalFeeStatusRow(sheet, rowNum) {
-  var rowData = sheet.getRange(rowNum, 1, 1, 48).getValues()[0];
+  var rowData = sheet.getRange(rowNum, 1, 1, 49).getValues()[0];
 
   var teamId = String(rowData[1] || "").trim();
   var regId = String(rowData[2] || "").trim();
@@ -845,23 +948,26 @@ function processEvalFeeStatusRow(sheet, rowNum) {
   var teamSize = parseInt(rawSize, 10) || 4;
   var leadName = String(rowData[5] || "").trim();
   var leadEmail = String(rowData[6] || "").trim();
+  var leadPhone = String(rowData[7] || "").replace("'", "").trim();
+  var leadCollege = String(rowData[8] || "").trim();
   var selectedTrack = String(rowData[37] || "").trim(); // Col 38 (0-indexed: 37)
   var pptLink = String(rowData[38] || "").trim();       // Col 39 (0-indexed: 38)
   var evalFeeStatus = String(rowData[41] || "").trim(); // Col 42 (0-indexed: 41)
-  var utr = String(rowData[42] || "").trim();           // Col 43 (0-indexed: 42)
-  var emailSentStatus = String(rowData[47] || "").trim(); // Col 48 (0-indexed: 47)
+  var utr = String(rowData[42] || "").replace("'", "").trim(); // Col 43 (0-indexed: 42)
+  var emailSentStatus = String(rowData[48] || "").trim(); // Col 49 (0-indexed: 48)
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
     return false;
   }
 
+  var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
   var lowerStatus = evalFeeStatus.toLowerCase().trim();
 
-  // If status is "Rejected", style as red, record in Col 48, and exit
+  // If status is "Rejected", style as red, record in Col 49, and exit
   if (lowerStatus === "rejected" || lowerStatus.indexOf("rejected") !== -1) {
     sheet.getRange(rowNum, 42).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
-    sheet.getRange(rowNum, 48).setValue("❌ Payment Rejected (" + nowStr + ")");
+    sheet.getRange(rowNum, 49).setValue("❌ Payment Rejected (" + nowStr + ")");
     Logger.log("Row " + rowNum + " (" + teamId + "): Eval fee status marked as Rejected.");
     return false;
   }
@@ -887,7 +993,15 @@ function processEvalFeeStatusRow(sheet, rowNum) {
     return false;
   }
 
-  var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
+  // Extract registered team members
+  var membersList = [];
+  if (rowData[12] && String(rowData[12]).trim() !== "-" && String(rowData[12]).trim() !== "") membersList.push(String(rowData[12]).trim());
+  if (rowData[17] && String(rowData[17]).trim() !== "-" && String(rowData[17]).trim() !== "") membersList.push(String(rowData[17]).trim());
+  if (rowData[22] && String(rowData[22]).trim() !== "-" && String(rowData[22]).trim() !== "") membersList.push(String(rowData[22]).trim());
+  if (rowData[27] && String(rowData[27]).trim() !== "-" && String(rowData[27]).trim() !== "") membersList.push(String(rowData[27]).trim());
+  if (rowData[32] && String(rowData[32]).trim() !== "-" && String(rowData[32]).trim() !== "") membersList.push(String(rowData[32]).trim());
+
+  var portalLink = getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, leadPhone);
 
   var teamData = {
     teamId: teamId,
@@ -896,16 +1010,20 @@ function processEvalFeeStatusRow(sheet, rowNum) {
     teamSize: teamSize,
     leadFullName: leadName,
     leadEmail: leadEmail,
+    leadPhone: leadPhone,
+    leadCollege: leadCollege,
+    members: membersList,
     selectedTrack: selectedTrack || "General AI Track",
     pptDriveUrl: pptLink,
     evalFeeStatus: "Verified",
-    utr: utr
+    utr: utr,
+    portalLink: portalLink
   };
 
   sendConfirmationEmail(teamData);
 
-  // Update Col 48: Email Notification Status
-  sheet.getRange(rowNum, 48).setValue("✓ Confirmation Email Sent (" + nowStr + ")");
+  // Update Col 49: Email Notification Status
+  sheet.getRange(rowNum, 49).setValue("✓ Confirmation Email Sent (" + nowStr + ")");
   // Style Col 42 with verified green and ensure text is "Verified"
   sheet.getRange(rowNum, 42).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
 
@@ -973,18 +1091,22 @@ function processAllPptEvaluations() {
  * Processes a single row for PPT Status evaluation & email dispatch
  */
 function processPptEvaluationRow(sheet, rowNum) {
-  var rowData = sheet.getRange(rowNum, 1, 1, 48).getValues()[0];
+  var rowData = sheet.getRange(rowNum, 1, 1, 49).getValues()[0];
 
   var teamId = String(rowData[1] || "").trim();
   var regId = String(rowData[2] || "").trim();
   var teamName = String(rowData[3] || "").trim();
   var rawSize = rowData[4];
   var teamSize = parseInt(rawSize, 10) || 4;
+  if (teamSize < 4) teamSize = 4;
+  if (teamSize > 6) teamSize = 6;
   var leadName = String(rowData[5] || "").trim();
   var leadEmail = String(rowData[6] || "").trim();
+  var leadPhone = String(rowData[7] || "").replace("'", "").trim();
+  var leadCollege = String(rowData[8] || "").trim();
   var selectedTrack = String(rowData[37] || "").trim(); // Col 38 (0-indexed: 37)
   var pptStatus = String(rowData[43] || "").trim();     // Col 44 (0-indexed: 43)
-  var emailSentStatus = String(rowData[47] || "").trim(); // Col 48 (0-indexed: 47)
+  var emailSentStatus = String(rowData[48] || "").trim(); // Col 49 (0-indexed: 48)
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
@@ -992,6 +1114,14 @@ function processPptEvaluationRow(sheet, rowNum) {
   }
 
   var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
+
+  // Extract registered team members
+  var membersList = [];
+  if (rowData[12] && String(rowData[12]).trim() !== "-" && String(rowData[12]).trim() !== "") membersList.push(String(rowData[12]).trim());
+  if (rowData[17] && String(rowData[17]).trim() !== "-" && String(rowData[17]).trim() !== "") membersList.push(String(rowData[17]).trim());
+  if (rowData[22] && String(rowData[22]).trim() !== "-" && String(rowData[22]).trim() !== "") membersList.push(String(rowData[22]).trim());
+  if (rowData[27] && String(rowData[27]).trim() !== "-" && String(rowData[27]).trim() !== "") membersList.push(String(rowData[27]).trim());
+  if (rowData[32] && String(rowData[32]).trim() !== "-" && String(rowData[32]).trim() !== "") membersList.push(String(rowData[32]).trim());
 
   // CASE 1: PPT ACCEPTED
   if (pptStatus.toLowerCase() === "accepted" || pptStatus.toLowerCase() === "selected") {
@@ -1002,7 +1132,7 @@ function processPptEvaluationRow(sheet, rowNum) {
     }
 
     var feeAmount = teamSize * 200;
-    var paymentLink = getRound2PaymentLink(teamSize, teamId, leadEmail, teamName);
+    var paymentLink = getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, leadPhone);
 
     var teamData = {
       teamId: teamId,
@@ -1011,6 +1141,9 @@ function processPptEvaluationRow(sheet, rowNum) {
       teamSize: teamSize,
       leadFullName: leadName,
       leadEmail: leadEmail,
+      leadPhone: leadPhone,
+      leadCollege: leadCollege,
+      members: membersList,
       selectedTrack: selectedTrack || "General AI Track",
       feeAmount: feeAmount,
       paymentLink: paymentLink
@@ -1018,11 +1151,11 @@ function processPptEvaluationRow(sheet, rowNum) {
 
     sendPptAcceptanceEmail(teamData);
 
-    // Update Sheet: Col 45 (Fee), Col 46 (Link), Col 47 (Payment Status), Col 48 (Email Status)
+    // Update Sheet: Col 45 (Fee), Col 46 (Link), Col 47 (Payment Status), Col 49 (Email Status)
     sheet.getRange(rowNum, 45).setValue("₹" + feeAmount);
     sheet.getRange(rowNum, 46).setValue(paymentLink);
-    sheet.getRange(rowNum, 47).setValue("Pending");
-    sheet.getRange(rowNum, 48).setValue("✓ Accepted Email Sent (" + nowStr + ")");
+    sheet.getRange(rowNum, 47).setValue("Pending Verification");
+    sheet.getRange(rowNum, 49).setValue("✓ Accepted Email Sent (" + nowStr + ")");
 
     // Highlight row status
     sheet.getRange(rowNum, 44).setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
@@ -1050,8 +1183,8 @@ function processPptEvaluationRow(sheet, rowNum) {
 
     sendPptRejectionEmail(teamDataReject);
 
-    // Update Sheet: Col 48 (Email Status)
-    sheet.getRange(rowNum, 48).setValue("✓ Rejection Email Sent (" + nowStr + ")");
+    // Update Sheet: Col 49 (Email Status)
+    sheet.getRange(rowNum, 49).setValue("✓ Rejection Email Sent (" + nowStr + ")");
     sheet.getRange(rowNum, 44).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
 
     Logger.log("✓ Rejection feedback email sent to: " + leadEmail + " for " + teamId);
@@ -1071,8 +1204,10 @@ function sendPptAcceptanceEmail(data) {
   var regId = data.registrationId || "N/A";
   var leadName = data.leadFullName || "Team Leader";
   var teamSize = data.teamSize || 4;
+  if (teamSize < 4) teamSize = 4;
+  if (teamSize > 6) teamSize = 6;
   var feeAmount = data.feeAmount || (teamSize * 200);
-  var paymentLink = data.paymentLink || getRound2PaymentLink(teamSize, teamId);
+  var paymentLink = data.paymentLink || getRound2PaymentLink(teamSize, teamId, recipient, teamName, leadName, data.selectedTrack, data.leadPhone);
 
   var subject = "[ACCEPTED] Qualified for AITHON 2.0 Finale - " + teamName + " [" + teamId + "]";
 
@@ -1092,6 +1227,9 @@ function sendPptAcceptanceEmail(data) {
     "• Team Name         : " + teamName + "\n" +
     "• Team ID           : " + teamId + "\n" +
     "• Registration ID   : " + regId + "\n" +
+    "• Team Leader       : " + leadName + (data.leadCollege ? " (" + data.leadCollege + ")" : "") + "\n" +
+    "• Leader Email      : " + recipient + "\n" +
+    (data.members && data.members.length > 0 ? ("• Team Members      : " + data.members.join(", ") + "\n") : "") +
     "• Competition Track : " + (data.selectedTrack || "General AI Track") + "\n" +
     "• Team Size         : " + teamSize + " Members\n" +
     "• Status            : SHORTLISTED FOR FINALE (ROUND 2)\n\n" +
@@ -1164,6 +1302,18 @@ function sendPptAcceptanceEmail(data) {
     '                  <td style="font-weight: 700; color: #0f172a;">' + teamName + '</td>' +
     '                </tr>' +
     '                <tr>' +
+    '                  <td style="color: #64748b;">Team Leader:</td>' +
+    '                  <td style="font-weight: 700; color: #0f172a;">' + leadName + (data.leadCollege ? (' <span style="font-weight: normal; color: #64748b;">(' + data.leadCollege + ')</span>') : '') + '</td>' +
+    '                </tr>' +
+    '                <tr>' +
+    '                  <td style="color: #64748b;">Leader Email:</td>' +
+    '                  <td style="font-family: monospace; color: #334155;">' + recipient + '</td>' +
+    '                </tr>' +
+    (data.members && data.members.length > 0 ? ('                <tr>' +
+    '                  <td style="color: #64748b;">Team Members:</td>' +
+    '                  <td style="color: #334155; font-weight: 600;">' + data.members.join(', ') + '</td>' +
+    '                </tr>') : '') +
+    '                <tr>' +
     '                  <td style="color: #64748b;">Competition Track:</td>' +
     '                  <td style="font-weight: 700; color: #2563eb;">' + (data.selectedTrack || 'General AI Track') + '</td>' +
     '                </tr>' +
@@ -1173,7 +1323,7 @@ function sendPptAcceptanceEmail(data) {
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Status:</td>' +
-    '                  <td><span style="color: #047857; font-weight: 700;">Qualified for Finale</span></td>' +
+    '                  <td><span style="color: #047857; font-weight: 700;">Qualified for Finale (Round 2)</span></td>' +
     '                </tr>' +
     '              </table>' +
     '            </td>' +
@@ -1183,7 +1333,7 @@ function sendPptAcceptanceEmail(data) {
     '        <!-- NON-EDITABLE PAYMENT CARD -->' +
     '        <div style="background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px solid #22c55e; border-radius: 14px; padding: 24px 20px; text-align: center; margin-bottom: 26px;">' +
     '          <div style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">' +
-    '            Final Round Entry Fee (Non-Editable)' +
+    '            Final Round Entry Fee (Amount Locked)' +
     '          </div>' +
     '          <div style="font-size: 13px; color: #166534; font-weight: 600; margin-bottom: 4px;">' +
     '            ' + teamSize + ' Team Members × ₹200 per member' +
@@ -1199,9 +1349,21 @@ function sendPptAcceptanceEmail(data) {
     '            </a>' +
     '          </div>' +
 
+    '          <!-- Fallback Direct URL -->' +
+    '          <div style="margin-bottom: 14px; font-size: 11px; color: #047857;">' +
+    '            If the button doesn\'t open, copy and paste this link in your browser:<br>' +
+    '            <a href="' + paymentLink + '" target="_blank" style="color: #047857; font-weight: 700; word-break: break-all; text-decoration: underline;">' + paymentLink + '</a>' +
+    '          </div>' +
+
     '          <div style="font-size: 11.5px; color: #15803d; font-weight: 600; line-height: 1.5; max-width: 480px; margin: 0 auto;">' +
     '            <strong>Private Finalist Portal:</strong> Click above to open your private AITHON 2.0 Grand Finale portal. Completing the fee of ₹' + feeAmount + ' locks your team workstation at AVCOE Sangamner, and your official Grand Finale Ticket & Entry Pass will be dispatched immediately.' +
     '          </div>' +
+    '        </div>' +
+
+    '        <!-- WhatsApp Community Link -->' +
+    '        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 24px;">' +
+    '          <div style="font-size: 12px; color: #166534; font-weight: 700; margin-bottom: 8px;">Official WhatsApp Community for Finalists:</div>' +
+    '          <a href="' + WHATSAPP_COMMUNITY_URL + '" target="_blank" style="display: inline-block; background-color: #25D366; color: #ffffff; text-decoration: none; font-weight: 800; font-size: 12px; padding: 10px 22px; border-radius: 8px;">Join WhatsApp Community &rarr;</a>' +
     '        </div>' +
 
     '        <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">' +
@@ -1339,6 +1501,7 @@ function sendConfirmationEmail(data) {
   var leadName = data.leadFullName || "Team Leader";
   var teamSize = data.teamSize || "4";
   var pptLink = data.pptDriveUrl || "";
+  var portalLink = data.portalLink || (WEBSITE_URL + "/finale-payment?teamId=" + encodeURIComponent(teamId));
 
   var subject = "[CONFIRMED] AITHON 2.0 Registration — " + teamName + " [" + teamId + "]";
 
@@ -1349,20 +1512,27 @@ function sendConfirmationEmail(data) {
     "Amrutvahini College of Engineering (AVCOE), Sangamner\n" +
     "==========================================================\n\n" +
     "Dear " + leadName + ",\n\n" +
-    "Congratulations! Your team registration for AITHON 2.0 has been successfully recorded.\n\n" +
+    "Congratulations! Your team registration and idea presentation for AITHON 2.0 have been successfully recorded and verified.\n\n" +
     "----------------------------------------------------------\n" +
     "OFFICIAL REGISTRATION SUMMARY\n" +
     "----------------------------------------------------------\n" +
-    "• Team Name        : " + teamName + "\n" +
-    "• Team ID          : " + teamId + "\n" +
-    "• Registration ID  : " + regId + "\n" +
-    "• Competition Track: " + (data.selectedTrack || "General AI Track") + "\n" +
-    "• Team Size        : " + teamSize + " Members\n" +
-    "• PPT Submission   : Stored in Drive as " + teamId + ".pptx\n" +
-    (pptLink && pptLink.indexOf("http") === 0 ? "• PPT Drive Link   : " + pptLink + "\n" : "") +
-    "• Evaluation Fee   : ₹50 Successful\n" +
-    "• Event Date       : Friday, 23 October 2026\n" +
-    "• Venue            : Dept. of AI & DS, AVCOE Sangamner, Maharashtra\n\n" +
+    "• Team Name         : " + teamName + "\n" +
+    "• Team ID           : " + teamId + "\n" +
+    "• Registration ID   : " + regId + "\n" +
+    "• Team Leader       : " + leadName + (data.leadCollege ? " (" + data.leadCollege + ")" : "") + "\n" +
+    "• Leader Email      : " + recipient + "\n" +
+    (data.leadPhone ? ("• Leader Phone      : " + data.leadPhone + "\n") : "") +
+    (data.members && data.members.length > 0 ? ("• Team Members      : " + data.members.join(", ") + "\n") : "") +
+    "• Competition Track : " + (data.selectedTrack || "General AI Track") + "\n" +
+    "• Team Size         : " + teamSize + " Members\n" +
+    "• PPT Submission    : Stored in Drive as " + teamId + ".pptx\n" +
+    (pptLink && pptLink.indexOf("http") === 0 ? ("• PPT Drive Link    : " + pptLink + "\n") : "") +
+    "• Evaluation Fee    : ₹50 Verified & Confirmed" + (data.utr ? (" (UTR: " + data.utr + ")") : "") + "\n" +
+    "• Event Date        : Friday, 23 October 2026\n" +
+    "• Venue             : Dept. of AI & DS, AVCOE Sangamner, Maharashtra\n\n" +
+    "----------------------------------------------------------\n" +
+    "LIVE REGISTRATION & STATUS PORTAL:\n" +
+    portalLink + "\n\n" +
     "----------------------------------------------------------\n" +
     "ACTION REQUIRED: JOIN OFFICIAL WHATSAPP COMMUNITY\n" +
     "----------------------------------------------------------\n" +
@@ -1380,7 +1550,7 @@ function sendConfirmationEmail(data) {
     '  <title>AITHON 2.0 Registration Confirmed</title>' +
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
-    '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.07); border: 1px solid #e2e8f0;">' +
+    '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.07); border: 1px solid #e2e8f0;">' +
     '    <tr>' +
     '      <td style="background-color: #062b59; padding: 32px 24px; text-align: center; color: #ffffff;">' +
     '        <div style="display: inline-block; background-color: rgba(37,99,235,0.3); border: 1px solid #38bdf8; color: #93c5fd; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
@@ -1402,7 +1572,7 @@ function sendConfirmationEmail(data) {
     '          Dear <strong>' + leadName + '</strong>,' +
     '        </p>' +
     '        <p style="font-size: 13.5px; color: #334155; margin: 0 0 22px 0; line-height: 1.6;">' +
-    '          Congratulations! Your team registration and idea PPT for <strong>AITHON 2.0</strong> have been successfully recorded.' +
+    '          Congratulations! Your team registration and idea PPT for <strong>AITHON 2.0</strong> have been successfully recorded and verified.' +
     '        </p>' +
     '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 24px;">' +
     '          <tr>' +
@@ -1424,6 +1594,18 @@ function sendConfirmationEmail(data) {
     '                  <td style="font-weight: 700; color: #0f172a;">' + teamName + '</td>' +
     '                </tr>' +
     '                <tr>' +
+    '                  <td style="color: #64748b;">Team Leader:</td>' +
+    '                  <td style="font-weight: 700; color: #0f172a;">' + leadName + (data.leadCollege ? (' <span style="font-weight: normal; color: #64748b;">(' + data.leadCollege + ')</span>') : '') + '</td>' +
+    '                </tr>' +
+    '                <tr>' +
+    '                  <td style="color: #64748b;">Leader Contact:</td>' +
+    '                  <td style="color: #334155;">' + recipient + (data.leadPhone ? (' • ' + data.leadPhone) : '') + '</td>' +
+    '                </tr>' +
+    (data.members && data.members.length > 0 ? ('                <tr>' +
+    '                  <td style="color: #64748b;">Team Members:</td>' +
+    '                  <td style="color: #334155; font-weight: 600;">' + data.members.join(', ') + '</td>' +
+    '                </tr>') : '') +
+    '                <tr>' +
     '                  <td style="color: #64748b;">Competition Track:</td>' +
     '                  <td style="font-weight: 700; color: #2563eb;">' + (data.selectedTrack || 'General AI Track') + '</td>' +
     '                </tr>' +
@@ -1433,11 +1615,11 @@ function sendConfirmationEmail(data) {
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">PPT Submission:</td>' +
-    '                  <td><span style="color: #047857; font-weight: 700;">&#10003; Uploaded (' + teamId + '.pptx)</span></td>' +
+    '                  <td>' + (pptLink && pptLink.indexOf("http") === 0 ? ('<a href="' + pptLink + '" target="_blank" style="color: #2563eb; font-weight: 700; text-decoration: underline;">&#10003; Open ' + teamId + '.pptx on Google Drive &rarr;</a>') : ('<span style="color: #047857; font-weight: 700;">&#10003; Uploaded (' + teamId + '.pptx)</span>')) + '</td>' +
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Evaluation Fee:</td>' +
-    '                  <td><span style="color: #047857; font-weight: 700;">&#10003; ₹50 Successful</span></td>' +
+    '                  <td><span style="color: #047857; font-weight: 700;">&#10003; ₹50 Verified & Confirmed' + (data.utr ? (' (UTR: ' + data.utr + ')') : '') + '</span></td>' +
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Event Date:</td>' +
@@ -1447,6 +1629,15 @@ function sendConfirmationEmail(data) {
     '            </td>' +
     '          </tr>' +
     '        </table>' +
+
+    '        <!-- Portal View Button -->' +
+    '        <div style="text-align: center; margin-bottom: 22px;">' +
+    '          <a href="' + portalLink + '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #062b59 0%, #1e40af 100%); color: #ffffff; text-decoration: none; font-weight: 800; font-size: 13px; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(30,64,175,0.25);">' +
+    '            View Live Team Registration & Review Status &rarr;' +
+    '          </a>' +
+    '        </div>' +
+
+    '        <!-- WhatsApp Community -->' +
     '        <div style="background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 22px 20px; text-align: center; margin-bottom: 26px;">' +
     '          <div style="display: inline-block; background-color: #25D366; color: #ffffff; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px;">' +
     '            Mandatory For Team Leaders' +
@@ -1713,15 +1904,16 @@ function handleDirectRound2Confirmation(data, sheet) {
       return ContentService.createTextOutput(JSON.stringify({ success: false, error: "No teams found in sheet" })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    var values = sheet.getRange(2, 1, lastRow - 1, 48).getValues();
+    var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
     var matchRow = -1;
 
     for (var i = 0; i < values.length; i++) {
       var row = values[i];
       var rTeamId = String(row[1] || "").trim().toUpperCase();
+      var rRegId = String(row[2] || "").trim().toUpperCase();
       var rEmail = String(row[6] || "").trim().toLowerCase();
 
-      if ((targetTeamId && rTeamId === targetTeamId) || (targetEmail && rEmail === targetEmail)) {
+      if ((targetTeamId && (rTeamId === targetTeamId || rRegId === targetTeamId)) || (targetEmail && rEmail === targetEmail)) {
         matchRow = i + 2;
         break;
       }
@@ -1731,31 +1923,41 @@ function handleDirectRound2Confirmation(data, sheet) {
       return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Team not found for ID: " + targetTeamId })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    var rawAmount = data.amount || 0;
-    if (!rawAmount) {
-      var size = parseInt(sheet.getRange(matchRow, 5).getValue(), 10) || 4;
-      rawAmount = size * 200;
-    }
-    var amountStr = rawAmount > 0 ? ("₹" + rawAmount) : "Paid";
-    
-    // 🛡️ DO NOT AUTO-DISPATCH TICKET EMAIL OR MARK AS CONFIRMED!
-    // Set Column 47 as Pending Verification so organizing committee must confirm via Google Sheet
-    var statusText = "Pending Verification (UTR: " + (utr || "Submitted") + ", " + amountStr + ")";
+    // Determine team size and fee amount strictly (4 = ₹800, 5 = ₹1000, 6 = ₹1200)
+    var size = parseInt(sheet.getRange(matchRow, 5).getValue(), 10) || 4;
+    if (size < 4) size = 4;
+    if (size > 6) size = 6;
+    var rawAmount = size * 200;
+
+    // 1. Column 45: Store calculated Round 2 fee amount
+    sheet.getRange(matchRow, 45).setValue("₹" + rawAmount);
+
+    // 2. Column 47: Set status as "Pending Verification" (Amber background)
+    // The committee must manually verify the UTR in Google Sheets before ticket email triggers!
     sheet.getRange(matchRow, 47)
-      .setValue(statusText)
+      .setValue("Pending Verification")
       .setBackground("#fef3c7")
       .setFontColor("#92400e")
       .setFontWeight("bold");
+
+    // 3. Column 48: Store ONLY the submitted transaction ID / UTR (Plain Text, No Dropdown)
+    var cleanUtr = String(utr || "").replace("'", "").trim();
+    var r2UtrCell = sheet.getRange(matchRow, 48);
+    r2UtrCell.clearDataValidations();
+    r2UtrCell.setNumberFormat("@");
+    r2UtrCell.setValue(cleanUtr ? ("'" + cleanUtr) : "-");
+
+    Logger.log("✓ Recorded Round 2 UTR for " + targetTeamId + " at Row " + matchRow + ": " + cleanUtr + " (Fee: ₹" + rawAmount + ")");
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       underReview: true,
       paymentVerified: false,
-      message: "Round 2 payment UTR received. We will review your payment shortly in 24hr will get confirmation. By confirming via Google Sheet mail will get trigger.",
+      message: "Round 2 payment UTR received. We will review your payment shortly in 24hr will get confirmation. Once our committee verifies your payment in Google Sheet, confirmation & Grand Finale Hall Ticket will be triggered to your email.",
       row: matchRow,
       teamId: targetTeamId,
       amount: rawAmount,
-      utr: utr
+      utr: cleanUtr
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
@@ -1769,35 +1971,56 @@ function handleDirectRound2Confirmation(data, sheet) {
  * =========================================================================
  */
 function processRound2PaymentRow(sheet, rowNum, payId, amount) {
-  var rowData = sheet.getRange(rowNum, 1, 1, 48).getValues()[0];
+  var rowData = sheet.getRange(rowNum, 1, 1, 49).getValues()[0];
 
   var teamId = String(rowData[1] || "").trim();
   var regId = String(rowData[2] || "").trim();
   var teamName = String(rowData[3] || "").trim();
   var rawSize = rowData[4];
   var teamSize = parseInt(rawSize, 10) || 4;
+  if (teamSize < 4) teamSize = 4;
+  if (teamSize > 6) teamSize = 6;
   var leadName = String(rowData[5] || "").trim();
   var leadEmail = String(rowData[6] || "").trim();
+  var leadPhone = String(rowData[7] || "").replace("'", "").trim();
+  var leadCollege = String(rowData[8] || "").trim();
   var selectedTrack = String(rowData[37] || "").trim(); // Col 38 (0-indexed: 37)
-  var feeAmount = amount || (teamSize * 200);
+  var rawFee = parseInt(String(rowData[44] || "").replace(/[^0-9]/g, ""), 10);
+  var feeAmount = amount || rawFee || (teamSize * 200);
   var r2PaymentStatus = String(rowData[46] || "").trim(); // Col 47 (0-indexed: 46)
-  var emailSentStatus = String(rowData[47] || "").trim(); // Col 48 (0-indexed: 47)
+  var r2PaymentUtr = String(rowData[47] || "").replace("'", "").trim(); // Col 48 (0-indexed: 47)
+  var emailSentStatus = String(rowData[48] || "").trim(); // Col 49 (0-indexed: 48)
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
     return false;
   }
 
-  var lowerStatus = r2PaymentStatus.toLowerCase();
-  // Strictly check that payment is marked as confirmed/paid AND not still pending verification
-  var isPaid = (lowerStatus.indexOf("paid") !== -1 ||
-                lowerStatus.indexOf("approved") !== -1 ||
-                lowerStatus.indexOf("verified") !== -1 ||
-                lowerStatus.indexOf("confirmed") !== -1) &&
-               lowerStatus.indexOf("pending") === -1 &&
-               lowerStatus.indexOf("hold") === -1;
+  var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
+  var lowerStatus = r2PaymentStatus.toLowerCase().trim();
+
+  // If status is "Rejected", style as red, record in Col 49, and exit
+  if (lowerStatus === "rejected" || lowerStatus.indexOf("rejected") !== -1) {
+    sheet.getRange(rowNum, 47).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
+    sheet.getRange(rowNum, 49).setValue("❌ Finale Payment Rejected (" + nowStr + ")");
+    Logger.log("Row " + rowNum + " (" + teamId + "): Round 2 payment marked as Rejected.");
+    return false;
+  }
+
+  // If status is "Pending Verification", style as amber and wait for committee action
+  if (lowerStatus === "pending verification" || lowerStatus.indexOf("pending") !== -1) {
+    sheet.getRange(rowNum, 47).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
+    Logger.log("Row " + rowNum + " (" + teamId + "): Round 2 payment is Pending Verification.");
+    return false;
+  }
+
+  // Strictly check that payment is marked as Verified / Paid / Approved
+  var isPaid = lowerStatus === "verified" || lowerStatus.indexOf("verified") !== -1 ||
+               lowerStatus === "paid" || lowerStatus.indexOf("paid") !== -1 ||
+               lowerStatus === "approved" || lowerStatus.indexOf("approved") !== -1;
 
   if (!isPaid) {
+    Logger.log("Row " + rowNum + " (" + teamId + "): Round 2 payment status is '" + r2PaymentStatus + "'. Awaiting manual verification.");
     return false;
   }
 
@@ -1807,7 +2030,13 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
     return false;
   }
 
-  var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
+  // Extract registered team members
+  var membersList = [];
+  if (rowData[12] && String(rowData[12]).trim() !== "-" && String(rowData[12]).trim() !== "") membersList.push(String(rowData[12]).trim());
+  if (rowData[17] && String(rowData[17]).trim() !== "-" && String(rowData[17]).trim() !== "") membersList.push(String(rowData[17]).trim());
+  if (rowData[22] && String(rowData[22]).trim() !== "-" && String(rowData[22]).trim() !== "") membersList.push(String(rowData[22]).trim());
+  if (rowData[27] && String(rowData[27]).trim() !== "-" && String(rowData[27]).trim() !== "") membersList.push(String(rowData[27]).trim());
+  if (rowData[32] && String(rowData[32]).trim() !== "-" && String(rowData[32]).trim() !== "") membersList.push(String(rowData[32]).trim());
 
   var teamData = {
     teamId: teamId,
@@ -1816,18 +2045,21 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
     teamSize: teamSize,
     leadFullName: leadName,
     leadEmail: leadEmail,
+    leadPhone: leadPhone,
+    leadCollege: leadCollege,
+    members: membersList,
     selectedTrack: selectedTrack || "General AI Track",
     feeAmount: feeAmount,
-    paymentId: payId || "VERIFIED"
+    paymentId: payId || r2PaymentUtr || "VERIFIED"
   };
 
   sendGrandFinaleTicketEmail(teamData);
 
-  // Update Sheet Col 48 (Email Notification Status)
-  sheet.getRange(rowNum, 48).setValue("✓ Finale Ticket Sent (" + nowStr + ")");
-  sheet.getRange(rowNum, 47).setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
+  // Update Sheet: Col 47 (Verified green), Col 49 (Ticket Sent status)
+  sheet.getRange(rowNum, 47).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
+  sheet.getRange(rowNum, 49).setValue("✓ Finale Ticket Sent (" + nowStr + ")");
 
-  Logger.log("✓ Grand Finale Ticket email sent to: " + leadEmail + " for " + teamId);
+  Logger.log("✓ Grand Finale Ticket email sent to: " + leadEmail + " for " + teamId + " (UTR: " + (payId || r2PaymentUtr) + ")");
   return true;
 }
 
@@ -1986,6 +2218,19 @@ function sendGrandFinaleTicketEmail(data) {
     '            </td>' +
     '          </tr>' +
     '        </table>' +
+    '        <!-- Action Buttons: Digital Pass & Google Maps -->' +
+    '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">' +
+    '          <tr>' +
+    '            <td align="center">' +
+    '              <a href="' + ((WEBSITE_URL || "https://aithon2-0.xyz").replace(/\/+$/, "")) + '/finale-payment?teamId=' + encodeURIComponent(teamId) + '" style="display: inline-block; background-color: #062b59; color: #ffffff; text-decoration: none; font-weight: 800; font-size: 13px; padding: 12px 24px; border-radius: 8px; margin-right: 8px; margin-bottom: 8px;">' +
+    '                🎟️ View Workstation Digital Pass &rarr;' +
+    '              </a>' +
+    '              <a href="https://maps.google.com/?q=Amrutvahini+College+of+Engineering+Sangamner" target="_blank" style="display: inline-block; background-color: #f1f5f9; color: #062b59; border: 1px solid #cbd5e1; text-decoration: none; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 8px; margin-bottom: 8px;">' +
+    '                📍 Get Directions (Google Maps)' +
+    '              </a>' +
+    '            </td>' +
+    '          </tr>' +
+    '        </table>' +
     '        <!-- Event Venue Card -->' +
     '        <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">' +
     '          <div style="font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">' +
@@ -2022,6 +2267,90 @@ function sendGrandFinaleTicketEmail(data) {
     '</html>';
 
   sendEmailSafe(recipient, subject, plainText, htmlBody);
+}
+
+/**
+ * 🔗 REGENERATE ALL ROUND 2 PAYMENT LINKS & REFRESH COLUMNS:
+ * Scans all rows from Row 2 downwards:
+ * 1. Computes exact fee strictly as teamSize * 200 (₹800, ₹1000, ₹1200) and saves in Col 45.
+ * 2. Generates complete private payment portal link with all parameters (teamId, email, name, track, phone, size, fee) and saves in Col 46.
+ * 3. Formats Column 48 (Round 2 Payment UTR) as Plain Text (no dropdown).
+ * 4. Sets Column 42 & 47 dropdowns to ONLY ["Pending Verification", "Verified", "Rejected"].
+ */
+function regenerateAllRound2PaymentLinks() {
+  var ss = getTargetSpreadsheet();
+  var sheet = ss.getSheetByName("Registrations") || ss.getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    Logger.log("No registration rows found.");
+    return;
+  }
+
+  // Ensure sheet has at least 49 columns
+  if (sheet.getMaxColumns() < HEADERS.length) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), HEADERS.length - sheet.getMaxColumns());
+  }
+
+  var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
+  var updated = 0;
+
+  for (var i = 0; i < values.length; i++) {
+    var row = values[i];
+    var rowNum = i + 2;
+    var teamId = String(row[1] || "").trim();
+    if (!teamId) continue;
+
+    var rawSize = row[4];
+    var teamSize = parseInt(rawSize, 10) || 4;
+    if (teamSize < 4) teamSize = 4;
+    if (teamSize > 6) teamSize = 6;
+    var fee = teamSize * 200;
+
+    var teamName = String(row[3] || "").trim();
+    var leadName = String(row[5] || "").trim();
+    var leadEmail = String(row[6] || "").trim();
+    var leadPhone = String(row[7] || "").replace("'", "").trim();
+    var selectedTrack = String(row[37] || "").trim();
+
+    var link = getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, leadPhone);
+
+    // Col 45: Round 2 Fee Amount
+    sheet.getRange(rowNum, 45).setValue("₹" + fee);
+
+    // Col 46: Round 2 Payment Link
+    sheet.getRange(rowNum, 46).setValue(link);
+
+    // Ensure Col 48 (Round 2 Payment UTR) has no dropdown and is plain text
+    var utrVal = row[47];
+    if (utrVal && String(utrVal).trim() !== "" && String(utrVal).trim() !== "-") {
+      var cleanUtr = String(utrVal).replace("'", "").trim();
+      sheet.getRange(rowNum, 48).setValue("'" + cleanUtr);
+    }
+    sheet.getRange(rowNum, 48).clearDataValidations();
+    sheet.getRange(rowNum, 48).setNumberFormat("@");
+
+    updated++;
+  }
+
+  // Apply dropdown rules to entire columns
+  var maxRows = Math.max(sheet.getMaxRows(), 100);
+  var evalRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
+    .setAllowInvalid(true)
+    .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
+    .build();
+  sheet.getRange(2, 42, maxRows - 1, 1).setDataValidation(evalRule);
+  sheet.getRange(2, 47, maxRows - 1, 1).setDataValidation(evalRule);
+
+  sheet.getRange(2, 43, maxRows - 1, 1).clearDataValidations();
+  sheet.getRange(2, 43, maxRows - 1, 1).setNumberFormat("@");
+  sheet.getRange(2, 48, maxRows - 1, 1).clearDataValidations();
+  sheet.getRange(2, 48, maxRows - 1, 1).setNumberFormat("@");
+
+  Logger.log("✓ Successfully regenerated Round 2 Payment Links for " + updated + " teams and refreshed dropdowns/UTR columns!");
+  try {
+    SpreadsheetApp.getUi().alert("Round 2 Payment Links & Columns Updated!\n\n• Updated Column 45 (Fee Amount) & Column 46 (Full Payment Links) for " + updated + " team(s).\n• Formatted Column 48 (Round 2 Payment UTR) as Plain Text (no dropdown).\n• Formatted Column 47 (Round 2 Payment Status) with ['Pending Verification', 'Verified', 'Rejected'] dropdown.");
+  } catch (e) {}
 }
 
 /**
