@@ -39,7 +39,7 @@ var UPI_VPA = "ai.veer2k26@okaxis";
 
 // Official Website Domain (used to generate private Grand Finale payment portal link in acceptance emails)
 // Update this to your deployed domain (e.g. "https://aithon2026.vercel.app") or custom domain
-var WEBSITE_URL = "http://localhost:5173";
+var WEBSITE_URL = "https://aithon2-0.xyz";
 
 /**
  * ROUND 2 NON-EDITABLE PAYMENT LINKS (Team Members × ₹200):

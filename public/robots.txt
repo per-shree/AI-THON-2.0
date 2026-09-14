@@ -1,5 +1,5 @@
 # robots.txt for AI-THON 2.0
-# https://aithon2026.vercel.app
+# https://aithon2-0.xyz
 
 User-agent: *
 Allow: /
@@ -7,4 +7,4 @@ Disallow: /admin/
 Disallow: /finale-payment
 
 # XML Sitemap Location
-Sitemap: https://aithon2026.vercel.app/sitemap.xml
+Sitemap: https://aithon2-0.xyz/sitemap.xml
