@@ -142,6 +142,65 @@ export default function Registration() {
   const [reportSentMessage, setReportSentMessage] = useState('')
   const fileInputRef = useRef(null)
 
+  const [submitMessageIndex, setSubmitMessageIndex] = useState(0)
+
+  // Calming Submission Stages for the popup overlay
+  const SUBMISSION_STAGES = [
+    {
+      title: 'Connecting & Securing Team ID...',
+      desc: 'Locking in your sequential Team ID with organizing committee.',
+      badge: 'Stage 1 of 4 • Securing Spot',
+    },
+    {
+      title: 'Uploading Presentation to Google Drive...',
+      desc: 'Saving your slides safely under your designated Team ID.',
+      badge: 'Stage 2 of 4 • Drive Storage',
+    },
+    {
+      title: 'Syncing with Official Committee Sheet...',
+      desc: 'Recording all team details and ₹50 payment verification reference.',
+      badge: 'Stage 3 of 4 • Sheet Sync',
+    },
+    {
+      title: 'Almost Done! Finalizing Confirmation...',
+      desc: 'Setting up your submission review slip. Hang tight!',
+      badge: 'Stage 4 of 4 • Confirmation',
+    },
+  ]
+
+  // Dynamic message progression & back button prevention during submission
+  useEffect(() => {
+    if (!isSubmitting) {
+      setSubmitMessageIndex(0)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setSubmitMessageIndex((prev) => (prev + 1) % SUBMISSION_STAGES.length)
+    }, 2600)
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault()
+      e.returnValue = 'Your registration submission is in progress. Please do not refresh or close this window.'
+      return e.returnValue
+    }
+
+    const handlePopState = () => {
+      // Keep on current page if physical back button is pressed
+      window.history.pushState(null, '', window.location.href)
+    }
+
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [isSubmitting, SUBMISSION_STAGES.length])
+
   // Pre-fetch live next serial ID from Google Sheets
   useEffect(() => {
     let isMounted = true
@@ -2083,6 +2142,80 @@ export default function Registration() {
                 >
                   OK, I'll Enter UTR
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================
+            FULL-SCREEN SUBMISSION OVERLAY (TAKE A BREATH & DON'T HIT BACK)
+            ================================================== */}
+        {isSubmitting && (
+          <div className="fixed inset-0 z-50 bg-[#062b59]/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn select-none">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-blue-100 text-center space-y-6 relative animate-scaleIn">
+              {/* Calming Animated Icon Badge */}
+              <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+                <span className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping" />
+                <span className="absolute inset-1.5 rounded-full bg-blue-500/20 animate-pulse" />
+                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#062b59] via-[#0b3b75] to-[#2563eb] text-white flex items-center justify-center shadow-lg shadow-blue-900/30">
+                  <Sparkles className="w-8 h-8 text-amber-300 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Title & "Take a Deep Breath" Callout */}
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
+                  <span> Take a Deep Breath & Relax</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-[#062b59] uppercase tracking-tight">
+                  Processing Your Entry
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xs mx-auto leading-relaxed">
+                  We are uploading your presentation slides and recording your details with the committee.
+                </p>
+              </div>
+
+              {/* Dynamic Live Status Stage Card */}
+              <div className="p-4 sm:p-4.5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-blue-50/90 border border-blue-200/90 text-left space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] uppercase font-extrabold tracking-wider text-[#2563eb] bg-white px-2.5 py-0.5 rounded border border-blue-200">
+                    {SUBMISSION_STAGES[submitMessageIndex].badge}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-600">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>Working...</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 text-[#062b59]">
+                  <RefreshCw className="w-4 h-4 text-[#2563eb] animate-spin shrink-0 mt-0.5" />
+                  <div className="space-y-0.5 min-w-0">
+                    <h4 className="text-xs sm:text-sm font-extrabold text-[#062b59] tracking-tight">
+                      {SUBMISSION_STAGES[submitMessageIndex].title}
+                    </h4>
+                    <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                      {SUBMISSION_STAGES[submitMessageIndex].desc}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Animated Shimmering Progress Bar */}
+                <div className="w-full bg-blue-200/70 h-2 rounded-full overflow-hidden mt-2 relative">
+                  <div className="h-full bg-gradient-to-r from-[#2563eb] via-[#ea580c] to-[#2563eb] rounded-full animate-progressShimmer w-full" />
+                </div>
+              </div>
+
+              {/* Strictly Anti-Back Alert Warning */}
+              <div className="p-3.5 rounded-2xl bg-rose-50/90 border border-rose-200 text-rose-950 text-xs flex items-start gap-2.5 text-left leading-relaxed">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block text-rose-900 font-extrabold uppercase tracking-wider text-[10.5px]">
+                    Do NOT Press the Back Button or Refresh
+                  </strong>
+                  <span className="text-[11px] text-rose-800 font-medium">
+                    Google Drive upload takes 5 to 10 seconds. Your confirmation slip will open automatically as soon as it completes.
+                  </span>
+                </div>
               </div>
             </div>
           </div>

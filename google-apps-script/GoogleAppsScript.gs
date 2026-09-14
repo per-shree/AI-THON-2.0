@@ -36,15 +36,18 @@ var UPI_VPA = "9404665180@centralbank";
 var WEBSITE_URL = "https://aithon2-0.xyz";
 
 /**
- * ROUND 2 PAYMENT PORTAL FALLBACK LINKS (Team Members × ₹200):
- * - 4 Members = ₹800
- * - 5 Members = ₹1,000
- * - 6 Members = ₹1,200
+ * ROUND 2 / GRAND FINALE FINAL PAYMENT FORM & FEE STRUCTURE:
+ * - 4 Members = ₹800 (4 × ₹200)
+ * - 5 Members = ₹1,000 (5 × ₹200)
+ * - 6 Members = ₹1,200 (6 × ₹200)
+ * UPI VPA: 9404665180@centralbank
+ * Official Final Payment Google Form URL:
  */
+var ROUND_2_PAYMENT_FORM_URL = "https://forms.gle/4dNxoKjjRLjti7og7";
 var ROUND_2_PAYMENT_LINKS = {
-  4: "https://aithon2-0.xyz/finale-payment?size=4&fee=800", // 4 members = ₹800
-  5: "https://aithon2-0.xyz/finale-payment?size=5&fee=1000", // 5 members = ₹1000
-  6: "https://aithon2-0.xyz/finale-payment?size=6&fee=1200"  // 6 members = ₹1200
+  4: ROUND_2_PAYMENT_FORM_URL,
+  5: ROUND_2_PAYMENT_FORM_URL,
+  6: ROUND_2_PAYMENT_FORM_URL
 };
 
 // Comprehensive 48-Column Header Structure for AITHON 2.0
@@ -112,12 +115,11 @@ function getTargetSpreadsheet() {
 }
 
 /**
- * Generates the private website payment portal link for Round 2
- * This link is unlisted and ONLY dispatched inside the Acceptance Email!
+ * Returns the official Google Form link for Round 2 / Grand Finale Final Payment
+ * Dispatched inside the Acceptance Email and recorded in Sheet Column 46
  */
 function getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, phone) {
-  var base = (WEBSITE_URL || "https://aithon2-0.xyz").replace(/\/+$/, "");
-  return base + "/finale-payment?teamId=" + encodeURIComponent(teamId || "");
+  return ROUND_2_PAYMENT_FORM_URL;
 }
 
 /**
@@ -1322,7 +1324,8 @@ function sendPptAcceptanceEmail(data) {
   if (teamSize < 4) teamSize = 4;
   if (teamSize > 6) teamSize = 6;
   var feeAmount = data.feeAmount || (teamSize * 200);
-  var paymentLink = data.paymentLink || getRound2PaymentLink(teamSize, teamId, recipient, teamName, leadName, data.selectedTrack, data.leadPhone);
+  var paymentFormUrl = ROUND_2_PAYMENT_FORM_URL;
+  var upiVpa = UPI_VPA || "9404665180@centralbank";
 
   var subject = "[ACCEPTED] Qualified for AITHON 2.0 Finale - " + teamName + " [" + teamId + "]";
 
@@ -1349,25 +1352,42 @@ function sendPptAcceptanceEmail(data) {
     "• Team Size         : " + teamSize + " Members\n" +
     "• Status            : SHORTLISTED FOR FINALE (ROUND 2)\n\n" +
     "----------------------------------------------------------\n" +
-    "ROUND 2 REGISTRATION FEE (NON-EDITABLE)\n" +
+    "MANDATORY STEP: FINAL PAYMENT & SEAT CONFIRMATION\n" +
     "----------------------------------------------------------\n" +
-    "Calculation         : " + teamSize + " Members × ₹200/member\n" +
-    "Total Team Fee      : ₹" + feeAmount + " (Fixed for entire team)\n\n" +
-    "OFFICIAL PAYMENT LINK (AMOUNT LOCKED):\n" +
-    paymentLink + "\n\n" +
-    "Note: The fee of ₹" + feeAmount + " is strictly fixed and non-editable. Please complete this final step to confirm your team's physical seat.\n\n" +
+    "To officially reserve and lock your team's physical seat & workstation at AVCOE Sangamner, your team must complete the Round 2 registration fee and submit the payment proof on our official Google Form.\n\n" +
+    "• Fee Calculation   : " + teamSize + " Members × ₹200/member\n" +
+    "• Total Team Fee    : ₹" + feeAmount + " (Fixed for entire team)\n" +
+    "• Payment Mode      : UPI (Google Pay, PhonePe, Paytm, BHIM, etc.)\n" +
+    "• Official UPI ID   : " + upiVpa + "\n" +
+    "• Beneficiary Name  : AITHON 2.0 / AVCOE\n" +
+    "• Payment Remark    : " + teamId + " Finale Fee\n\n" +
+    "----------------------------------------------------------\n" +
+    "OFFICIAL FINAL PAYMENT FORM LINK (SUBMIT PAYMENT PROOF):\n" +
+    "----------------------------------------------------------\n" +
+    paymentFormUrl + "\n\n" +
+    "HOW TO COMPLETE FINAL PAYMENT CONFIRMATION:\n" +
+    "1. Pay the exact fee of ₹" + feeAmount + " via UPI to: " + upiVpa + "\n" +
+    "2. Copy the 12-digit UPI Reference / UTR Number and take a screenshot of the successful transaction.\n" +
+    "3. Open the Official Final Payment Google Form:\n" +
+    "   " + paymentFormUrl + "\n" +
+    "4. Fill in your Team ID (" + teamId + "), Registration ID (" + regId + "), Leader details, UTR Number, and upload payment screenshot.\n" +
+    "5. Submit the form. Our organizing team will verify your payment and confirm your team's physical workstation and entry passes.\n\n" +
+    "----------------------------------------------------------\n" +
+    "OFFICIAL WHATSAPP COMMUNITY FOR FINALISTS:\n" +
+    "----------------------------------------------------------\n" +
+    WHATSAPP_COMMUNITY_URL + "\n\n" +
     "Best regards,\n" +
     "Organizing Committee — AITHON 2.0\n" +
     "Amrutvahini College of Engineering, Sangamner";
 
-  // Modern HTML Email Template with Non-Editable Payment Call-To-Action
+  // Modern HTML Email Template with Official Google Form Payment Call-To-Action
   var htmlBody =
     '<!DOCTYPE html>' +
     '<html>' +
     '<head>' +
     '  <meta charset="utf-8">' +
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
-    '  <title>AITHON 2.0 PPT Accepted</title>' +
+    '  <title>AITHON 2.0 PPT Accepted - Final Payment Form</title>' +
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
     '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">' +
@@ -1394,7 +1414,7 @@ function sendPptAcceptanceEmail(data) {
     '          Dear <strong>' + leadName + '</strong> and Members of <strong>' + teamName + '</strong>,' +
     '        </p>' +
     '        <p style="font-size: 13.5px; color: #334155; margin: 0 0 22px 0; line-height: 1.6;">' +
-    '          We are pleased to inform you that your idea presentation for <strong>AITHON 2.0</strong> has been evaluated and <strong>SHORTLISTED</strong> by our jury panel! Your team has officially qualified to compete in the offline Grand Finale.' +
+    '          We are pleased to inform you that your idea presentation for <strong>AITHON 2.0</strong> has been evaluated and <strong>SHORTLISTED</strong> by our jury panel! Your team has officially qualified to compete in the offline Grand Finale at Amrutvahini College of Engineering, Sangamner.' +
     '        </p>' +
     '        <!-- Summary Card -->' +
     '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 24px;">' +
@@ -1445,27 +1465,47 @@ function sendPptAcceptanceEmail(data) {
     '          </tr>' +
     '        </table>' +
 
-    '        <!-- NON-EDITABLE PAYMENT CARD -->' +
+    '        <!-- OFFICIAL FINAL PAYMENT FORM CARD -->' +
     '        <div style="background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px solid #22c55e; border-radius: 14px; padding: 24px 20px; text-align: center; margin-bottom: 26px;">' +
-    '          <div style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">' +
-    '            Final Round Entry Fee (Amount Locked)' +
+    '          <div style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 5px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">' +
+    '            Mandatory Step • Finale Seat Confirmation' +
     '          </div>' +
     '          <div style="font-size: 13px; color: #166534; font-weight: 600; margin-bottom: 4px;">' +
     '            ' + teamSize + ' Team Members × ₹200 per member' +
     '          </div>' +
-    '          <div style="font-size: 34px; font-weight: 900; color: #064e3b; margin: 4px 0 16px 0; letter-spacing: -1px;">' +
+    '          <div style="font-size: 36px; font-weight: 900; color: #064e3b; margin: 4px 0 16px 0; letter-spacing: -1px;">' +
     '            ₹' + feeAmount +
     '          </div>' +
 
-    '          <!-- Pay Button -->' +
-    '          <div style="margin-bottom: 16px;">' +
-    '            <a href="' + paymentLink + '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #047857 0%, #059669 100%); color: #ffffff; text-decoration: none; font-weight: 800; font-size: 14px; padding: 14px 28px; border-radius: 10px; box-shadow: 0 4px 14px rgba(5,150,105,0.35); text-transform: uppercase; letter-spacing: 0.5px;">' +
-    '              Pay ₹' + feeAmount + ' & Confirm Finale Workstation &rarr;' +
+    '          <!-- UPI Details Box -->' +
+    '          <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; text-align: left; font-size: 13px;">' +
+    '            <div style="font-weight: 700; color: #065f46; margin-bottom: 6px; font-size: 13.5px;">UPI Payment Details:</div>' +
+    '            <div style="margin-bottom: 4px; color: #334155;"><strong>UPI ID:</strong> <span style="font-family: monospace; font-size: 14px; font-weight: 800; color: #047857; background-color: #ecfdf5; padding: 2px 8px; border-radius: 4px; border: 1px dashed #059669;">' + upiVpa + '</span></div>' +
+    '            <div style="margin-bottom: 4px; color: #334155;"><strong>Beneficiary:</strong> AITHON 2.0 / AVCOE</div>' +
+    '            <div style="color: #334155;"><strong>Payment Remark:</strong> <span style="font-family: monospace; font-weight: 700;">' + teamId + ' Finale Fee</span></div>' +
+    '          </div>' +
+
+    '          <!-- Step by Step Instructions -->' +
+    '          <div style="background-color: #ffffff; border: 1px solid #d1fae5; border-radius: 10px; padding: 16px 18px; margin-bottom: 22px; text-align: left; font-size: 12.5px; line-height: 1.6; color: #334155;">' +
+    '            <div style="font-weight: 700; color: #065f46; margin-bottom: 8px; font-size: 13px;">Steps to Submit Final Payment & Confirm Workstation:</div>' +
+    '            <ol style="margin: 0; padding-left: 20px;">' +
+    '              <li style="margin-bottom: 6px;">Pay <strong>₹' + feeAmount + '</strong> to UPI ID <strong style="color: #047857;">' + upiVpa + '</strong> via Google Pay, PhonePe, Paytm, or BHIM.</li>' +
+    '              <li style="margin-bottom: 6px;">Note down the <strong>12-digit UPI Reference / UTR Number</strong> and capture a clear screenshot of the completed payment.</li>' +
+    '              <li style="margin-bottom: 6px;">Click the button below to open the <strong>Official Final Payment Google Form</strong>.</li>' +
+    '              <li>Fill in your <strong>Team ID (' + teamId + ')</strong>, <strong>Registration ID (' + regId + ')</strong>, enter the UTR Number, upload the screenshot, and submit.</li>' +
+    '            </ol>' +
+    '          </div>' +
+
+    '          <!-- Primary CTA Button -->' +
+    '          <div style="margin-bottom: 14px;">' +
+    '            <a href="' + paymentFormUrl + '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #047857 0%, #059669 100%); color: #ffffff; text-decoration: none; font-weight: 800; font-size: 15px; padding: 15px 32px; border-radius: 10px; box-shadow: 0 4px 16px rgba(5,150,105,0.35); text-transform: uppercase; letter-spacing: 0.5px;">' +
+    '              Submit Final Payment Form (Google Form) &rarr;' +
     '            </a>' +
     '          </div>' +
 
-    '          <div style="font-size: 11.5px; color: #15803d; font-weight: 600; line-height: 1.5; max-width: 480px; margin: 0 auto;">' +
-    '            <strong>Private Finalist Portal:</strong> Click above to open your private AITHON 2.0 Grand Finale portal. Completing the fee of ₹' + feeAmount + ' locks your team workstation at AVCOE Sangamner, and your official Grand Finale Ticket & Entry Pass will be dispatched immediately.' +
+    '          <!-- Direct URL Link fallback -->' +
+    '          <div style="font-size: 11.5px; color: #475569; word-break: break-all; margin-top: 10px;">' +
+    '            Direct Form Link: <a href="' + paymentFormUrl + '" target="_blank" style="color: #047857; font-weight: 700; text-decoration: underline;">' + paymentFormUrl + '</a>' +
     '          </div>' +
     '        </div>' +
 
