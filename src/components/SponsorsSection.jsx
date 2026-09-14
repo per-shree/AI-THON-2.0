@@ -48,6 +48,15 @@ export default function SponsorsSection() {
       isLargeLogo: true
     },
     {
+      name: 'Vajra Infra',
+      logo: '/vajra_logo.png',
+      url: '#',
+      tier: 'ASSOCIATE PARTNER',
+      desc: 'Real Estate & Developers',
+      isActive: true,
+      isLargeLogo: true
+    },
+    {
       name: 'Unitech Institute Sangamner',
       logo: '/unitech_logo.png',
       url: '',

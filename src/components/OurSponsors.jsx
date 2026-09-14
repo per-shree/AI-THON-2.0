@@ -38,6 +38,13 @@ const sponsorsList = [
     desc: 'Leading infrastructure and premier real estate developers committed to regional development.',
   },
   {
+    name: 'Vajra Infra',
+    logo: '/vajra_logo.png',
+    url: '',
+    role: 'Real Estate & Developers',
+    desc: 'Strength, Build, Infrastructure — Delivering excellence in infrastructure and engineering development.',
+  },
+  {
     name: 'Unitech Institute Sangamner',
     logo: '/unitech_logo.png',
     url: '',
