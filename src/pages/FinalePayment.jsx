@@ -120,22 +120,34 @@ export default function FinalePayment() {
             status.includes('approved')) &&
           !status.includes('pending') &&
           !status.includes('hold')
-        const isPending = status.includes('pending')
+
+        // Real UTR previously submitted to Google Sheets (Column 48)
+        const rawUtr = String(data.round2PaymentUtr || '').replace("'", '').trim()
+        const hasRealSubmittedUtr =
+          rawUtr.length >= 6 &&
+          rawUtr !== '-' &&
+          !rawUtr.toLowerCase().includes('pending') &&
+          !rawUtr.toLowerCase().includes('verification') &&
+          !rawUtr.toLowerCase().includes('submitted')
 
         if (isConfirmed) {
           setPaidInfo({
-            paymentId: data.round2PaymentStatus,
+            paymentId: hasRealSubmittedUtr ? rawUtr : (data.round2PaymentStatus || 'VERIFIED'),
             amount: data.round2FeeAmount || (resolvedSize * 200),
             teamId: data.teamId || targetId,
             isConfirmed: true,
           })
-        } else if (isPending) {
+        } else if (hasRealSubmittedUtr) {
+          // Only show under review if a real UTR was actually submitted previously
           setPaidInfo({
-            paymentId: data.round2PaymentStatus,
+            paymentId: rawUtr,
             amount: data.round2FeeAmount || (resolvedSize * 200),
             teamId: data.teamId || targetId,
             isConfirmed: false,
           })
+        } else {
+          // Team has NOT submitted payment yet! Keep paidInfo null so QR code & payment form are visible!
+          setPaidInfo(null)
         }
       } else {
         setErrorMsg('Team ID not found. Please double check the ID sent in your acceptance email.')
@@ -398,6 +410,16 @@ export default function FinalePayment() {
 
             {/* Action Buttons */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {!paidInfo.isConfirmed && (
+                <button
+                  type="button"
+                  onClick={() => setPaidInfo(null)}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  ✏️ Edit / Re-enter Payment UTR
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => window.print()}

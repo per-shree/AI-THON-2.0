@@ -116,37 +116,8 @@ function getTargetSpreadsheet() {
  * This link is unlisted and ONLY dispatched inside the Acceptance Email!
  */
 function getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, phone) {
-  var size = parseInt(teamSize, 10) || 4;
-  if (size < 4) size = 4;
-  if (size > 6) size = 6;
-  var fee = size * 200;
   var base = (WEBSITE_URL || "https://aithon2-0.xyz").replace(/\/+$/, "");
-
-  var params = [
-    "teamId=" + encodeURIComponent(teamId || ""),
-    "id=" + encodeURIComponent(teamId || ""),
-    "size=" + size,
-    "teamSize=" + size,
-    "fee=" + fee,
-    "amount=" + fee,
-    "email=" + encodeURIComponent(leadEmail || ""),
-    "leadEmail=" + encodeURIComponent(leadEmail || ""),
-    "teamName=" + encodeURIComponent(teamName || ""),
-    "team=" + encodeURIComponent(teamName || ""),
-    "leadName=" + encodeURIComponent(leadName || ""),
-    "name=" + encodeURIComponent(leadName || ""),
-    "track=" + encodeURIComponent(selectedTrack || "General AI Track"),
-    "selectedTrack=" + encodeURIComponent(selectedTrack || "General AI Track")
-  ];
-  if (phone) {
-    var cleanPhone = String(phone).replace("'", "").trim();
-    if (cleanPhone) {
-      params.push("phone=" + encodeURIComponent(cleanPhone));
-      params.push("leadPhone=" + encodeURIComponent(cleanPhone));
-    }
-  }
-
-  return base + "/finale-payment?" + params.join("&");
+  return base + "/finale-payment?teamId=" + encodeURIComponent(teamId || "");
 }
 
 /**
@@ -1001,8 +972,6 @@ function processEvalFeeStatusRow(sheet, rowNum) {
   if (rowData[27] && String(rowData[27]).trim() !== "-" && String(rowData[27]).trim() !== "") membersList.push(String(rowData[27]).trim());
   if (rowData[32] && String(rowData[32]).trim() !== "-" && String(rowData[32]).trim() !== "") membersList.push(String(rowData[32]).trim());
 
-  var portalLink = getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, leadPhone);
-
   var teamData = {
     teamId: teamId,
     registrationId: regId,
@@ -1016,8 +985,7 @@ function processEvalFeeStatusRow(sheet, rowNum) {
     selectedTrack: selectedTrack || "General AI Track",
     pptDriveUrl: pptLink,
     evalFeeStatus: "Verified",
-    utr: utr,
-    portalLink: portalLink
+    utr: utr
   };
 
   sendConfirmationEmail(teamData);
@@ -1349,12 +1317,6 @@ function sendPptAcceptanceEmail(data) {
     '            </a>' +
     '          </div>' +
 
-    '          <!-- Fallback Direct URL -->' +
-    '          <div style="margin-bottom: 14px; font-size: 11px; color: #047857;">' +
-    '            If the button doesn\'t open, copy and paste this link in your browser:<br>' +
-    '            <a href="' + paymentLink + '" target="_blank" style="color: #047857; font-weight: 700; word-break: break-all; text-decoration: underline;">' + paymentLink + '</a>' +
-    '          </div>' +
-
     '          <div style="font-size: 11.5px; color: #15803d; font-weight: 600; line-height: 1.5; max-width: 480px; margin: 0 auto;">' +
     '            <strong>Private Finalist Portal:</strong> Click above to open your private AITHON 2.0 Grand Finale portal. Completing the fee of ₹' + feeAmount + ' locks your team workstation at AVCOE Sangamner, and your official Grand Finale Ticket & Entry Pass will be dispatched immediately.' +
     '          </div>' +
@@ -1501,7 +1463,6 @@ function sendConfirmationEmail(data) {
   var leadName = data.leadFullName || "Team Leader";
   var teamSize = data.teamSize || "4";
   var pptLink = data.pptDriveUrl || "";
-  var portalLink = data.portalLink || (WEBSITE_URL + "/finale-payment?teamId=" + encodeURIComponent(teamId));
 
   var subject = "[CONFIRMED] AITHON 2.0 Registration — " + teamName + " [" + teamId + "]";
 
@@ -1525,14 +1486,10 @@ function sendConfirmationEmail(data) {
     (data.members && data.members.length > 0 ? ("• Team Members      : " + data.members.join(", ") + "\n") : "") +
     "• Competition Track : " + (data.selectedTrack || "General AI Track") + "\n" +
     "• Team Size         : " + teamSize + " Members\n" +
-    "• PPT Submission    : Stored in Drive as " + teamId + ".pptx\n" +
-    (pptLink && pptLink.indexOf("http") === 0 ? ("• PPT Drive Link    : " + pptLink + "\n") : "") +
+    "• PPT Submission    : Uploaded (" + teamId + ".pptx)\n" +
     "• Evaluation Fee    : ₹50 Verified & Confirmed" + (data.utr ? (" (UTR: " + data.utr + ")") : "") + "\n" +
     "• Event Date        : Friday, 23 October 2026\n" +
     "• Venue             : Dept. of AI & DS, AVCOE Sangamner, Maharashtra\n\n" +
-    "----------------------------------------------------------\n" +
-    "LIVE REGISTRATION & STATUS PORTAL:\n" +
-    portalLink + "\n\n" +
     "----------------------------------------------------------\n" +
     "ACTION REQUIRED: JOIN OFFICIAL WHATSAPP COMMUNITY\n" +
     "----------------------------------------------------------\n" +
@@ -1615,7 +1572,7 @@ function sendConfirmationEmail(data) {
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">PPT Submission:</td>' +
-    '                  <td>' + (pptLink && pptLink.indexOf("http") === 0 ? ('<a href="' + pptLink + '" target="_blank" style="color: #2563eb; font-weight: 700; text-decoration: underline;">&#10003; Open ' + teamId + '.pptx on Google Drive &rarr;</a>') : ('<span style="color: #047857; font-weight: 700;">&#10003; Uploaded (' + teamId + '.pptx)</span>')) + '</td>' +
+    '                  <td><span style="color: #047857; font-weight: 700;">&#10003; Uploaded (' + teamId + '.pptx)</span></td>' +
     '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Evaluation Fee:</td>' +
@@ -1629,13 +1586,6 @@ function sendConfirmationEmail(data) {
     '            </td>' +
     '          </tr>' +
     '        </table>' +
-
-    '        <!-- Portal View Button -->' +
-    '        <div style="text-align: center; margin-bottom: 22px;">' +
-    '          <a href="' + portalLink + '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #062b59 0%, #1e40af 100%); color: #ffffff; text-decoration: none; font-weight: 800; font-size: 13px; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(30,64,175,0.25);">' +
-    '            View Live Team Registration & Review Status &rarr;' +
-    '          </a>' +
-    '        </div>' +
 
     '        <!-- WhatsApp Community -->' +
     '        <div style="background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 22px 20px; text-align: center; margin-bottom: 26px;">' +
