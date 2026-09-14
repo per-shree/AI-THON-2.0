@@ -38,11 +38,11 @@ const sponsorsList = [
     desc: 'Leading infrastructure and premier real estate developers committed to regional development.',
   },
   {
-    name: 'Pravara Infotech',
-    logo: '/pravara_logo.png',
-    url: 'https://pravarainfotech.in/',
-    role: 'IT Solutions Partner',
-    desc: 'End-to-end enterprise software engineering, scalable cloud solutions, and IT consulting.',
+    name: 'Unitech Institute Sangamner',
+    logo: '/unitech_logo.png',
+    url: '',
+    role: 'ASSOCIATE PARTNER',
+    desc: 'Premier computer education, technical training, and skill development institute in Sangamner.',
   },
   {
     name: 'Qwicit',

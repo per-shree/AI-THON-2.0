@@ -48,12 +48,13 @@ export default function SponsorsSection() {
       isLargeLogo: true
     },
     {
-      name: 'Pravara Infotech',
-      logo: '/pravara_logo.png',
-      url: 'https://pravarainfotech.in/',
+      name: 'Unitech Institute Sangamner',
+      logo: '/unitech_logo.png',
+      url: '',
       tier: 'ASSOCIATE PARTNER',
-      desc: 'IT & Software Solutions',
-      isActive: true
+      desc: 'Computer Education & Training',
+      isActive: true,
+      isLargeLogo: true
     },
     {
       name: 'Qwicit',
