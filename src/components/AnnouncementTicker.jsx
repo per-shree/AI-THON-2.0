@@ -1,11 +1,11 @@
 export default function AnnouncementTicker() {
   const announcements = [
     'AITHON 2.0',
-    '23 OCTOBER 2026',
-    '12 HOURS NON-STOP',
-    'NATIONAL LEVEL AI HACKATHON',
+    'REGISTRATIONS ACCEPTED TILL 04 OCT 2026',
+    'ROUND 1 IDEA PPT SUBMISSION OPEN',
+    'GRAND FINALE: 23 OCTOBER 2026',
+    '12 HOURS NON-STOP HACKATHON',
     'AVCOE SANGAMNER',
-    'REGISTRATIONS OPEN NOW',
     'TOTAL PRIZE POOL ₹1,00,000',
   ]
 

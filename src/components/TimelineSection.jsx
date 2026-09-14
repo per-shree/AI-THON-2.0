@@ -4,7 +4,7 @@ export default function TimelineSection() {
       num: '01',
       stage: 'ROUND 1: QUALIFIER',
       title: 'ONLINE REGISTRATION',
-      desc: 'Team Lead registers on the portal, enters details for 4–6 members, and selects 1 of 23 competition tracks.',
+      desc: 'Team Lead registers on the portal, enters details for 4–6 members, and selects 1 of 23 tracks. Registrations accepted till 04/10/2026 (11:59 PM IST).',
     },
     {
       num: '02',
