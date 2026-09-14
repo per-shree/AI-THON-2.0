@@ -43,11 +43,11 @@ export default function ProblemStatements() {
         </div>
 
         {/* Problem Statement Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 w-full mb-12">
+        <div className="flex flex-wrap justify-center gap-5 w-full mb-12">
           {domains.map((item, idx) => (
             <div 
               key={idx}
-              className="bg-[#faf9f6] border border-[#edebe6] p-5 flex flex-col justify-between text-left group hover:bg-white hover:border-[#2563eb] hover:shadow-sm transition-all duration-200 rounded-xl space-y-3"
+              className="bg-[#faf9f6] border border-[#edebe6] p-5 flex flex-col justify-between text-left group hover:bg-white hover:border-[#2563eb] hover:shadow-sm transition-all duration-200 rounded-xl space-y-3 w-full sm:w-[calc(50%-0.625rem)] md:w-[calc(33.333%-0.85rem)] lg:w-[calc(25%-0.95rem)]"
             >
               <div>
                 <span className="inline-block px-2.5 py-0.5 rounded bg-blue-50 text-[#2563eb] text-[11px] font-extrabold tracking-wider uppercase border border-blue-100/80">

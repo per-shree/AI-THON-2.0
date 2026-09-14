@@ -92,9 +92,10 @@ export default function OurSponsors() {
         </div>
 
         {/* Proper Static Sponsor Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-          {sponsorsList.map((sponsor) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          {sponsorsList.map((sponsor, idx) => {
             const hasLink = Boolean(sponsor.url)
+            const isLast = idx === sponsorsList.length - 1
 
             const CardWrapper = hasLink ? 'a' : 'div'
             const wrapperProps = hasLink
@@ -113,6 +114,10 @@ export default function OurSponsors() {
                   hasLink
                     ? 'hover:border-blue-400 hover:-translate-y-1 cursor-pointer'
                     : 'hover:border-slate-300 cursor-default'
+                } ${
+                  isLast
+                    ? 'sm:col-span-2 lg:col-span-4 sm:max-w-xs sm:w-full sm:mx-auto'
+                    : ''
                 }`}
               >
                 {/* Subtle Top Gradient Accent */}
