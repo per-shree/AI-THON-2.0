@@ -48,19 +48,29 @@ export default function SponsorsSection() {
       isLargeLogo: true
     },
     {
-      name: 'Pravara Infotech',
-      logo: '/pravara_logo.png',
-      url: 'https://pravarainfotech.in/',
+      name: 'Vajra Infra',
+      logo: '/vajra_logo.png',
+      url: '#',
       tier: 'ASSOCIATE PARTNER',
-      desc: 'IT & Software Solutions',
-      isActive: true
+      desc: 'Real Estate & Developers',
+      isActive: true,
+      isLargeLogo: true
     },
     {
-      name: 'Qwicit',
+      name: 'Unitech Institute Sangamner',
+      logo: '/unitech_logo.png',
+      url: '',
+      tier: 'ASSOCIATE PARTNER',
+      desc: 'Computer Education & Training',
+      isActive: true,
+      isLargeLogo: true
+    },
+    {
+      name: 'Qwicit Technologies',
       logo: '/qwicit_logo.png',
       url: 'https://qwicit.com/',
-      tier: 'ASSOCIATE PARTNER',
-      desc: 'Digital & IT Solutions',
+      tier: 'TECH & PAYMENT PARTNER',
+      desc: 'Technology & Payment Gateway',
       isActive: true,
       isLargeLogo: true
     },

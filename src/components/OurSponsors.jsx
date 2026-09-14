@@ -38,18 +38,25 @@ const sponsorsList = [
     desc: 'Leading infrastructure and premier real estate developers committed to regional development.',
   },
   {
-    name: 'Pravara Infotech',
-    logo: '/pravara_logo.png',
-    url: 'https://pravarainfotech.in/',
-    role: 'IT Solutions Partner',
-    desc: 'End-to-end enterprise software engineering, scalable cloud solutions, and IT consulting.',
+    name: 'Vajra Infra',
+    logo: '/vajra_logo.png',
+    url: '',
+    role: 'Real Estate & Developers',
+    desc: 'Strength, Build, Infrastructure — Delivering excellence in infrastructure and engineering development.',
   },
   {
-    name: 'Qwicit',
+    name: 'Unitech Institute Sangamner',
+    logo: '/unitech_logo.png',
+    url: '',
+    role: 'ASSOCIATE PARTNER',
+    desc: 'Premier computer education, technical training, and skill development institute in Sangamner.',
+  },
+  {
+    name: 'Qwicit Technologies',
     logo: '/qwicit_logo.png',
     url: 'https://qwicit.com/',
-    role: 'ASSOCIATE PARTNER',
-    desc: "There's no limit to ideas.! — Innovative digital solutions and modern technology consultancy.",
+    role: 'Technology & Payment Gateway Partner',
+    desc: "There's no limit to ideas.! — Powering digital solutions and seamless payment gateway infrastructure for AITHON 2.0.",
   },
   {
     name: 'Shravya Studios',
@@ -85,9 +92,10 @@ export default function OurSponsors() {
         </div>
 
         {/* Proper Static Sponsor Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
-          {sponsorsList.map((sponsor) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          {sponsorsList.map((sponsor, idx) => {
             const hasLink = Boolean(sponsor.url)
+            const isLast = idx === sponsorsList.length - 1
 
             const CardWrapper = hasLink ? 'a' : 'div'
             const wrapperProps = hasLink
@@ -106,6 +114,10 @@ export default function OurSponsors() {
                   hasLink
                     ? 'hover:border-blue-400 hover:-translate-y-1 cursor-pointer'
                     : 'hover:border-slate-300 cursor-default'
+                } ${
+                  isLast
+                    ? 'sm:col-span-2 lg:col-span-4 sm:max-w-xs sm:w-full sm:mx-auto'
+                    : ''
                 }`}
               >
                 {/* Subtle Top Gradient Accent */}

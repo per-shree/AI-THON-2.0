@@ -42,9 +42,12 @@ export default function TracksSection() {
         </div>
 
         {/* Clean Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
           {tracks.map((t) => (
-            <div key={t.num} className="space-y-2 pt-4 border-t-2 border-slate-200 hover:border-[#2563eb] transition-colors">
+            <div 
+              key={t.num} 
+              className="space-y-2 pt-4 border-t-2 border-slate-200 hover:border-[#2563eb] transition-colors w-full sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1.33rem)] lg:w-[calc(25%-1.5rem)]"
+            >
               <span className="text-xs font-extrabold text-[#2563eb] block uppercase tracking-wider">{t.num}</span>
               <h3 className="text-sm sm:text-base font-extrabold text-[#062b59] leading-snug tracking-tight">{t.name}</h3>
             </div>

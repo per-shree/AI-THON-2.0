@@ -7,7 +7,7 @@ export default function FaqSection() {
   const faqs = [
     {
       q: 'Who can participate?',
-      a: 'AITHON 2.0 is open to all undergraduate and diploma engineering / technology students enrolled in any recognized institution.',
+      a: 'AITHON 2.0 is open to all Undergraduate (UG) and Diploma students across recognized academic institutions in India (Engineering & Technology, Medical & Healthcare, Pharmacy & Life Sciences, Legal Studies, Business & Finance, Arts & Media, Design, Agriculture, and Polytechnic). Note: Postgraduate (M.E./M.Tech/MBA/M.Sc, etc.), PhD scholars, and working professionals are strictly ineligible.',
     },
     {
       q: 'What is the team size?',

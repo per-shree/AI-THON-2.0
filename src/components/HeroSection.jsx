@@ -84,13 +84,8 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Integrated Hero Live Countdown Timer */}
-        <div className="w-full max-w-md mx-auto mb-3.5 sm:mb-4.5 md:mb-5 px-1 sm:px-0">
-          <CountdownTimer variant="hero" />
-        </div>
-
         {/* Action Buttons - Distinctly positioned and mobile responsive */}
-        <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-3.5 md:gap-4 w-full sm:w-auto relative z-20 mb-2 sm:mb-3 px-2 sm:px-0">
+        <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-3.5 md:gap-4 w-full sm:w-auto relative z-20 mb-3 sm:mb-4 px-2 sm:px-0">
           <Link
             to="/register"
             className="flex-1 sm:flex-none px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-3.5 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
@@ -103,6 +98,17 @@ export default function HeroSection() {
           >
             EXPLORE AITHON
           </a>
+        </div>
+
+        {/* Urgency Badge & Live Countdown Timer Below Registration Button */}
+        <div className="w-full max-w-md mx-auto space-y-2 sm:space-y-2.5 px-1 sm:px-0 relative z-20 mb-2 sm:mb-3 flex flex-col items-center">
+          <div className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ea580c] text-white border border-orange-600/40 shadow-2xs">
+            <span className="w-1 h-1 rounded-full bg-blue-200 animate-ping shrink-0" />
+            <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-white leading-tight">
+              REGISTRATIONS CLOSE IN (04 OCT 2026)
+            </span>
+          </div>
+          <CountdownTimer variant="hero" />
         </div>
 
       </div>

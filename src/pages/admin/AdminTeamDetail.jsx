@@ -126,9 +126,9 @@ export default function AdminTeamDetail() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-800">
             {[
               { label: 'TEAM ID', value: team.id },
-              { label: 'TEAM SIZE', value: `${team.teamSize} Members` },
+              { label: 'TEAM SIZE', value: `${team.teamSize || team.membersCount || 4} Members` },
               { label: 'TRACK', value: team.track },
-              { label: 'REGISTERED', value: team.registeredDate },
+              { label: 'REGISTERED', value: team.registeredDate || team.registeredAt || '—' },
             ].map(({ label, value }) => (
               <div key={label} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                 <span className="text-[10px] font-mono uppercase text-slate-500 block mb-1">{label}</span>
@@ -136,6 +136,30 @@ export default function AdminTeamDetail() {
               </div>
             ))}
           </div>
+
+          {(team.pptDriveUrl || team.pptFileName) && (
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-mono uppercase text-cyan-400 block mb-1">
+                  Idea Presentation (Drive Sync)
+                </span>
+                <span className="text-xs font-mono text-slate-200">
+                  {team.id}.pptx {team.pptFileName ? `• ${team.pptFileName}` : ''}
+                </span>
+              </div>
+              {team.pptDriveUrl && team.pptDriveUrl.startsWith('http') && (
+                <a
+                  href={team.pptDriveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-900/50 text-xs font-mono font-semibold transition-colors shrink-0"
+                >
+                  <span>Open in Drive</span>
+                  <ArrowRightIcon className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ─── REVIEW SECTION ──────────────────────────────────────────── */}

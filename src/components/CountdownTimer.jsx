@@ -7,9 +7,11 @@ export default function CountdownTimer({ variant = 'default' }) {
     minutes: 0,
     seconds: 0,
   })
+  const [isExpired, setIsExpired] = useState(false)
 
   useEffect(() => {
-    const targetDate = new Date('2026-10-23T09:00:00+05:30').getTime()
+    // Registration deadline: 04 October 2026 at 11:59:59 PM IST
+    const targetDate = new Date('2026-10-04T23:59:59+05:30').getTime()
 
     const updateTimer = () => {
       const now = new Date().getTime()
@@ -22,8 +24,10 @@ export default function CountdownTimer({ variant = 'default' }) {
         const seconds = Math.floor((difference % (1000 * 60)) / 1000)
 
         setTimeLeft({ days, hours, minutes, seconds })
+        setIsExpired(false)
       } else {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+        setIsExpired(true)
       }
     }
 
@@ -69,11 +73,11 @@ export default function CountdownTimer({ variant = 'default' }) {
       <div className="flex flex-col items-center text-center mb-8 sm:mb-12 space-y-3">
         <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-[#e2d5c5] shadow-xs">
           <span className="text-sm sm:text-base font-extrabold text-[#062b59] uppercase tracking-wider">
-            COUNTDOWN TO AITHON 2.0
+            {isExpired ? 'REGISTRATIONS CLOSED' : 'REGISTRATIONS CLOSE IN'}
           </span>
         </div>
         <p className="text-xs sm:text-sm font-semibold text-slate-500 tracking-widest uppercase">
-          EVENT DATE: 23 OCTOBER 2026 • AVCOE SANGAMNER
+          DEADLINE: 04 OCTOBER 2026 (11:59 PM IST) • AITHON 2.0
         </p>
       </div>
 

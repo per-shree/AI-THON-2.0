@@ -4,6 +4,7 @@ import { AdminProvider } from './context/AdminContext'
 // Public Pages
 import Home from './pages/Home'
 import Registration from './pages/Registration'
+import FinalePayment from './pages/FinalePayment'
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin'
@@ -25,6 +26,9 @@ export default function App() {
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Registration />} />
+
+          {/* Unlisted Finalist Payment Route (Access strictly via acceptance email) */}
+          <Route path="/finale-payment" element={<FinalePayment />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
