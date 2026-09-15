@@ -437,15 +437,13 @@ function doPost(e) {
       emailSentCol                             // Col 50: Email Notification Status
     ];
 
-    var targetRow = existingRow !== -1 ? existingRow : (sheet.getLastRow() + 1);
+    var targetRow = existingRow !== -1 ? existingRow : getNextAvailableRow(sheet);
+    sheet.getRange(targetRow, 1, 1, row.length).setValues([row]);
 
     if (existingRow !== -1) {
-      sheet.getRange(existingRow, 1, 1, row.length).setValues([row]);
       Logger.log("✓ Real-time updated row " + existingRow + " for " + data.teamId);
     } else {
-      sheet.appendRow(row);
-      targetRow = sheet.getLastRow();
-      Logger.log("✓ Real-time allocated & appended row " + targetRow + " for " + data.teamId);
+      Logger.log("✓ Real-time allocated & wrote row " + targetRow + " for " + data.teamId);
     }
 
     var rowRange = sheet.getRange(targetRow, 1, 1, row.length);
@@ -533,7 +531,13 @@ function doGet(e) {
       return handleDirectRound2Confirmation(e.parameter, sheet);
     }
 
-    // ⚡ 2. Check for next available serial ID query (e.g. action=getNextId)
+    // ⚡ 2. Sheet Compactor & Blank Row Cleaner (Accessible via URL or Admin Settings)
+    if (e && e.parameter && (e.parameter.action === "compactSheet" || e.parameter.action === "cleanSheet")) {
+      var compactResult = compactAndCleanSheet(sheet);
+      return ContentService.createTextOutput(JSON.stringify(compactResult)).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ⚡ 3. Check for next available serial ID query (e.g. action=getNextId)
     if (e && e.parameter && (e.parameter.action === "getNextId" || e.parameter.action === "nextSerial")) {
       var nextSerial = sheet ? getLiveNextSerial(sheet) : 101;
       return ContentService.createTextOutput(JSON.stringify({
@@ -729,10 +733,102 @@ function getLiveNextSerial(sheet) {
 }
 
 /**
+ * Finds the exact next consecutive row for a new registration.
+ * Scans downwards from Row 2 to find the first row without actual registration data,
+ * preventing blank-row gaps where submissions get pushed hundreds of rows down.
+ */
+function getNextAvailableRow(sheet) {
+  if (!sheet) return 2;
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 2;
+
+  var idData = sheet.getRange(2, 2, lastRow - 1, 1).getValues(); // Column 2: Team ID
+  var trueLastRow = 1;
+  for (var i = 0; i < idData.length; i++) {
+    var val = String(idData[i][0] || "").trim();
+    if (val && val !== "-" && val !== "N/A" && val !== "") {
+      trueLastRow = i + 2;
+    }
+  }
+  return trueLastRow + 1;
+}
+
+/**
+ * 🧹 Cleans up blank rows and compacts all registrations consecutively starting at Row 2.
+ * Eliminates large gaps between registrations caused by empty formatted rows.
+ */
+function compactAndCleanSheet(sheet) {
+  try {
+    if (!sheet) {
+      var ss = getTargetSpreadsheet();
+      sheet = ss ? ss.getSheetByName("Registrations") : null;
+      if (!sheet && ss) sheet = ss.getActiveSheet();
+    }
+    if (!sheet) return { success: false, message: "Sheet not found" };
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return { success: true, count: 0, message: "No data rows to compact." };
+
+    var totalCols = Math.max(sheet.getLastColumn(), HEADERS.length);
+    var allValues = sheet.getRange(2, 1, lastRow - 1, totalCols).getValues();
+    var validRows = [];
+
+    for (var i = 0; i < allValues.length; i++) {
+      var r = allValues[i];
+      var ts = String(r[0] || "").trim();
+      var teamId = String(r[1] || "").trim();
+      var regId = String(r[2] || "").trim();
+      var teamName = String(r[3] || "").trim();
+      var leadName = String(r[5] || "").trim();
+      var email = String(r[6] || "").trim();
+
+      // Check if this row has actual registration data
+      if ((teamId && teamId !== "-" && teamId !== "N/A") || email || teamName || leadName || ts) {
+        validRows.push(r);
+      }
+    }
+
+    if (validRows.length === 0) {
+      return { success: true, count: 0, message: "No active registrations found." };
+    }
+
+    // Clear content of current data range
+    sheet.getRange(2, 1, lastRow - 1, totalCols).clearContent();
+
+    // Write valid rows starting cleanly from row 2
+    sheet.getRange(2, 1, validRows.length, totalCols).setValues(validRows);
+
+    // Format all active data rows
+    var activeRange = sheet.getRange(2, 1, validRows.length, totalCols);
+    activeRange.setVerticalAlignment("middle");
+    activeRange.setFontFamily("Plus Jakarta Sans");
+    activeRange.setFontSize(10);
+
+    // Trim excess empty rows if sheet exceeds validRows.length + 30
+    var maxRows = sheet.getMaxRows();
+    var desiredMax = Math.max(validRows.length + 30, 50);
+    if (maxRows > desiredMax) {
+      sheet.deleteRows(desiredMax + 1, maxRows - desiredMax);
+    }
+
+    Logger.log("✓ Sheet successfully compacted: " + validRows.length + " teams arranged consecutively from Row 2.");
+    return {
+      success: true,
+      count: validRows.length,
+      message: "Successfully compacted sheet! " + validRows.length + " registrations are now consecutive from Row 2."
+    };
+  } catch (err) {
+    Logger.log("Error in compactAndCleanSheet: " + err.toString());
+    return { success: false, error: err.toString() };
+  }
+}
+
+/**
  * Sets up sheet headers and formatting
  */
 function setupSheet(sheet) {
-  sheet.appendRow(HEADERS);
+  var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
+  headerRange.setValues([HEADERS]);
   formatHeaderRow(sheet);
 }
 
@@ -864,8 +960,11 @@ function updateSheetStructure() {
   headerRange.setValues([HEADERS]);
   formatHeaderRow(sheet);
 
+  // Automatically clean up blank rows and compact registrations
+  compactAndCleanSheet(sheet);
+
   Logger.log("✓ Google Sheet headers successfully updated to 50 columns with Selected Domain (Software / Hardware)!");
-  return "Sheet structure updated successfully to 50 columns!";
+  return "Sheet structure updated successfully to 50 columns and compacted!";
 }
 
 /**
@@ -875,6 +974,8 @@ function onOpen() {
   try {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu("🚀 AITHON 2.0")
+      .addItem("🧹 Clean Up Blank Rows & Compact Sheet", "compactAndCleanSheet")
+      .addSeparator()
       .addItem("✅ Verify Registration Payment & Send Email", "processAllVerifiedRegistrations")
       .addItem("⚡ Quick Verify Registration Payment (1-Click)", "quickVerifyRegistrationPaymentPrompt")
       .addSeparator()

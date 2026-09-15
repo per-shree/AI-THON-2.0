@@ -6,6 +6,8 @@ import {
   getGoogleSheetUrl,
   saveGoogleSheetUrl,
   testGoogleSheetWebhook,
+  sendTestRegistrationToSheet,
+  compactGoogleSheet,
 } from '../../services/googleSheetsService'
 
 export default function AdminSettings() {
@@ -24,6 +26,38 @@ export default function AdminSettings() {
       setTestStatus({ state: 'success', message: res.message })
     } else {
       setTestStatus({ state: 'error', message: res.message })
+    }
+  }
+
+  const handleSendTestRow = async () => {
+    setTestStatus({ state: 'testing', message: 'Submitting diagnostic test team to Google Sheet...' })
+    const res = await sendTestRegistrationToSheet(sheetUrl)
+    if (res && res.success) {
+      setTestStatus({
+        state: 'success',
+        message: `✓ Diagnostic test row created! Team: ${res.teamId || 'TEAM-TEST'} added directly to your sheet.`,
+      })
+    } else {
+      setTestStatus({
+        state: 'error',
+        message: `Failed to write test row: ${res?.error || 'Unknown error'}`,
+      })
+    }
+  }
+
+  const handleCompactSheet = async () => {
+    setTestStatus({ state: 'testing', message: 'Compacting sheet and removing blank row gaps...' })
+    const res = await compactGoogleSheet(sheetUrl)
+    if (res && res.success) {
+      setTestStatus({
+        state: 'success',
+        message: `✓ ${res.message || 'Sheet compacted successfully!'}`,
+      })
+    } else {
+      setTestStatus({
+        state: 'error',
+        message: res?.message || 'Could not compact sheet. You can also run "🧹 Clean Up Blank Rows & Compact Sheet" from the 🚀 AITHON 2.0 menu in Google Sheets.',
+      })
     }
   }
 
@@ -182,6 +216,26 @@ export default function AdminSettings() {
                   className="px-4 py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-bold transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
                 >
                   {testStatus.state === 'testing' ? 'Testing...' : 'Test Webhook'}
+                </button>
+              </div>
+
+              {/* Quick Diagnostic Actions */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleSendTestRow}
+                  disabled={testStatus.state === 'testing'}
+                  className="px-3 py-1.5 rounded-lg bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 text-cyan-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  🧪 Write Test Row to Sheet
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCompactSheet}
+                  disabled={testStatus.state === 'testing'}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-500/30 text-indigo-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  🧹 Compact Sheet (Remove Blank Gaps)
                 </button>
               </div>
 
