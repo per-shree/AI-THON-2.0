@@ -1479,7 +1479,7 @@ function sendPptAcceptanceEmail(data) {
     "• Total Team Fee    : ₹" + feeAmount + " (Fixed for entire team)\n" +
     "• Payment Mode      : UPI (Google Pay, PhonePe, Paytm, BHIM, etc.)\n" +
     "• Official UPI ID   : " + upiVpa + "\n" +
-    "• Beneficiary Name  : AITHON 2.0 / AVCOE\n" +
+    "• Beneficiary Name  : Mr Shri Avinash Ugale\n" +
     "• Payment Remark    : " + teamId + " Finale Fee\n\n" +
     "----------------------------------------------------------\n" +
     "OFFICIAL FINAL PAYMENT FORM LINK (SUBMIT PAYMENT PROOF):\n" +
@@ -1612,7 +1612,7 @@ function sendPptAcceptanceEmail(data) {
     '          <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; text-align: left; font-size: 13px;">' +
     '            <div style="font-weight: 700; color: #065f46; margin-bottom: 6px; font-size: 13.5px;">UPI Payment Details:</div>' +
     '            <div style="margin-bottom: 4px; color: #334155;"><strong>UPI ID:</strong> <span style="font-family: monospace; font-size: 14px; font-weight: 800; color: #047857; background-color: #ecfdf5; padding: 2px 8px; border-radius: 4px; border: 1px dashed #059669;">' + upiVpa + '</span></div>' +
-    '            <div style="margin-bottom: 4px; color: #334155;"><strong>Beneficiary:</strong> AITHON 2.0 / AVCOE</div>' +
+    '            <div style="margin-bottom: 4px; color: #334155;"><strong>Beneficiary:</strong> Mr Shri Avinash Ugale</div>' +
     '            <div style="color: #334155;"><strong>Payment Remark:</strong> <span style="font-family: monospace; font-weight: 700;">' + teamId + ' Finale Fee</span></div>' +
     '          </div>' +
 
@@ -2568,15 +2568,12 @@ function sendGrandFinaleTicketEmail(data) {
     '            </td>' +
     '          </tr>' +
     '        </table>' +
-    '        <!-- Action Buttons: Digital Pass & Google Maps -->' +
+    '        <!-- Action Button: Google Maps -->' +
     '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">' +
     '          <tr>' +
     '            <td align="center">' +
-    '              <a href="' + ((WEBSITE_URL || "https://aithon2-0.xyz").replace(/\/+$/, "")) + '/finale-payment?teamId=' + encodeURIComponent(teamId) + '" style="display: inline-block; background-color: #062b59; color: #ffffff; text-decoration: none; font-weight: 800; font-size: 13px; padding: 12px 24px; border-radius: 8px; margin-right: 8px; margin-bottom: 8px;">' +
-    '                🎟️ View Workstation Digital Pass &rarr;' +
-    '              </a>' +
-    '              <a href="https://maps.google.com/?q=Amrutvahini+College+of+Engineering+Sangamner" target="_blank" style="display: inline-block; background-color: #f1f5f9; color: #062b59; border: 1px solid #cbd5e1; text-decoration: none; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 8px; margin-bottom: 8px;">' +
-    '                📍 Get Directions (Google Maps)' +
+    '              <a href="https://maps.google.com/?q=Amrutvahini+College+of+Engineering+Sangamner" target="_blank" style="display: inline-block; background-color: #062b59; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 13px; padding: 12px 24px; border-radius: 8px; margin-bottom: 8px;">' +
+    '                Get Directions (Google Maps)' +
     '              </a>' +
     '            </td>' +
     '          </tr>' +
