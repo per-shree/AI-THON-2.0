@@ -33,6 +33,8 @@ import {
   Layers,
   Clock,
   QrCode,
+  Laptop,
+  Cpu,
 } from 'lucide-react'
 import {
   UserIcon,
@@ -72,6 +74,12 @@ const COURSE_OPTIONS = [
   'Other',
 ]
 
+// Official Competition Domains
+export const DOMAIN_OPTIONS = [
+  'Software',
+  'Hardware',
+]
+
 // 23 Official Hackathon Competition Tracks
 export const TRACK_OPTIONS = [
   'Track 01: AI in Healthcare & Medicine',
@@ -107,7 +115,7 @@ export const isOtherCourse = (course) =>
 
 // Official UPI Payment Configuration for ₹50 Evaluation Fee
 export const OFFICIAL_UPI_ID = '9404665180@centralbank'
-export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=AITHON%202.0&am=50&cu=INR&tn=AITHON%20Registration'
+export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
 
 export default function Registration() {
   const { registerTeam, getNextSerialTeamId, syncNextSerialNum } = useAdmin()
@@ -239,7 +247,8 @@ export default function Registration() {
       { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
     ],
 
-    // Step 3: PPT Submission & Track Selection
+    // Step 3: Domain, PPT Submission & Track Selection
+    selectedDomain: '',
     selectedTrack: '',
     pptFileName: '',
     pptFileSize: '',
@@ -381,9 +390,12 @@ export default function Registration() {
     return Object.keys(errs).length === 0
   }
 
-  // Validate Step 3: Track Selection & PPT Upload
+  // Validate Step 3: Domain, Track Selection & PPT Upload
   const validateStep3 = () => {
     const errs = {}
+    if (!formData.selectedDomain || !formData.selectedDomain.trim()) {
+      errs.selectedDomain = 'Please select your domain (1. Software or 2. Hardware) before proceeding'
+    }
     if (!formData.selectedTrack || !formData.selectedTrack.trim()) {
       errs.selectedTrack = 'Please select your competition track out of the 23 tracks before proceeding'
     }
@@ -1275,6 +1287,117 @@ export default function Registration() {
               </div>
             </div>
 
+            {/* Domain Selection Section (1. Software / 2. Hardware) */}
+            <div className="space-y-3 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <label
+                  className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center gap-2"
+                >
+                  <Cpu className="w-4 h-4 text-[#2563eb]" />
+                  <span>Select Domain <span className="text-[#ea580c] font-bold">*</span></span>
+                </label>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Choose whether your project is Software or Hardware
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {[
+                  {
+                    id: 'Software',
+                    label: '1. Software',
+                    desc: 'Web, Mobile apps, AI/ML models, Cloud, APIs, Algorithms & Digital systems',
+                    icon: Laptop,
+                  },
+                  {
+                    id: 'Hardware',
+                    label: '2. Hardware',
+                    desc: 'IoT devices, Embedded Systems, Robotics, Sensors, Microcontrollers & Circuits',
+                    icon: Cpu,
+                  },
+                ].map((item) => {
+                  const isSelected = formData.selectedDomain === item.id
+                  const ItemIcon = item.icon
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, selectedDomain: item.id }))
+                        if (errors.selectedDomain) {
+                          setErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.selectedDomain
+                            return next
+                          })
+                        }
+                      }}
+                      className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer flex items-start gap-3.5 relative group ${
+                        isSelected
+                          ? 'border-[#2563eb] bg-blue-50/50 shadow-sm'
+                          : 'border-[#edebe6] bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected
+                            ? 'bg-[#2563eb] text-white'
+                            : 'bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-[#2563eb]'
+                        }`}
+                      >
+                        <ItemIcon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-sm font-extrabold tracking-wide ${
+                              isSelected ? 'text-[#062b59]' : 'text-slate-800'
+                            }`}
+                          >
+                            {item.label}
+                          </span>
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                              isSelected
+                                ? 'border-[#2563eb] bg-[#2563eb]'
+                                : 'border-slate-300 bg-white'
+                            }`}
+                          >
+                            {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium mt-1 leading-snug">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {errors.selectedDomain && (
+                <p className="text-xs font-semibold text-rose-600 flex items-center gap-1 mt-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.selectedDomain}</span>
+                </p>
+              )}
+
+              {formData.selectedDomain && (
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-blue-50/70 border border-blue-200/70 text-xs text-[#062b59]">
+                  <CheckCircle2 className="w-4 h-4 text-[#2563eb] shrink-0" />
+                  <div className="flex-1">
+                    <span className="font-bold">Chosen Domain: </span>
+                    <span className="font-extrabold text-[#2563eb]">
+                      {formData.selectedDomain === 'Software' ? '1. Software' : '2. Hardware'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded border border-blue-200 text-slate-600">
+                    Domain Selected
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Track Selection Section (Select out of 23 Tracks) */}
             <div className="space-y-3 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
@@ -1587,6 +1710,20 @@ export default function Registration() {
                   </div>
 
                   <div className="space-y-2.5">
+                    {/* Chosen Domain */}
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-blue-200/80 text-xs">
+                      <Cpu className="w-4 h-4 text-[#2563eb] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-slate-400 font-semibold text-[11px] block uppercase">Domain</span>
+                        <span className="font-extrabold text-[#062b59] truncate block">
+                          {formData.selectedDomain ? (formData.selectedDomain === 'Software' ? '1. Software' : '2. Hardware') : '1. Software'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#2563eb] bg-blue-50 px-2 py-0.5 rounded uppercase shrink-0 border border-blue-100">
+                        Domain Verified
+                      </span>
+                    </div>
+
                     {/* Chosen Competition Track */}
                     <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-emerald-200/80 text-xs">
                       <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
@@ -1939,11 +2076,18 @@ export default function Registration() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-[#edebe6] text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-3 border-b border-[#edebe6] text-xs">
                 <div>
                   <span className="text-slate-400 block font-bold text-[11px] uppercase">Team Name</span>
-                  <span className="text-sm sm:text-base font-extrabold text-[#062b59]">
+                  <span className="text-sm sm:text-base font-extrabold text-[#062b59] block truncate">
                     {formData.teamName || 'AiTHON Team'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Domain</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-[#062b59] flex items-center gap-1.5 mt-0.5">
+                    <Cpu className="w-4 h-4 text-[#2563eb] shrink-0" />
+                    <span className="truncate">{formData.selectedDomain === 'Hardware' ? '2. Hardware' : '1. Software'}</span>
                   </span>
                 </div>
                 <div>

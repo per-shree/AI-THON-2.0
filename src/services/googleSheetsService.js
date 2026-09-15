@@ -116,7 +116,8 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
     member6Course: resolvedMember6Course,
     member6Year: member6.year || '',
 
-    // Idea PPT Submission, Selected Track & Payment
+    // Idea PPT Submission, Selected Domain & Track, & Payment
+    selectedDomain: formData.selectedDomain || '',
     selectedTrack: formData.selectedTrack || '',
     pptFileName: formData.pptFileName || '',
     pptBase64: formData.pptBase64 || '',

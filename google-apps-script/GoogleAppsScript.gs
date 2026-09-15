@@ -53,7 +53,7 @@ var ROUND_2_PAYMENT_LINKS = {
   6: ROUND_2_PAYMENT_FORM_URL
 };
 
-// Comprehensive 48-Column Header Structure for AITHON 2.0
+// Comprehensive 50-Column Header Structure for AITHON 2.0
 var HEADERS = [
   "Timestamp",                 // Col 1 (A)
   "Team ID",                   // Col 2 (B) - Serial ID (e.g. TEAM-101)
@@ -92,19 +92,68 @@ var HEADERS = [
   "Member 6 College",          // Col 35 (AI)
   "Member 6 Course",           // Col 36 (AJ)
   "Member 6 Year",             // Col 37 (AK)
-  "Selected Track",            // Col 38 (AL) - Competition Domain (1 of 23 Tracks)
-  "PPT Drive Link",            // Col 39 (AM) - Direct Google Drive URL (Named as Team ID)
-  "Original PPT File Name",    // Col 40 (AN)
-  "Evaluation Fee (₹50)",      // Col 41 (AO) - ₹50
-  "Eval Fee Status",           // Col 42 (AP) - Dropdown: Pending Verification / Verified / Rejected
-  "Eval Payment UTR",          // Col 43 (AQ) - Only Payment ID / UTR, No Dropdown
-  "PPT Status",                // Col 44 (AR) - Selection / Rejection (Accepted / Rejected / Pending Review)
-  "Round 2 Fee Amount",        // Col 45 (AS) - Calculated: Team Size × 200 (₹800, ₹1000, ₹1200)
-  "Round 2 Payment Link",      // Col 46 (AT) - Non-Editable Payment Link
-  "Round 2 Payment Status",    // Col 47 (AU) - Dropdown: Pending Verification / Verified / Rejected
-  "Round 2 Payment UTR",       // Col 48 (AV) - Only Payment ID / UTR, No Dropdown
-  "Email Notification Status"  // Col 49 (AW) - Tracks email sent date/time to prevent duplicate emails
+  "Selected Domain",           // Col 38 (AL) - 1. Software / 2. Hardware
+  "Selected Track",            // Col 39 (AM) - Competition Track (1 of 23 Tracks)
+  "PPT Drive Link",            // Col 40 (AN) - Direct Google Drive URL (Named as Team ID)
+  "Original PPT File Name",    // Col 41 (AO)
+  "Evaluation Fee (₹50)",      // Col 42 (AP) - ₹50
+  "Eval Fee Status",           // Col 43 (AQ) - Dropdown: Pending Verification / Verified / Rejected
+  "Eval Payment UTR",          // Col 44 (AR) - Only Payment ID / UTR, No Dropdown
+  "PPT Status",                // Col 45 (AS) - Selection / Rejection (Accepted / Rejected / Pending Review)
+  "Round 2 Fee Amount",        // Col 46 (AT) - Calculated: Team Size × 200 (₹800, ₹1000, ₹1200)
+  "Round 2 Payment Link",      // Col 47 (AU) - Non-Editable Payment Link
+  "Round 2 Payment Status",    // Col 48 (AV) - Dropdown: Pending Verification / Verified / Rejected
+  "Round 2 Payment UTR",       // Col 49 (AW) - Only Payment ID / UTR, No Dropdown
+  "Email Notification Status"  // Col 50 (AX) - Tracks email sent date/time to prevent duplicate emails
 ];
+
+/**
+ * Dynamic Column Resolver:
+ * Supports both 50-column (with "Selected Domain") and older 49-column sheets
+ */
+function getSheetColumnIndexes(sheet) {
+  var headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 50)).getValues()[0];
+  var domainIdx = -1;
+  for (var i = 0; i < headers.length; i++) {
+    var h = String(headers[i] || "").trim();
+    if (h === "Selected Domain" || h === "Domain") {
+      domainIdx = i;
+      break;
+    }
+  }
+  var hasDomain = domainIdx !== -1;
+  var offset = hasDomain ? 1 : 0;
+  return {
+    hasDomain: hasDomain,
+    totalCols: 49 + offset,
+    domainIdx: hasDomain ? domainIdx : -1,
+    domainCol: hasDomain ? (domainIdx + 1) : -1,
+    trackIdx: 37 + offset,
+    trackCol: 38 + offset,
+    pptLinkIdx: 38 + offset,
+    pptLinkCol: 39 + offset,
+    pptFileNameIdx: 39 + offset,
+    pptFileNameCol: 40 + offset,
+    evalFeeIdx: 40 + offset,
+    evalFeeCol: 41 + offset,
+    evalFeeStatusIdx: 41 + offset,
+    evalFeeStatusCol: 42 + offset,
+    evalUtrIdx: 42 + offset,
+    evalUtrCol: 43 + offset,
+    pptStatusIdx: 43 + offset,
+    pptStatusCol: 44 + offset,
+    round2FeeIdx: 44 + offset,
+    round2FeeCol: 45 + offset,
+    round2LinkIdx: 45 + offset,
+    round2LinkCol: 46 + offset,
+    round2StatusIdx: 46 + offset,
+    round2StatusCol: 47 + offset,
+    round2UtrIdx: 47 + offset,
+    round2UtrCol: 48 + offset,
+    emailStatusIdx: 48 + offset,
+    emailStatusCol: 49 + offset
+  };
+}
 
 function getTargetSpreadsheet() {
   try {
@@ -289,10 +338,22 @@ function doPost(e) {
       data.leadPhone
     );
 
+    // Auto-migrate sheet if it was a 49-column sheet missing "Selected Domain"
+    var cols = getSheetColumnIndexes(sheet);
+    if (!cols.hasDomain) {
+      sheet.insertColumnBefore(38);
+      sheet.getRange(1, 38).setValue("Selected Domain");
+      sheet.setColumnWidth(38, 140);
+      cols = getSheetColumnIndexes(sheet);
+    }
+
+    var rawDomain = String(data.selectedDomain || "Software").trim();
+    var selectedDomain = (rawDomain.toLowerCase().indexOf("hard") !== -1) ? "Hardware" : "Software";
+
     // 🛡️ SUBMISSION & REAL-TIME STATUS RECORDING
     var utrStr = data.paymentUtr ? String(data.paymentUtr).trim() : "";
     if (!utrStr && existingRow !== -1) {
-      var prevUtr = String(sheet.getRange(existingRow, 43).getValue() || "").trim().replace(/^'/, "");
+      var prevUtr = String(sheet.getRange(existingRow, cols.evalUtrCol).getValue() || "").trim().replace(/^'/, "");
       if (prevUtr && prevUtr !== "-") {
         utrStr = prevUtr;
       }
@@ -308,7 +369,7 @@ function doPost(e) {
 
     var pptStatusCol = "Pending Review";
     if (existingRow !== -1) {
-      var prevPptStatus = String(sheet.getRange(existingRow, 44).getValue() || "").trim();
+      var prevPptStatus = String(sheet.getRange(existingRow, cols.pptStatusCol).getValue() || "").trim();
       if (prevPptStatus && prevPptStatus !== "-") {
         pptStatusCol = prevPptStatus;
       }
@@ -316,13 +377,13 @@ function doPost(e) {
 
     var emailSentCol = "Not Sent (Pending Manual Verification)";
     if (existingRow !== -1) {
-      var prevEmailStatus = String(sheet.getRange(existingRow, 49).getValue() || "").trim();
+      var prevEmailStatus = String(sheet.getRange(existingRow, cols.emailStatusCol).getValue() || "").trim();
       if (prevEmailStatus && prevEmailStatus.indexOf("Verified") !== -1) {
         emailSentCol = prevEmailStatus;
       }
     }
 
-    // 48-column row aligned with HEADERS
+    // 50-column row aligned with HEADERS
     var row = [
       timestamp,                               // Col 1: Timestamp
       data.teamId || "N/A",                    // Col 2: Team ID
@@ -361,18 +422,19 @@ function doPost(e) {
       data.member6College || "-",              // Col 35: Member 6 College
       member6Course,                           // Col 36: Member 6 Course (or user-specified Other)
       data.member6Year || "-",                 // Col 37: Member 6 Year
-      data.selectedTrack || "General AI Track",// Col 38: Selected Track (1 of 23 Tracks)
-      pptDriveUrl,                             // Col 39: PPT Drive Link
-      data.pptFileName || "-",                 // Col 40: Original PPT File Name
-      "₹50",                                   // Col 41: Evaluation Fee (₹50)
-      evalFeeStatus,                           // Col 42: Eval Fee Status (Dropdown: Pending Verification / Verified / Rejected)
-      utrStr ? ("'" + utrStr) : "-",           // Col 43: Eval Payment UTR (Only Payment ID / UTR, No Dropdown)
-      pptStatusCol,                            // Col 44: PPT Status
-      round2FeeAmount,                         // Col 45: Round 2 Fee Amount (teamSize * 200)
-      round2Link,                              // Col 46: Round 2 Payment Link (Non-editable)
-      "Pending Verification",                  // Col 47: Round 2 Payment Status (Dropdown: Pending Verification / Verified / Rejected)
-      "-",                                     // Col 48: Round 2 Payment UTR (Only Payment ID / UTR, No Dropdown)
-      emailSentCol                             // Col 49: Email Notification Status
+      selectedDomain,                          // Col 38: Selected Domain (1. Software / 2. Hardware)
+      data.selectedTrack || "General AI Track",// Col 39: Selected Track (1 of 23 Tracks)
+      pptDriveUrl,                             // Col 40: PPT Drive Link
+      data.pptFileName || "-",                 // Col 41: Original PPT File Name
+      "₹50",                                   // Col 42: Evaluation Fee (₹50)
+      evalFeeStatus,                           // Col 43: Eval Fee Status (Dropdown: Pending Verification / Verified / Rejected)
+      utrStr ? ("'" + utrStr) : "-",           // Col 44: Eval Payment UTR (Only Payment ID / UTR, No Dropdown)
+      pptStatusCol,                            // Col 45: PPT Status
+      round2FeeAmount,                         // Col 46: Round 2 Fee Amount (teamSize * 200)
+      round2Link,                              // Col 47: Round 2 Payment Link (Non-editable)
+      "Pending Verification",                  // Col 48: Round 2 Payment Status (Dropdown: Pending Verification / Verified / Rejected)
+      "-",                                     // Col 49: Round 2 Payment UTR (Only Payment ID / UTR, No Dropdown)
+      emailSentCol                             // Col 50: Email Notification Status
     ];
 
     var targetRow = existingRow !== -1 ? existingRow : (sheet.getLastRow() + 1);
@@ -391,35 +453,44 @@ function doPost(e) {
     rowRange.setFontFamily("Plus Jakarta Sans");
     rowRange.setFontSize(10);
 
-    // Style Col 42 and apply dropdown
+    // Style and apply dropdown validations
     try {
+      if (cols.domainCol !== -1) {
+        var domainRule = SpreadsheetApp.newDataValidation()
+          .requireValueInList(["Software", "Hardware"], true)
+          .setAllowInvalid(true)
+          .setHelpText("Select 'Software' or 'Hardware'.")
+          .build();
+        sheet.getRange(targetRow, cols.domainCol).setDataValidation(domainRule);
+      }
+
       var evalRule = SpreadsheetApp.newDataValidation()
         .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
         .setAllowInvalid(true)
         .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
         .build();
-      sheet.getRange(targetRow, 42).setDataValidation(evalRule);
+      sheet.getRange(targetRow, cols.evalFeeStatusCol).setDataValidation(evalRule);
       if (evalFeeStatus === "Pending Verification") {
-        sheet.getRange(targetRow, 42).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
+        sheet.getRange(targetRow, cols.evalFeeStatusCol).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
       } else {
-        sheet.getRange(targetRow, 42).setBackground("#f1f5f9").setFontColor("#475569").setFontWeight("normal");
+        sheet.getRange(targetRow, cols.evalFeeStatusCol).setBackground("#f1f5f9").setFontColor("#475569").setFontWeight("normal");
       }
 
-      // Strictly ensure Column 43 (Eval Payment UTR) has NO dropdown and is formatted as Plain Text
-      sheet.getRange(targetRow, 43).clearDataValidations();
-      sheet.getRange(targetRow, 43).setNumberFormat("@");
+      // Strictly ensure Eval Payment UTR has NO dropdown and is formatted as Plain Text
+      sheet.getRange(targetRow, cols.evalUtrCol).clearDataValidations();
+      sheet.getRange(targetRow, cols.evalUtrCol).setNumberFormat("@");
 
-      // Set Column 47 (Round 2 Payment Status) dropdown: Pending Verification / Verified / Rejected
+      // Set Round 2 Payment Status dropdown
       var r2Rule = SpreadsheetApp.newDataValidation()
         .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
         .setAllowInvalid(true)
         .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
         .build();
-      sheet.getRange(targetRow, 47).setDataValidation(r2Rule);
+      sheet.getRange(targetRow, cols.round2StatusCol).setDataValidation(r2Rule);
 
-      // Strictly ensure Column 48 (Round 2 Payment UTR) has NO dropdown and is formatted as Plain Text
-      sheet.getRange(targetRow, 48).clearDataValidations();
-      sheet.getRange(targetRow, 48).setNumberFormat("@");
+      // Strictly ensure Round 2 Payment UTR has NO dropdown and is formatted as Plain Text
+      sheet.getRange(targetRow, cols.round2UtrCol).clearDataValidations();
+      sheet.getRange(targetRow, cols.round2UtrCol).setNumberFormat("@");
     } catch (styleErr) {}
 
     return ContentService.createTextOutput(JSON.stringify({
@@ -485,14 +556,15 @@ function doGet(e) {
       if (sheet && (queryTeamId || queryEmail || queryUtr || cleanQuery)) {
         var lastRow = sheet.getLastRow();
         if (lastRow > 1) {
-          var rows = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
+          var cols = getSheetColumnIndexes(sheet);
+          var rows = sheet.getRange(2, 1, lastRow - 1, cols.totalCols).getValues();
           // Search backwards so that the most recent registration matching email/UTR is returned
           for (var i = rows.length - 1; i >= 0; i--) {
             var r = rows[i];
             var rTeamId = String(r[1] || "").trim().toUpperCase();
             var rRegId = String(r[2] || "").trim().toUpperCase();
             var rEmail = String(r[6] || "").trim().toLowerCase();
-            var rUtr = String(r[42] || "").trim().replace(/[^A-Za-z0-9]/g, "");
+            var rUtr = String(r[cols.evalUtrIdx] || "").trim().replace(/[^A-Za-z0-9]/g, "");
             var cleanRTeam = rTeamId.replace(/[^A-Z0-9]/gi, "");
             var cleanRReg = rRegId.replace(/[^A-Z0-9]/gi, "");
 
@@ -529,18 +601,19 @@ function doGet(e) {
                 leadCourse: r[9] || "",
                 leadYear: r[10] || "",
                 leadCity: r[11] || "",
-                selectedTrack: r[37] || "General AI Track",
-                pptDriveLink: r[38] || "",
-                pptFileName: r[39] || "",
-                evalFee: r[40] || "₹50",
-                evalFeeStatus: r[41] || "Pending Verification",
-                evalPaymentUtr: String(r[42] || "").replace("'", ""),
-                pptStatus: r[43] || "Pending Review",
+                selectedDomain: cols.hasDomain ? (r[cols.domainIdx] || "Software") : "Software",
+                selectedTrack: r[cols.trackIdx] || "General AI Track",
+                pptDriveLink: r[cols.pptLinkIdx] || "",
+                pptFileName: r[cols.pptFileNameIdx] || "",
+                evalFee: r[cols.evalFeeIdx] || "₹50",
+                evalFeeStatus: r[cols.evalFeeStatusIdx] || "Pending Verification",
+                evalPaymentUtr: String(r[cols.evalUtrIdx] || "").replace("'", ""),
+                pptStatus: r[cols.pptStatusIdx] || "Pending Review",
                 round2FeeAmount: finaleFee,
-                round2PaymentLink: r[45] || "",
-                round2PaymentStatus: r[46] || "Pending Verification",
-                round2PaymentUtr: String(r[47] || "").replace("'", ""),
-                ticketSent: String(r[48] || "").indexOf("Finale Ticket Sent") !== -1
+                round2PaymentLink: r[cols.round2LinkIdx] || "",
+                round2PaymentStatus: r[cols.round2StatusIdx] || "Pending Verification",
+                round2PaymentUtr: String(r[cols.round2UtrIdx] || "").replace("'", ""),
+                ticketSent: String(r[cols.emailStatusIdx] || "").indexOf("Finale Ticket Sent") !== -1
               })).setMimeType(ContentService.MimeType.JSON);
             }
           }
@@ -664,6 +737,7 @@ function setupSheet(sheet) {
 }
 
 function formatHeaderRow(sheet) {
+  var cols = getSheetColumnIndexes(sheet);
   var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
   headerRange.setBackground("#062b59");
   headerRange.setFontColor("#ffffff");
@@ -685,22 +759,37 @@ function formatHeaderRow(sheet) {
     sheet.setColumnWidth(7, 200);  // Leader Email
     sheet.setColumnWidth(8, 130);  // Phone
     sheet.setColumnWidth(9, 240);  // College
-    sheet.setColumnWidth(38, 250); // Selected Track (1 of 23 Tracks)
-    sheet.setColumnWidth(39, 280); // PPT Drive Link
-    sheet.setColumnWidth(40, 200); // Original PPT File Name
-    sheet.setColumnWidth(41, 120); // Evaluation Fee (₹50)
-    sheet.setColumnWidth(42, 160); // Eval Fee Status
-    sheet.setColumnWidth(43, 160); // Eval Payment UTR
-    sheet.setColumnWidth(44, 170); // PPT Status (Selection/Rejection)
-    sheet.setColumnWidth(45, 150); // Round 2 Fee Amount
-    sheet.setColumnWidth(46, 300); // Round 2 Payment Link
-    sheet.setColumnWidth(47, 160); // Round 2 Payment Status
-    sheet.setColumnWidth(48, 160); // Round 2 Payment UTR
-    sheet.setColumnWidth(49, 260); // Email Notification Status
+    if (cols.hasDomain) {
+      sheet.setColumnWidth(cols.domainCol, 140); // Selected Domain (Software / Hardware)
+    }
+    sheet.setColumnWidth(cols.trackCol, 250); // Selected Track (1 of 23 Tracks)
+    sheet.setColumnWidth(cols.pptLinkCol, 280); // PPT Drive Link
+    sheet.setColumnWidth(cols.pptFileNameCol, 200); // Original PPT File Name
+    sheet.setColumnWidth(cols.evalFeeCol, 120); // Evaluation Fee (₹50)
+    sheet.setColumnWidth(cols.evalFeeStatusCol, 160); // Eval Fee Status
+    sheet.setColumnWidth(cols.evalUtrCol, 160); // Eval Payment UTR
+    sheet.setColumnWidth(cols.pptStatusCol, 170); // PPT Status (Selection/Rejection)
+    sheet.setColumnWidth(cols.round2FeeCol, 150); // Round 2 Fee Amount
+    sheet.setColumnWidth(cols.round2LinkCol, 300); // Round 2 Payment Link
+    sheet.setColumnWidth(cols.round2StatusCol, 160); // Round 2 Payment Status
+    sheet.setColumnWidth(cols.round2UtrCol, 160); // Round 2 Payment UTR
+    sheet.setColumnWidth(cols.emailStatusCol, 260); // Email Notification Status
 
-    // Apply Dropdown Data Validation to Column 44 (PPT Status) for all data rows
     var maxRows = Math.max(sheet.getMaxRows(), 100);
-    var statusRange = sheet.getRange(2, 44, maxRows - 1, 1);
+
+    // Apply Dropdown Data Validation to Domain Column if present
+    if (cols.hasDomain) {
+      var domainRange = sheet.getRange(2, cols.domainCol, maxRows - 1, 1);
+      var domainRule = SpreadsheetApp.newDataValidation()
+        .requireValueInList(["Software", "Hardware"], true)
+        .setAllowInvalid(true)
+        .setHelpText("Select 'Software' or 'Hardware'.")
+        .build();
+      domainRange.setDataValidation(domainRule);
+    }
+
+    // Apply Dropdown Data Validation to Column for PPT Status for all data rows
+    var statusRange = sheet.getRange(2, cols.pptStatusCol, maxRows - 1, 1);
     var rule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["Accepted", "Rejected", "Pending Review"], true)
       .setAllowInvalid(false)
@@ -708,8 +797,8 @@ function formatHeaderRow(sheet) {
       .build();
     statusRange.setDataValidation(rule);
 
-    // Apply Dropdown Data Validation to Column 42 (Eval Fee Status) for all data rows: ONLY Pending Verification, Verified, Rejected
-    var evalStatusRange = sheet.getRange(2, 42, maxRows - 1, 1);
+    // Apply Dropdown Data Validation to Eval Fee Status for all data rows: ONLY Pending Verification, Verified, Rejected
+    var evalStatusRange = sheet.getRange(2, cols.evalFeeStatusCol, maxRows - 1, 1);
     var evalRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
       .setAllowInvalid(true)
@@ -717,13 +806,13 @@ function formatHeaderRow(sheet) {
       .build();
     evalStatusRange.setDataValidation(evalRule);
 
-    // Strictly remove any dropdown data validation from Column 43 (Eval Payment UTR) - ONLY payment ID occurs
-    var utrRange = sheet.getRange(2, 43, maxRows - 1, 1);
+    // Strictly remove any dropdown data validation from Eval Payment UTR - ONLY payment ID occurs
+    var utrRange = sheet.getRange(2, cols.evalUtrCol, maxRows - 1, 1);
     utrRange.clearDataValidations();
     utrRange.setNumberFormat("@");
 
-    // Apply Dropdown Data Validation to Column 47 (Round 2 Payment Status) for all data rows: ONLY Pending Verification, Verified, Rejected
-    var r2StatusRange = sheet.getRange(2, 47, maxRows - 1, 1);
+    // Apply Dropdown Data Validation to Round 2 Payment Status for all data rows: ONLY Pending Verification, Verified, Rejected
+    var r2StatusRange = sheet.getRange(2, cols.round2StatusCol, maxRows - 1, 1);
     var r2Rule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
       .setAllowInvalid(true)
@@ -731,8 +820,8 @@ function formatHeaderRow(sheet) {
       .build();
     r2StatusRange.setDataValidation(r2Rule);
 
-    // Strictly remove any dropdown data validation from Column 48 (Round 2 Payment UTR) - ONLY payment ID occurs
-    var r2UtrRange = sheet.getRange(2, 48, maxRows - 1, 1);
+    // Strictly remove any dropdown data validation from Round 2 Payment UTR - ONLY payment ID occurs
+    var r2UtrRange = sheet.getRange(2, cols.round2UtrCol, maxRows - 1, 1);
     r2UtrRange.clearDataValidations();
     r2UtrRange.setNumberFormat("@");
 
@@ -743,7 +832,7 @@ function formatHeaderRow(sheet) {
 
 /**
  * 🛠️ ONE-CLICK SHEET STRUCTURE UPDATER:
- * Run this function once to update your Google Sheet to the comprehensive 47 columns,
+ * Run this function once to update your Google Sheet to the comprehensive 50 columns with Selected Domain,
  * add dropdowns for "Accepted / Rejected / Pending Review", and apply formatting.
  */
 function updateSheetStructure() {
@@ -759,7 +848,13 @@ function updateSheetStructure() {
     }
   }
 
-  // Ensure sheet has at least 48 columns
+  // Ensure "Selected Domain" column exists at Col 38 if previously "Selected Track" was at Col 38
+  var headerRow = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 38)).getValues()[0];
+  if (headerRow[37] === "Selected Track") {
+    sheet.insertColumnBefore(38);
+  }
+
+  // Ensure sheet has at least 50 columns
   if (sheet.getMaxColumns() < HEADERS.length) {
     sheet.insertColumnsAfter(sheet.getMaxColumns(), HEADERS.length - sheet.getMaxColumns());
   }
@@ -769,8 +864,8 @@ function updateSheetStructure() {
   headerRange.setValues([HEADERS]);
   formatHeaderRow(sheet);
 
-  Logger.log("✓ Google Sheet headers successfully updated to 49 columns with Round 2 Payment UTR and dropdowns!");
-  return "Sheet structure updated successfully to 49 columns!";
+  Logger.log("✓ Google Sheet headers successfully updated to 50 columns with Selected Domain (Software / Hardware)!");
+  return "Sheet structure updated successfully to 50 columns!";
 }
 
 /**
@@ -780,18 +875,18 @@ function onOpen() {
   try {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu("🚀 AITHON 2.0")
-      .addItem("✅ Verify Registration Payment & Send Email (Col 42)", "processAllVerifiedRegistrations")
+      .addItem("✅ Verify Registration Payment & Send Email", "processAllVerifiedRegistrations")
       .addItem("⚡ Quick Verify Registration Payment (1-Click)", "quickVerifyRegistrationPaymentPrompt")
       .addSeparator()
-      .addItem("⚡ Quick Mark Team as Paid (Finale Col 47)", "quickMarkTeamPaidPrompt")
+      .addItem("⚡ Quick Mark Team as Paid (Finale)", "quickMarkTeamPaidPrompt")
       .addItem("🎟️ Dispatch Finale Tickets to Paid Teams", "processAllPaidFinaleTeams")
       .addItem("📧 Process PPT Evaluations (Send Emails)", "processAllPptEvaluations")
       .addSeparator()
-      .addItem("🔗 Regenerate All Round 2 Payment Links (Col 46)", "regenerateAllRound2PaymentLinks")
+      .addItem("🔗 Regenerate All Round 2 Payment Links", "regenerateAllRound2PaymentLinks")
       .addItem("📋 View Unmatched Payments Sheet", "openUnmatchedPaymentsSheet")
       .addSeparator()
-      .addItem("🔄 Fix Sheet Dropdowns (Col 42, 43, 44, 47, 48)", "fixEvalColumnsDropdownAndUtr")
-      .addItem("🛠️ Setup Sheet Columns & Dropdowns (49 Cols)", "updateSheetStructure")
+      .addItem("🔄 Fix Sheet Dropdowns & Payment UTRs", "fixEvalColumnsDropdownAndUtr")
+      .addItem("🛠️ Setup Sheet Columns & Dropdowns (50 Cols)", "updateSheetStructure")
       .addItem("⚡ Enable Real-Time Edit Trigger", "installEditTrigger")
       .addToUi();
   } catch (e) {
@@ -800,7 +895,7 @@ function onOpen() {
 }
 
 /**
- * 🛠️ Fix Column 42 & 47 Dropdowns, and Remove Dropdowns from Column 43 & 48 (Payment UTRs)
+ * 🛠️ Fix Column Dropdowns, and Remove Dropdowns from Payment UTRs
  */
 function fixEvalColumnsDropdownAndUtr() {
   try {
@@ -808,42 +903,53 @@ function fixEvalColumnsDropdownAndUtr() {
     var sheet = ss ? ss.getSheetByName("Registrations") : null;
     if (!sheet) sheet = ss.getActiveSheet();
     var maxRows = Math.max(sheet.getMaxRows(), 100);
+    var cols = getSheetColumnIndexes(sheet);
 
-    // 1. Column 42: Dropdown with ONLY [Pending Verification, Verified, Rejected]
+    // 1. Domain dropdown if present
+    if (cols.hasDomain) {
+      var domainRule = SpreadsheetApp.newDataValidation()
+        .requireValueInList(["Software", "Hardware"], true)
+        .setAllowInvalid(true)
+        .setHelpText("Select 'Software' or 'Hardware'.")
+        .build();
+      sheet.getRange(2, cols.domainCol, maxRows - 1, 1).setDataValidation(domainRule);
+    }
+
+    // 2. Eval Fee Status dropdown: [Pending Verification, Verified, Rejected]
     var evalRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
       .setAllowInvalid(true)
       .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
       .build();
-    sheet.getRange(2, 42, maxRows - 1, 1).setDataValidation(evalRule);
+    sheet.getRange(2, cols.evalFeeStatusCol, maxRows - 1, 1).setDataValidation(evalRule);
 
-    // 2. Column 43: Clear all dropdown data validations so only payment ID occurs
-    sheet.getRange(2, 43, maxRows - 1, 1).clearDataValidations();
-    sheet.getRange(2, 43, maxRows - 1, 1).setNumberFormat("@");
+    // 3. Clear all dropdown data validations from Eval Payment UTR
+    sheet.getRange(2, cols.evalUtrCol, maxRows - 1, 1).clearDataValidations();
+    sheet.getRange(2, cols.evalUtrCol, maxRows - 1, 1).setNumberFormat("@");
 
-    // 3. Column 44: Dropdown with [Accepted, Rejected, Pending Review]
+    // 4. PPT Status dropdown with [Accepted, Rejected, Pending Review]
     var pptRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["Accepted", "Rejected", "Pending Review"], true)
       .setAllowInvalid(false)
       .setHelpText("Select 'Accepted' or 'Rejected' to evaluate team PPT.")
       .build();
-    sheet.getRange(2, 44, maxRows - 1, 1).setDataValidation(pptRule);
+    sheet.getRange(2, cols.pptStatusCol, maxRows - 1, 1).setDataValidation(pptRule);
 
-    // 4. Column 47: Dropdown with ONLY [Pending Verification, Verified, Rejected]
+    // 5. Round 2 Payment Status dropdown with [Pending Verification, Verified, Rejected]
     var r2Rule = SpreadsheetApp.newDataValidation()
       .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
       .setAllowInvalid(true)
       .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
       .build();
-    sheet.getRange(2, 47, maxRows - 1, 1).setDataValidation(r2Rule);
+    sheet.getRange(2, cols.round2StatusCol, maxRows - 1, 1).setDataValidation(r2Rule);
 
-    // 5. Column 48: Clear all dropdown data validations so only payment ID occurs
-    sheet.getRange(2, 48, maxRows - 1, 1).clearDataValidations();
-    sheet.getRange(2, 48, maxRows - 1, 1).setNumberFormat("@");
+    // 6. Clear all dropdown data validations from Round 2 Payment UTR
+    sheet.getRange(2, cols.round2UtrCol, maxRows - 1, 1).clearDataValidations();
+    sheet.getRange(2, cols.round2UtrCol, maxRows - 1, 1).setNumberFormat("@");
 
-    Logger.log("✓ Updated Column 42 & 47 dropdowns to [Pending Verification, Verified, Rejected] and cleared Column 43 & 48 UTR validations.");
+    Logger.log("✓ Updated dropdowns and cleared UTR validations.");
     try {
-      SpreadsheetApp.getUi().alert("✓ Updated successfully!\n\n• Column 42 & 47: Dropdown now consists only of 'Pending Verification', 'Verified', and 'Rejected'.\n• Column 43 & 48: All dropdowns removed so only Payment UTR occurs (plain text).");
+      SpreadsheetApp.getUi().alert("✓ Updated successfully!\n\n• Fee & PPT Status: Dropdowns correctly applied.\n• Payment UTR Columns: Formatted as plain text with no dropdowns.");
     } catch (uiErr) {}
   } catch (err) {
     Logger.log("fixEvalColumnsDropdownAndUtr error: " + err.toString());
@@ -876,7 +982,8 @@ function quickVerifyRegistrationPaymentPrompt() {
     return;
   }
 
-  var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
+  var cols = getSheetColumnIndexes(sheet);
+  var values = sheet.getRange(2, 1, lastRow - 1, cols.totalCols).getValues();
   var matchRow = -1;
   var upperInput = input.toUpperCase();
   var lowerInput = input.toLowerCase();
@@ -896,11 +1003,11 @@ function quickVerifyRegistrationPaymentPrompt() {
     return;
   }
 
-  var rowData = sheet.getRange(matchRow, 1, 1, 49).getValues()[0];
+  var rowData = sheet.getRange(matchRow, 1, 1, cols.totalCols).getValues()[0];
   var teamId = rowData[1];
   var teamName = rowData[3];
 
-  sheet.getRange(matchRow, 42)
+  sheet.getRange(matchRow, cols.evalFeeStatusCol)
     .setValue("Verified")
     .setBackground("#dcfce7")
     .setFontColor("#166534")
@@ -910,7 +1017,7 @@ function quickVerifyRegistrationPaymentPrompt() {
   if (dispatched) {
     ui.alert("✓ Success!\n\nTeam " + teamId + " (" + teamName + ") payment verified.\nOfficial Registration Confirmation Email sent to: " + rowData[6]);
   } else {
-    ui.alert("Team " + teamId + " payment marked as Verified in Column 42.");
+    ui.alert("Team " + teamId + " payment marked as Verified in Column " + cols.evalFeeStatusCol + ".");
   }
 }
 
@@ -940,7 +1047,8 @@ function quickMarkTeamPaidPrompt() {
     return;
   }
 
-  var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
+  var cols = getSheetColumnIndexes(sheet);
+  var values = sheet.getRange(2, 1, lastRow - 1, cols.totalCols).getValues();
   var matchRow = -1;
   var upperInput = input.toUpperCase();
   var lowerInput = input.toLowerCase();
@@ -959,7 +1067,7 @@ function quickMarkTeamPaidPrompt() {
     return;
   }
 
-  var rowData = sheet.getRange(matchRow, 1, 1, 49).getValues()[0];
+  var rowData = sheet.getRange(matchRow, 1, 1, cols.totalCols).getValues()[0];
   var teamId = rowData[1];
   var teamName = rowData[3];
   var teamSize = parseInt(rowData[4], 10) || 4;
@@ -967,8 +1075,8 @@ function quickMarkTeamPaidPrompt() {
   if (teamSize > 6) teamSize = 6;
   var fee = teamSize * 200;
 
-  sheet.getRange(matchRow, 45).setValue("₹" + fee);
-  sheet.getRange(matchRow, 47)
+  sheet.getRange(matchRow, cols.round2FeeCol).setValue("₹" + fee);
+  sheet.getRange(matchRow, cols.round2StatusCol)
     .setValue("Verified")
     .setBackground("#dcfce7")
     .setFontColor("#166534")
@@ -978,7 +1086,7 @@ function quickMarkTeamPaidPrompt() {
   if (dispatched) {
     ui.alert("✓ Success!\n\nTeam " + teamId + " (" + teamName + ") marked as Paid.\nOfficial Grand Finale Ticket has been emailed to: " + rowData[6]);
   } else {
-    ui.alert("Team " + teamId + " marked as Paid in Column 47.");
+    ui.alert("Team " + teamId + " marked as Paid in Column " + cols.round2StatusCol + ".");
   }
 }
 
@@ -1003,9 +1111,9 @@ function openUnmatchedPaymentsSheet() {
 
 /**
  * ⚡ Installable Trigger on Edit:
- * 1. Sends confirmation email when Col 42 (Eval Fee Status) is changed to 'Verified' / 'Paid',
- * 2. Sends acceptance/rejection email when Col 44 (PPT Status) is changed,
- * 3. Sends Grand Finale Hall Ticket when Col 47 (Round 2 Payment Status) is changed to 'Paid'!
+ * 1. Sends confirmation email when Eval Fee Status is changed to 'Verified' / 'Paid',
+ * 2. Sends acceptance/rejection email when PPT Status is changed,
+ * 3. Sends Grand Finale Hall Ticket when Round 2 Payment Status is changed to 'Paid'!
  */
 function installEditTrigger() {
   var ss = getTargetSpreadsheet();
@@ -1022,15 +1130,15 @@ function installEditTrigger() {
 
   Logger.log("✓ Real-time onEdit trigger successfully installed!");
   try {
-    SpreadsheetApp.getUi().alert("Real-time Triggers Installed!\n\n1. When Col 42 (Eval Fee Status) is marked 'Verified' / 'Paid', registration confirmation email is sent.\n2. When Col 44 (PPT Status) is 'Accepted', acceptance email is sent.\n3. When Col 47 (Round 2 Payment) is marked 'Paid', official Grand Finale Ticket email is sent automatically!");
+    SpreadsheetApp.getUi().alert("Real-time Triggers Installed!\n\n1. When Eval Fee Status is marked 'Verified' / 'Paid', registration confirmation email is sent.\n2. When PPT Status is 'Accepted', acceptance email is sent.\n3. When Round 2 Payment is marked 'Paid', official Grand Finale Ticket email is sent automatically!");
   } catch (e) {}
 }
 
 /**
  * Trigger handler for real-time edits:
- * - Column 42 (Eval Fee Status)
- * - Column 44 (PPT Status)
- * - Column 47 (Round 2 Payment Status)
+ * - Eval Fee Status
+ * - PPT Status
+ * - Round 2 Payment Status
  */
 function installedOnEdit(e) {
   if (!e || !e.range) return;
@@ -1039,19 +1147,20 @@ function installedOnEdit(e) {
 
   var row = e.range.getRow();
   var col = e.range.getColumn();
+  var cols = getSheetColumnIndexes(sheet);
 
-  // Column 42 is "Eval Fee Status" (Row >= 2) - Manual Payment Verification
-  if (col === 42 && row >= 2) {
+  // Eval Fee Status (Row >= 2) - Manual Payment Verification
+  if (col === cols.evalFeeStatusCol && row >= 2) {
     processEvalFeeStatusRow(sheet, row);
   }
 
-  // Column 44 is "PPT Status" (Row >= 2)
-  if (col === 44 && row >= 2) {
+  // PPT Status (Row >= 2)
+  if (col === cols.pptStatusCol && row >= 2) {
     processPptEvaluationRow(sheet, row);
   }
 
-  // Column 47 is "Round 2 Payment Status" (Row >= 2)
-  if (col === 47 && row >= 2) {
+  // Round 2 Payment Status (Row >= 2)
+  if (col === cols.round2StatusCol && row >= 2) {
     processRound2PaymentRow(sheet, row);
   }
 }
@@ -1062,7 +1171,8 @@ function installedOnEdit(e) {
  * Confirmation emails will ONLY be sent when Col 42 is manually marked as "Verified", "Paid", "Approved", or "Successful".
  */
 function processEvalFeeStatusRow(sheet, rowNum) {
-  var rowData = sheet.getRange(rowNum, 1, 1, 49).getValues()[0];
+  var cols = getSheetColumnIndexes(sheet);
+  var rowData = sheet.getRange(rowNum, 1, 1, cols.totalCols).getValues()[0];
 
   var teamId = String(rowData[1] || "").trim();
   var regId = String(rowData[2] || "").trim();
@@ -1073,11 +1183,12 @@ function processEvalFeeStatusRow(sheet, rowNum) {
   var leadEmail = String(rowData[6] || "").trim();
   var leadPhone = String(rowData[7] || "").replace("'", "").trim();
   var leadCollege = String(rowData[8] || "").trim();
-  var selectedTrack = String(rowData[37] || "").trim(); // Col 38 (0-indexed: 37)
-  var pptLink = String(rowData[38] || "").trim();       // Col 39 (0-indexed: 38)
-  var evalFeeStatus = String(rowData[41] || "").trim(); // Col 42 (0-indexed: 41)
-  var utr = String(rowData[42] || "").replace("'", "").trim(); // Col 43 (0-indexed: 42)
-  var emailSentStatus = String(rowData[48] || "").trim(); // Col 49 (0-indexed: 48)
+  var selectedDomain = cols.hasDomain ? String(rowData[cols.domainIdx] || "Software").trim() : "Software";
+  var selectedTrack = String(rowData[cols.trackIdx] || "").trim();
+  var pptLink = String(rowData[cols.pptLinkIdx] || "").trim();
+  var evalFeeStatus = String(rowData[cols.evalFeeStatusIdx] || "").trim();
+  var utr = String(rowData[cols.evalUtrIdx] || "").replace("'", "").trim();
+  var emailSentStatus = String(rowData[cols.emailStatusIdx] || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
@@ -1087,17 +1198,17 @@ function processEvalFeeStatusRow(sheet, rowNum) {
   var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
   var lowerStatus = evalFeeStatus.toLowerCase().trim();
 
-  // If status is "Rejected", style as red, record in Col 49, and exit
+  // If status is "Rejected", style as red, record in Email Status, and exit
   if (lowerStatus === "rejected" || lowerStatus.indexOf("rejected") !== -1) {
-    sheet.getRange(rowNum, 42).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
-    sheet.getRange(rowNum, 49).setValue("❌ Payment Rejected (" + nowStr + ")");
+    sheet.getRange(rowNum, cols.evalFeeStatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
+    sheet.getRange(rowNum, cols.emailStatusCol).setValue("❌ Payment Rejected (" + nowStr + ")");
     Logger.log("Row " + rowNum + " (" + teamId + "): Eval fee status marked as Rejected.");
     return false;
   }
 
   // If status is "Pending Verification", style as amber and wait for manual action
   if (lowerStatus === "pending verification" || lowerStatus.indexOf("pending") !== -1) {
-    sheet.getRange(rowNum, 42).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
+    sheet.getRange(rowNum, cols.evalFeeStatusCol).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
     Logger.log("Row " + rowNum + " (" + teamId + "): Eval fee status is Pending Verification.");
     return false;
   }
@@ -1134,6 +1245,7 @@ function processEvalFeeStatusRow(sheet, rowNum) {
     leadPhone: leadPhone,
     leadCollege: leadCollege,
     members: membersList,
+    selectedDomain: selectedDomain || "Software",
     selectedTrack: selectedTrack || "General AI Track",
     pptDriveUrl: pptLink,
     evalFeeStatus: "Verified",
@@ -1142,10 +1254,10 @@ function processEvalFeeStatusRow(sheet, rowNum) {
 
   sendConfirmationEmail(teamData);
 
-  // Update Col 49: Email Notification Status
-  sheet.getRange(rowNum, 49).setValue("✓ Confirmation Email Sent (" + nowStr + ")");
-  // Style Col 42 with verified green and ensure text is "Verified"
-  sheet.getRange(rowNum, 42).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
+  // Update Email Notification Status
+  sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Confirmation Email Sent (" + nowStr + ")");
+  // Style Eval Fee Status with verified green and ensure text is "Verified"
+  sheet.getRange(rowNum, cols.evalFeeStatusCol).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
 
   Logger.log("✓ Manual payment verified & confirmation email sent to: " + leadEmail + " for " + teamId);
   return true;
@@ -1153,8 +1265,8 @@ function processEvalFeeStatusRow(sheet, rowNum) {
 
 /**
  * 📧 BATCH PROCESSOR FOR REGISTRATION PAYMENT VERIFICATION:
- * Scans all rows in the sheet. For any row where Col 42 is 'Verified'/'Paid'/'Approved'/'Successful'
- * and confirmation email has not been sent yet (Col 48), dispatches the confirmation email!
+ * Scans all rows in the sheet. For any row where Eval Fee Status is 'Verified'/'Paid'/'Approved'/'Successful'
+ * and confirmation email has not been sent yet, dispatches the confirmation email!
  */
 function processAllVerifiedRegistrations() {
   var ss = getTargetSpreadsheet();
@@ -1211,7 +1323,8 @@ function processAllPptEvaluations() {
  * Processes a single row for PPT Status evaluation & email dispatch
  */
 function processPptEvaluationRow(sheet, rowNum) {
-  var rowData = sheet.getRange(rowNum, 1, 1, 49).getValues()[0];
+  var cols = getSheetColumnIndexes(sheet);
+  var rowData = sheet.getRange(rowNum, 1, 1, cols.totalCols).getValues()[0];
 
   var teamId = String(rowData[1] || "").trim();
   var regId = String(rowData[2] || "").trim();
@@ -1224,9 +1337,10 @@ function processPptEvaluationRow(sheet, rowNum) {
   var leadEmail = String(rowData[6] || "").trim();
   var leadPhone = String(rowData[7] || "").replace("'", "").trim();
   var leadCollege = String(rowData[8] || "").trim();
-  var selectedTrack = String(rowData[37] || "").trim(); // Col 38 (0-indexed: 37)
-  var pptStatus = String(rowData[43] || "").trim();     // Col 44 (0-indexed: 43)
-  var emailSentStatus = String(rowData[48] || "").trim(); // Col 49 (0-indexed: 48)
+  var selectedDomain = cols.hasDomain ? String(rowData[cols.domainIdx] || "Software").trim() : "Software";
+  var selectedTrack = String(rowData[cols.trackIdx] || "").trim();
+  var pptStatus = String(rowData[cols.pptStatusIdx] || "").trim();
+  var emailSentStatus = String(rowData[cols.emailStatusIdx] || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
@@ -1264,6 +1378,7 @@ function processPptEvaluationRow(sheet, rowNum) {
       leadPhone: leadPhone,
       leadCollege: leadCollege,
       members: membersList,
+      selectedDomain: selectedDomain || "Software",
       selectedTrack: selectedTrack || "General AI Track",
       feeAmount: feeAmount,
       paymentLink: paymentLink
@@ -1271,14 +1386,14 @@ function processPptEvaluationRow(sheet, rowNum) {
 
     sendPptAcceptanceEmail(teamData);
 
-    // Update Sheet: Col 45 (Fee), Col 46 (Link), Col 47 (Payment Status), Col 49 (Email Status)
-    sheet.getRange(rowNum, 45).setValue("₹" + feeAmount);
-    sheet.getRange(rowNum, 46).setValue(paymentLink);
-    sheet.getRange(rowNum, 47).setValue("Pending Verification");
-    sheet.getRange(rowNum, 49).setValue("✓ Accepted Email Sent (" + nowStr + ")");
+    // Update Sheet: Fee, Link, Payment Status, Email Status
+    sheet.getRange(rowNum, cols.round2FeeCol).setValue("₹" + feeAmount);
+    sheet.getRange(rowNum, cols.round2LinkCol).setValue(paymentLink);
+    sheet.getRange(rowNum, cols.round2StatusCol).setValue("Pending Verification");
+    sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Accepted Email Sent (" + nowStr + ")");
 
     // Highlight row status
-    sheet.getRange(rowNum, 44).setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
+    sheet.getRange(rowNum, cols.pptStatusCol).setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
 
     Logger.log("✓ Acceptance email sent to: " + leadEmail + " for " + teamId + " (Track: " + (selectedTrack || "N/A") + ", Fee: ₹" + feeAmount + ")");
     return true;
@@ -1298,14 +1413,15 @@ function processPptEvaluationRow(sheet, rowNum) {
       teamSize: teamSize,
       leadFullName: leadName,
       leadEmail: leadEmail,
+      selectedDomain: selectedDomain || "Software",
       selectedTrack: selectedTrack || "General AI Track"
     };
 
     sendPptRejectionEmail(teamDataReject);
 
-    // Update Sheet: Col 49 (Email Status)
-    sheet.getRange(rowNum, 49).setValue("✓ Rejection Email Sent (" + nowStr + ")");
-    sheet.getRange(rowNum, 44).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
+    // Update Sheet: Email Status and highlight
+    sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Rejection Email Sent (" + nowStr + ")");
+    sheet.getRange(rowNum, cols.pptStatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
 
     Logger.log("✓ Rejection feedback email sent to: " + leadEmail + " for " + teamId);
     return true;
@@ -1351,6 +1467,7 @@ function sendPptAcceptanceEmail(data) {
     "• Team Leader       : " + leadName + (data.leadCollege ? " (" + data.leadCollege + ")" : "") + "\n" +
     "• Leader Email      : " + recipient + "\n" +
     (data.members && data.members.length > 0 ? ("• Team Members      : " + data.members.join(", ") + "\n") : "") +
+    "• Project Domain   : " + (data.selectedDomain || "Software") + "\n" +
     "• Competition Track : " + (data.selectedTrack || "General AI Track") + "\n" +
     "• Team Size         : " + teamSize + " Members\n" +
     "• Status            : SHORTLISTED FOR FINALE (ROUND 2)\n\n" +
@@ -1458,6 +1575,10 @@ function sendPptAcceptanceEmail(data) {
     '                  <td style="color: #64748b;">Team Members:</td>' +
     '                  <td style="color: #334155; font-weight: 600;">' + data.members.join(', ') + '</td>' +
     '                </tr>') : '') +
+    '                <tr>' +
+    '                  <td style="color: #64748b;">Project Domain:</td>' +
+    '                  <td style="font-weight: 700; color: #0f172a;"><span style="display: inline-block; background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-weight: 700;">' + (data.selectedDomain || 'Software') + '</span></td>' +
+    '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Competition Track:</td>' +
     '                  <td style="font-weight: 700; color: #2563eb;">' + (data.selectedTrack || 'General AI Track') + '</td>' +
@@ -1688,6 +1809,7 @@ function sendConfirmationEmail(data) {
     "• Leader Email      : " + recipient + "\n" +
     (data.leadPhone ? ("• Leader Phone      : " + data.leadPhone + "\n") : "") +
     (data.members && data.members.length > 0 ? ("• Team Members      : " + data.members.join(", ") + "\n") : "") +
+    "• Project Domain   : " + (data.selectedDomain || "Software") + "\n" +
     "• Competition Track : " + (data.selectedTrack || "General AI Track") + "\n" +
     "• Team Size         : " + teamSize + " Members\n" +
     "• PPT Submission    : Uploaded (" + teamId + ".pptx)\n" +
@@ -1773,6 +1895,10 @@ function sendConfirmationEmail(data) {
     '                  <td style="color: #64748b;">Team Members:</td>' +
     '                  <td style="color: #334155; font-weight: 600;">' + data.members.join(', ') + '</td>' +
     '                </tr>') : '') +
+    '                <tr>' +
+    '                  <td style="color: #64748b;">Project Domain:</td>' +
+    '                  <td style="font-weight: 700; color: #0f172a;"><span style="display: inline-block; background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-weight: 700;">' + (data.selectedDomain || 'Software') + '</span></td>' +
+    '                </tr>' +
     '                <tr>' +
     '                  <td style="color: #64748b;">Competition Track:</td>' +
     '                  <td style="font-weight: 700; color: #2563eb;">' + (data.selectedTrack || 'General AI Track') + '</td>' +
@@ -2133,21 +2259,22 @@ function handleDirectRound2Confirmation(data, sheet) {
     if (size < 4) size = 4;
     if (size > 6) size = 6;
     var rawAmount = size * 200;
+    var cols = getSheetColumnIndexes(sheet);
 
-    // 1. Column 45: Store calculated Round 2 fee amount
-    sheet.getRange(matchRow, 45).setValue("₹" + rawAmount);
+    // 1. Store calculated Round 2 fee amount
+    sheet.getRange(matchRow, cols.round2FeeCol).setValue("₹" + rawAmount);
 
-    // 2. Column 47: Set status as "Pending Verification" (Amber background)
+    // 2. Set status as "Pending Verification" (Amber background)
     // The committee must manually verify the UTR in Google Sheets before ticket email triggers!
-    sheet.getRange(matchRow, 47)
+    sheet.getRange(matchRow, cols.round2StatusCol)
       .setValue("Pending Verification")
       .setBackground("#fef3c7")
       .setFontColor("#92400e")
       .setFontWeight("bold");
 
-    // 3. Column 48: Store ONLY the submitted transaction ID / UTR (Plain Text, No Dropdown)
+    // 3. Store ONLY the submitted transaction ID / UTR (Plain Text, No Dropdown)
     var cleanUtr = String(utr || "").replace("'", "").trim();
-    var r2UtrCell = sheet.getRange(matchRow, 48);
+    var r2UtrCell = sheet.getRange(matchRow, cols.round2UtrCol);
     r2UtrCell.clearDataValidations();
     r2UtrCell.setNumberFormat("@");
     r2UtrCell.setValue(cleanUtr ? ("'" + cleanUtr) : "-");
@@ -2179,7 +2306,8 @@ function handleDirectRound2Confirmation(data, sheet) {
  * =========================================================================
  */
 function processRound2PaymentRow(sheet, rowNum, payId, amount) {
-  var rowData = sheet.getRange(rowNum, 1, 1, 49).getValues()[0];
+  var cols = getSheetColumnIndexes(sheet);
+  var rowData = sheet.getRange(rowNum, 1, 1, cols.totalCols).getValues()[0];
 
   var teamId = String(rowData[1] || "").trim();
   var regId = String(rowData[2] || "").trim();
@@ -2192,12 +2320,13 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
   var leadEmail = String(rowData[6] || "").trim();
   var leadPhone = String(rowData[7] || "").replace("'", "").trim();
   var leadCollege = String(rowData[8] || "").trim();
-  var selectedTrack = String(rowData[37] || "").trim(); // Col 38 (0-indexed: 37)
-  var rawFee = parseInt(String(rowData[44] || "").replace(/[^0-9]/g, ""), 10);
+  var selectedDomain = cols.hasDomain ? String(rowData[cols.domainIdx] || "Software").trim() : "Software";
+  var selectedTrack = String(rowData[cols.trackIdx] || "").trim();
+  var rawFee = parseInt(String(rowData[cols.round2FeeIdx] || "").replace(/[^0-9]/g, ""), 10);
   var feeAmount = amount || rawFee || (teamSize * 200);
-  var r2PaymentStatus = String(rowData[46] || "").trim(); // Col 47 (0-indexed: 46)
-  var r2PaymentUtr = String(rowData[47] || "").replace("'", "").trim(); // Col 48 (0-indexed: 47)
-  var emailSentStatus = String(rowData[48] || "").trim(); // Col 49 (0-indexed: 48)
+  var r2PaymentStatus = String(rowData[cols.round2StatusIdx] || "").trim();
+  var r2PaymentUtr = String(rowData[cols.round2UtrIdx] || "").replace("'", "").trim();
+  var emailSentStatus = String(rowData[cols.emailStatusIdx] || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
@@ -2207,17 +2336,17 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
   var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
   var lowerStatus = r2PaymentStatus.toLowerCase().trim();
 
-  // If status is "Rejected", style as red, record in Col 49, and exit
+  // If status is "Rejected", style as red, record in Email Status, and exit
   if (lowerStatus === "rejected" || lowerStatus.indexOf("rejected") !== -1) {
-    sheet.getRange(rowNum, 47).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
-    sheet.getRange(rowNum, 49).setValue("❌ Finale Payment Rejected (" + nowStr + ")");
+    sheet.getRange(rowNum, cols.round2StatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
+    sheet.getRange(rowNum, cols.emailStatusCol).setValue("❌ Finale Payment Rejected (" + nowStr + ")");
     Logger.log("Row " + rowNum + " (" + teamId + "): Round 2 payment marked as Rejected.");
     return false;
   }
 
   // If status is "Pending Verification", style as amber and wait for committee action
   if (lowerStatus === "pending verification" || lowerStatus.indexOf("pending") !== -1) {
-    sheet.getRange(rowNum, 47).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
+    sheet.getRange(rowNum, cols.round2StatusCol).setBackground("#fef3c7").setFontColor("#92400e").setFontWeight("bold");
     Logger.log("Row " + rowNum + " (" + teamId + "): Round 2 payment is Pending Verification.");
     return false;
   }
@@ -2256,6 +2385,7 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
     leadPhone: leadPhone,
     leadCollege: leadCollege,
     members: membersList,
+    selectedDomain: selectedDomain || "Software",
     selectedTrack: selectedTrack || "General AI Track",
     feeAmount: feeAmount,
     paymentId: payId || r2PaymentUtr || "VERIFIED"
@@ -2263,9 +2393,9 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
 
   sendGrandFinaleTicketEmail(teamData);
 
-  // Update Sheet: Col 47 (Verified green), Col 49 (Ticket Sent status)
-  sheet.getRange(rowNum, 47).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
-  sheet.getRange(rowNum, 49).setValue("✓ Finale Ticket Sent (" + nowStr + ")");
+  // Update Sheet: Verified green, Ticket Sent status
+  sheet.getRange(rowNum, cols.round2StatusCol).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
+  sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Finale Ticket Sent (" + nowStr + ")");
 
   Logger.log("✓ Grand Finale Ticket email sent to: " + leadEmail + " for " + teamId + " (UTR: " + (payId || r2PaymentUtr) + ")");
   return true;
@@ -2330,6 +2460,7 @@ function sendGrandFinaleTicketEmail(data) {
     "• Team Name         : " + teamName + "\n" +
     "• Team ID           : " + teamId + "\n" +
     "• Registration ID   : " + regId + "\n" +
+    "• Project Domain   : " + (data.selectedDomain || "Software") + "\n" +
     "• Competition Track : " + track + "\n" +
     "• Team Size         : " + teamSize + " Members\n" +
     "• Payment Status    : ₹" + feeAmount + " PAID & VERIFIED (Ref: " + payRef + ")\n" +
@@ -2418,6 +2549,10 @@ function sendGrandFinaleTicketEmail(data) {
     '                  <td style="font-weight: 700; color: #0f172a;">' + teamName + '</td>' +
     '                </tr>' +
     '                <tr>' +
+    '                  <td style="color: #64748b;">Project Domain:</td>' +
+    '                  <td style="font-weight: 700; color: #0f172a;"><span style="display: inline-block; background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-weight: 700;">' + (data.selectedDomain || 'Software') + '</span></td>' +
+    '                </tr>' +
+    '                <tr>' +
     '                  <td style="color: #64748b;">Competition Track:</td>' +
     '                  <td style="font-weight: 700; color: #2563eb;">' + track + '</td>' +
     '                </tr>' +
@@ -2501,12 +2636,13 @@ function regenerateAllRound2PaymentLinks() {
     return;
   }
 
-  // Ensure sheet has at least 49 columns
+  // Ensure sheet has at least 50 columns
   if (sheet.getMaxColumns() < HEADERS.length) {
     sheet.insertColumnsAfter(sheet.getMaxColumns(), HEADERS.length - sheet.getMaxColumns());
   }
 
-  var values = sheet.getRange(2, 1, lastRow - 1, 49).getValues();
+  var cols = getSheetColumnIndexes(sheet);
+  var values = sheet.getRange(2, 1, lastRow - 1, cols.totalCols).getValues();
   var updated = 0;
 
   for (var i = 0; i < values.length; i++) {
@@ -2525,46 +2661,46 @@ function regenerateAllRound2PaymentLinks() {
     var leadName = String(row[5] || "").trim();
     var leadEmail = String(row[6] || "").trim();
     var leadPhone = String(row[7] || "").replace("'", "").trim();
-    var selectedTrack = String(row[37] || "").trim();
+    var selectedTrack = String(row[cols.trackIdx] || "").trim();
 
     var link = getRound2PaymentLink(teamSize, teamId, leadEmail, teamName, leadName, selectedTrack, leadPhone);
 
-    // Col 45: Round 2 Fee Amount
-    sheet.getRange(rowNum, 45).setValue("₹" + fee);
+    // Round 2 Fee Amount
+    sheet.getRange(rowNum, cols.round2FeeCol).setValue("₹" + fee);
 
-    // Col 46: Round 2 Payment Link
-    sheet.getRange(rowNum, 46).setValue(link);
+    // Round 2 Payment Link
+    sheet.getRange(rowNum, cols.round2LinkCol).setValue(link);
 
-    // Ensure Col 48 (Round 2 Payment UTR) has no dropdown and is plain text
-    var utrVal = row[47];
+    // Ensure Round 2 Payment UTR has no dropdown and is plain text
+    var utrVal = row[cols.round2UtrIdx];
     if (utrVal && String(utrVal).trim() !== "" && String(utrVal).trim() !== "-") {
       var cleanUtr = String(utrVal).replace("'", "").trim();
-      sheet.getRange(rowNum, 48).setValue("'" + cleanUtr);
+      sheet.getRange(rowNum, cols.round2UtrCol).setValue("'" + cleanUtr);
     }
-    sheet.getRange(rowNum, 48).clearDataValidations();
-    sheet.getRange(rowNum, 48).setNumberFormat("@");
+    sheet.getRange(rowNum, cols.round2UtrCol).clearDataValidations();
+    sheet.getRange(rowNum, cols.round2UtrCol).setNumberFormat("@");
 
     updated++;
   }
 
   // Apply dropdown rules to entire columns
-  var maxRows = Math.max(sheet.getMaxRows(), 100);
+  var maxRows = Math.max(sheet.getLastRow(), 100);
   var evalRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["Pending Verification", "Verified", "Rejected"], true)
     .setAllowInvalid(true)
     .setHelpText("Select 'Pending Verification', 'Verified', or 'Rejected'.")
     .build();
-  sheet.getRange(2, 42, maxRows - 1, 1).setDataValidation(evalRule);
-  sheet.getRange(2, 47, maxRows - 1, 1).setDataValidation(evalRule);
+  sheet.getRange(2, cols.evalFeeStatusCol, maxRows - 1, 1).setDataValidation(evalRule);
+  sheet.getRange(2, cols.round2StatusCol, maxRows - 1, 1).setDataValidation(evalRule);
 
-  sheet.getRange(2, 43, maxRows - 1, 1).clearDataValidations();
-  sheet.getRange(2, 43, maxRows - 1, 1).setNumberFormat("@");
-  sheet.getRange(2, 48, maxRows - 1, 1).clearDataValidations();
-  sheet.getRange(2, 48, maxRows - 1, 1).setNumberFormat("@");
+  sheet.getRange(2, cols.evalUtrCol, maxRows - 1, 1).clearDataValidations();
+  sheet.getRange(2, cols.evalUtrCol, maxRows - 1, 1).setNumberFormat("@");
+  sheet.getRange(2, cols.round2UtrCol, maxRows - 1, 1).clearDataValidations();
+  sheet.getRange(2, cols.round2UtrCol, maxRows - 1, 1).setNumberFormat("@");
 
   Logger.log("✓ Successfully regenerated Round 2 Payment Links for " + updated + " teams and refreshed dropdowns/UTR columns!");
   try {
-    SpreadsheetApp.getUi().alert("Round 2 Payment Links & Columns Updated!\n\n• Updated Column 45 (Fee Amount) & Column 46 (Full Payment Links) for " + updated + " team(s).\n• Formatted Column 48 (Round 2 Payment UTR) as Plain Text (no dropdown).\n• Formatted Column 47 (Round 2 Payment Status) with ['Pending Verification', 'Verified', 'Rejected'] dropdown.");
+    SpreadsheetApp.getUi().alert("Round 2 Payment Links & Columns Updated!\n\n• Updated Column " + cols.round2FeeCol + " (Fee Amount) & Column " + cols.round2LinkCol + " (Full Payment Links) for " + updated + " team(s).\n• Formatted Column " + cols.round2UtrCol + " (Round 2 Payment UTR) as Plain Text (no dropdown).\n• Formatted Column " + cols.round2StatusCol + " (Round 2 Payment Status) with ['Pending Verification', 'Verified', 'Rejected'] dropdown.");
   } catch (e) {}
 }
 
