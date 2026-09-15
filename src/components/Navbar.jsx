@@ -42,13 +42,19 @@ export default function Navbar() {
               <img
                 src="/amrutvahini_logo.png"
                 alt="Amrutvahini College of Engineering"
-                className="h-14 sm:h-16 md:h-20 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-12 sm:h-16 md:h-20 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
-              <div className="h-10 sm:h-12 w-px bg-slate-200 hidden sm:block shrink-0" />
+              <div className="h-8 sm:h-11 w-px bg-slate-200 hidden sm:block shrink-0" />
+              <img
+                src="/iste_logo.png"
+                alt="ISTE"
+                className="h-9 sm:h-11 md:h-14 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+              />
+              <div className="h-8 sm:h-11 w-px bg-slate-200 hidden sm:block shrink-0" />
               <img
                 src="/aiesa_logo.png"
                 alt="AIESA"
-                className="h-9 sm:h-10 md:h-11 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-8 sm:h-10 md:h-11 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
             </Link>
           </div>
