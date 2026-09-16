@@ -91,7 +91,9 @@ export default function FaqSection() {
             </p>
           </div>
           <a
-            href="#guidelines"
+            href="https://drive.google.com/file/d/1kLBCXC_ZQBwb6IPuXlvfn7u2SdvMm6c6/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-colors shrink-0 shadow-xs group"
           >
             <BookOpenIcon className="w-4 h-4" />
