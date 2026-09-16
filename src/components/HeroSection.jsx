@@ -14,21 +14,47 @@ export default function HeroSection() {
       <div className="max-w-5xl w-full mx-auto relative z-10 text-center flex flex-col items-center justify-center my-auto">
         
         {/* Top Eyebrow Tag - Sleek, Refined Professional Badge (Home page only) */}
-        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 xs:px-3 sm:px-3.5 md:px-4 py-1 sm:py-1.25 rounded-full bg-gradient-to-r from-[#062b59] via-[#0b3b75] to-[#062b59] text-white shadow-[0_3px_12px_rgba(6,43,89,0.16)] border border-blue-400/30 hover:border-blue-400/60 transition-all duration-300 mb-2.5 sm:mb-3 md:mb-4 max-w-full select-none">
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 xs:px-3 sm:px-3.5 md:px-4 py-1 sm:py-1.25 rounded-full bg-gradient-to-r from-[#062b59] via-[#0b3b75] to-[#062b59] text-white shadow-[0_3px_12px_rgba(6,43,89,0.16)] border border-blue-400/30 hover:border-blue-400/60 transition-all duration-300 mb-2 sm:mb-2.5 max-w-full select-none">
           <span className="flex items-center justify-center w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-gradient-to-tr from-[#ea580c] to-[#f97316] text-white shadow-xs shrink-0">
             <svg className="w-1.5 h-1.5 sm:w-2 sm:h-2" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z" />
             </svg>
           </span>
           <span className="text-[8px] xs:text-[8.5px] sm:text-[9.5px] md:text-[10px] font-bold sm:font-extrabold uppercase tracking-[0.12em] xs:tracking-[0.14em] sm:tracking-[0.16em] text-white whitespace-nowrap">
-            NATIONAL LEVEL AI HACKATHON
+            NATIONAL LEVEL AI HACKATHON • 23 OCTOBER 2026
           </span>
+        </div>
+
+        {/* Official Title Sponsor Presentation: Sumago Logo -> PRESENTS */}
+        <div className="flex flex-col items-center justify-center my-1.5 sm:my-2 select-none">
+          <a
+            href="https://sumagoinfotech.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Sumago Infotech Pvt. Ltd. - Official Title Sponsor"
+            className="group flex items-center justify-center py-1.5 px-3.5 sm:px-5 bg-white/95 hover:bg-white rounded-xl sm:rounded-2xl border border-amber-200/90 hover:border-amber-400 shadow-2xs hover:shadow-xs transition-all duration-300"
+          >
+            <img
+              src="/sumago_logo.png"
+              alt="Sumago Infotech Pvt. Ltd."
+              className="h-6 xs:h-7 sm:h-8 md:h-9 w-auto max-w-[210px] xs:max-w-[240px] sm:max-w-[300px] md:max-w-[360px] object-contain group-hover:scale-105 transition-transform duration-300"
+            />
+          </a>
+
+          {/* Elegant PRESENTS Typography with Flanking Gradient Accent Lines */}
+          <div className="flex items-center justify-center gap-2.5 sm:gap-3.5 w-44 sm:w-56 mt-1.5 sm:mt-2">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-slate-400" />
+            <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-black tracking-[0.35em] text-[#062b59] uppercase shrink-0">
+              PRESENTS
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-300 to-slate-400" />
+          </div>
         </div>
 
         {/* Hero Official Brand Logo & Main Heading (SEO) */}
         <div className="w-full flex flex-col items-center justify-center mb-1 sm:mb-2 max-w-full">
           <h1 className="sr-only">
-            AITHON 2.0 - National Level AI Hackathon
+            AITHON 2.0 - National Level AI Hackathon Presented by Sumago Infotech
           </h1>
 
           {/* Grand AITHON 2.0 Brand Logo - Prominently Scaled Across Viewports */}
