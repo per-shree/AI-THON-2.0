@@ -5,7 +5,7 @@ import Footer from '../components/Footer'
 import RegistrationProgress from '../components/RegistrationProgress'
 import FormInput from '../components/FormInput'
 import { useAdmin } from '../context/AdminContext'
-import { submitRegistrationToGoogleSheet, fetchNextSerialId } from '../services/googleSheetsService'
+import { submitRegistrationToGoogleSheet, fetchNextSerialId, syncRegistrationStep } from '../services/googleSheetsService'
 import {
   Download,
   FileText,
@@ -33,6 +33,8 @@ import {
   Layers,
   Clock,
   QrCode,
+  Laptop,
+  Cpu,
 } from 'lucide-react'
 import {
   UserIcon,
@@ -72,6 +74,12 @@ const COURSE_OPTIONS = [
   'Other',
 ]
 
+// Official Competition Domains
+export const DOMAIN_OPTIONS = [
+  'Software',
+  'Hardware',
+]
+
 // 23 Official Hackathon Competition Tracks
 export const TRACK_OPTIONS = [
   'Track 01: AI in Healthcare & Medicine',
@@ -107,7 +115,7 @@ export const isOtherCourse = (course) =>
 
 // Official UPI Payment Configuration for ₹50 Evaluation Fee
 export const OFFICIAL_UPI_ID = '9404665180@centralbank'
-export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=AITHON%202.0&am=50&cu=INR&tn=AITHON%20Registration'
+export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
 
 export default function Registration() {
   const { registerTeam, getNextSerialTeamId, syncNextSerialNum } = useAdmin()
@@ -119,8 +127,20 @@ export default function Registration() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isReadingPpt, setIsReadingPpt] = useState(false)
   const [drivePptUrl, setDrivePptUrl] = useState('')
-  const [registrationId, setRegistrationId] = useState('')
-  const [teamId, setTeamId] = useState('')
+  const [registrationId, setRegistrationId] = useState(() => {
+    try {
+      return sessionStorage.getItem('aithon_allocated_reg_id') || ''
+    } catch (e) {
+      return ''
+    }
+  })
+  const [teamId, setTeamId] = useState(() => {
+    try {
+      return sessionStorage.getItem('aithon_allocated_team_id') || ''
+    } catch (e) {
+      return ''
+    }
+  })
   const [copiedUpi, setCopiedUpi] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [paymentModal, setPaymentModal] = useState(null)
@@ -129,6 +149,65 @@ export default function Registration() {
   const [isSendingReport, setIsSendingReport] = useState(false)
   const [reportSentMessage, setReportSentMessage] = useState('')
   const fileInputRef = useRef(null)
+
+  const [submitMessageIndex, setSubmitMessageIndex] = useState(0)
+
+  // Calming Submission Stages for the popup overlay
+  const SUBMISSION_STAGES = [
+    {
+      title: 'Connecting & Securing Team ID...',
+      desc: 'Locking in your sequential Team ID with organizing committee.',
+      badge: 'Stage 1 of 4 • Securing Spot',
+    },
+    {
+      title: 'Uploading Presentation to Google Drive...',
+      desc: 'Saving your slides safely under your designated Team ID.',
+      badge: 'Stage 2 of 4 • Drive Storage',
+    },
+    {
+      title: 'Syncing with Official Committee Sheet...',
+      desc: 'Recording all team details and ₹50 payment verification reference.',
+      badge: 'Stage 3 of 4 • Sheet Sync',
+    },
+    {
+      title: 'Almost Done! Finalizing Confirmation...',
+      desc: 'Setting up your submission review slip. Hang tight!',
+      badge: 'Stage 4 of 4 • Confirmation',
+    },
+  ]
+
+  // Dynamic message progression & back button prevention during submission
+  useEffect(() => {
+    if (!isSubmitting) {
+      setSubmitMessageIndex(0)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setSubmitMessageIndex((prev) => (prev + 1) % SUBMISSION_STAGES.length)
+    }, 2600)
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault()
+      e.returnValue = 'Your registration submission is in progress. Please do not refresh or close this window.'
+      return e.returnValue
+    }
+
+    const handlePopState = () => {
+      // Keep on current page if physical back button is pressed
+      window.history.pushState(null, '', window.location.href)
+    }
+
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [isSubmitting, SUBMISSION_STAGES.length])
 
   // Pre-fetch live next serial ID from Google Sheets
   useEffect(() => {
@@ -168,7 +247,8 @@ export default function Registration() {
       { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
     ],
 
-    // Step 3: PPT Submission & Track Selection
+    // Step 3: Domain, PPT Submission & Track Selection
+    selectedDomain: '',
     selectedTrack: '',
     pptFileName: '',
     pptFileSize: '',
@@ -310,9 +390,12 @@ export default function Registration() {
     return Object.keys(errs).length === 0
   }
 
-  // Validate Step 3: Track Selection & PPT Upload
+  // Validate Step 3: Domain, Track Selection & PPT Upload
   const validateStep3 = () => {
     const errs = {}
+    if (!formData.selectedDomain || !formData.selectedDomain.trim()) {
+      errs.selectedDomain = 'Please select your domain (1. Software or 2. Hardware) before proceeding'
+    }
     if (!formData.selectedTrack || !formData.selectedTrack.trim()) {
       errs.selectedTrack = 'Please select your competition track out of the 23 tracks before proceeding'
     }
@@ -398,11 +481,30 @@ export default function Registration() {
     }
   }
 
-  // Navigation handlers
+  // Navigation handlers with Real-Time Google Sheet Sync
   const handleNextFromStep1 = () => {
     if (validateStep1()) {
       setCurrentStep(2)
       window.scrollTo({ top: 120, behavior: 'smooth' })
+
+      // ⚡ REAL-TIME ALLOCATION: First person to start registration gets earliest Team ID immediately!
+      syncRegistrationStep(formData, 1, teamId, registrationId)
+        .then((res) => {
+          if (res && res.teamId) {
+            setTeamId(res.teamId)
+            const finalReg = res.registrationId || res.teamId.replace('TEAM-', 'AI26-')
+            setRegistrationId(finalReg)
+            try {
+              sessionStorage.setItem('aithon_allocated_team_id', res.teamId)
+              sessionStorage.setItem('aithon_allocated_reg_id', finalReg)
+            } catch (e) {}
+            const numMatch = res.teamId.match(/\d+/)
+            if (numMatch && syncNextSerialNum) {
+              syncNextSerialNum(parseInt(numMatch[0], 10) + 1)
+            }
+          }
+        })
+        .catch((err) => console.warn('[Registration] Step 1 real-time sync notice:', err))
     }
   }
 
@@ -410,6 +512,17 @@ export default function Registration() {
     if (validateStep2()) {
       setCurrentStep(3)
       window.scrollTo({ top: 120, behavior: 'smooth' })
+
+      // ⚡ REAL-TIME SYNC: Update member details to Google Sheet in real time
+      syncRegistrationStep(formData, 2, teamId, registrationId)
+        .then((res) => {
+          if (res && res.teamId && !teamId) {
+            setTeamId(res.teamId)
+            const finalReg = res.registrationId || res.teamId.replace('TEAM-', 'AI26-')
+            setRegistrationId(finalReg)
+          }
+        })
+        .catch((err) => console.warn('[Registration] Step 2 real-time sync notice:', err))
     }
   }
 
@@ -418,6 +531,15 @@ export default function Registration() {
       setCurrentStep(4)
       setStep4View('review')
       window.scrollTo({ top: 120, behavior: 'smooth' })
+
+      // ⚡ REAL-TIME SYNC: Save PPT & Track selection to Google Sheet in real time
+      syncRegistrationStep(formData, 3, teamId, registrationId)
+        .then((res) => {
+          if (res && res.pptUrl) {
+            setDrivePptUrl(res.pptUrl)
+          }
+        })
+        .catch((err) => console.warn('[Registration] Step 3 real-time sync notice:', err))
     }
   }
 
@@ -512,9 +634,6 @@ export default function Registration() {
       console.warn('[Registration] Could not fetch live ID before submit:', err)
     }
 
-    setRegistrationId(currentRegId)
-    setTeamId(currentTeamId)
-
     try {
       // Resolve any 'Other' branches to the user-specified branch text
       const finalLeadCourse =
@@ -546,16 +665,12 @@ export default function Registration() {
         currentRegId
       )
 
-      if (result && result.teamId && result.registrationId) {
-        currentTeamId = result.teamId
-        currentRegId = result.registrationId
-        setTeamId(result.teamId)
-        setRegistrationId(result.registrationId)
-        const serverMatch = result.teamId.match(/\d+/)
-        if (serverMatch) {
-          currentNum = parseInt(serverMatch[0], 10)
-        }
-      }
+      // 🛡️ ATOMIC SYNC: Always prioritize the authoritative server-confirmed Team ID & Reg ID!
+      const confirmedTeamId = result?.teamId || currentTeamId
+      const confirmedRegId = result?.registrationId || currentRegId
+
+      setTeamId(confirmedTeamId)
+      setRegistrationId(confirmedRegId)
 
       if (result && result.pptUrl) {
         setDrivePptUrl(result.pptUrl)
@@ -565,23 +680,30 @@ export default function Registration() {
       if (registerTeam) {
         registerTeam({
           ...payloadData,
-          registrationId: currentRegId,
-          teamId: currentTeamId,
+          registrationId: confirmedRegId,
+          teamId: confirmedTeamId,
           paymentStatus: 'Pending Verification',
           pptDriveUrl: result?.pptUrl || '',
         })
       }
 
-      if (syncNextSerialNum) {
-        syncNextSerialNum(currentNum + 1)
+      const confirmedMatch = confirmedTeamId.match(/\d+/)
+      if (confirmedMatch && syncNextSerialNum) {
+        syncNextSerialNum(parseInt(confirmedMatch[0], 10) + 1)
       }
 
       // 4. Advance to Step 05: Completed (Under 24-Hour Review)
+      try {
+        sessionStorage.removeItem('aithon_allocated_team_id')
+        sessionStorage.removeItem('aithon_allocated_reg_id')
+      } catch (e) {}
       setCurrentStep(5)
       window.scrollTo({ top: 100, behavior: 'smooth' })
     } catch (err) {
       console.error('[Registration] Error completing registration:', err)
-      // Even if network fails, ensure UI gracefully confirms with generated serial ID
+      setTeamId(currentTeamId)
+      setRegistrationId(currentRegId)
+      // Even if network fails, ensure UI gracefully confirms
       setCurrentStep(5)
       window.scrollTo({ top: 100, behavior: 'smooth' })
     } finally {
@@ -643,6 +765,29 @@ export default function Registration() {
             }
           }}
         />
+
+        {/* ==================================================
+            LIVE ALLOCATED TEAM ID BADGE (Real-Time Sheet Sync)
+            ================================================== */}
+        {teamId && currentStep < 5 && (
+          <div className="mb-6 flex items-center justify-between p-3.5 px-4 sm:px-5 rounded-2xl bg-gradient-to-r from-orange-50 via-amber-50/70 to-orange-50 border border-orange-200/90 shadow-2xs animate-fadeIn">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200/60 animate-pulse shrink-0" />
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="font-bold text-slate-700">Official Allocated Team ID:</span>
+                <span className="font-mono font-black text-[#ea580c] text-xs sm:text-sm bg-white px-2.5 py-0.5 rounded-md border border-orange-200 shadow-2xs">
+                  {teamId}
+                </span>
+                <span className="font-mono text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  • {registrationId || teamId.replace('TEAM-', 'AI26-')}
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-300 shrink-0">
+              Allocated in Sheet
+            </span>
+          </div>
+        )}
 
         {/* ==================================================
             STEP 01 — TEAM LEAD DETAILS
@@ -1142,6 +1287,117 @@ export default function Registration() {
               </div>
             </div>
 
+            {/* Domain Selection Section (1. Software / 2. Hardware) */}
+            <div className="space-y-3 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <label
+                  className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center gap-2"
+                >
+                  <Cpu className="w-4 h-4 text-[#2563eb]" />
+                  <span>Select Domain <span className="text-[#ea580c] font-bold">*</span></span>
+                </label>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Choose whether your project is Software or Hardware
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {[
+                  {
+                    id: 'Software',
+                    label: '1. Software',
+                    desc: 'Web, Mobile apps, AI/ML models, Cloud, APIs, Algorithms & Digital systems',
+                    icon: Laptop,
+                  },
+                  {
+                    id: 'Hardware',
+                    label: '2. Hardware',
+                    desc: 'IoT devices, Embedded Systems, Robotics, Sensors, Microcontrollers & Circuits',
+                    icon: Cpu,
+                  },
+                ].map((item) => {
+                  const isSelected = formData.selectedDomain === item.id
+                  const ItemIcon = item.icon
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, selectedDomain: item.id }))
+                        if (errors.selectedDomain) {
+                          setErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.selectedDomain
+                            return next
+                          })
+                        }
+                      }}
+                      className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer flex items-start gap-3.5 relative group ${
+                        isSelected
+                          ? 'border-[#2563eb] bg-blue-50/50 shadow-sm'
+                          : 'border-[#edebe6] bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected
+                            ? 'bg-[#2563eb] text-white'
+                            : 'bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-[#2563eb]'
+                        }`}
+                      >
+                        <ItemIcon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-sm font-extrabold tracking-wide ${
+                              isSelected ? 'text-[#062b59]' : 'text-slate-800'
+                            }`}
+                          >
+                            {item.label}
+                          </span>
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                              isSelected
+                                ? 'border-[#2563eb] bg-[#2563eb]'
+                                : 'border-slate-300 bg-white'
+                            }`}
+                          >
+                            {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium mt-1 leading-snug">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {errors.selectedDomain && (
+                <p className="text-xs font-semibold text-rose-600 flex items-center gap-1 mt-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.selectedDomain}</span>
+                </p>
+              )}
+
+              {formData.selectedDomain && (
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-blue-50/70 border border-blue-200/70 text-xs text-[#062b59]">
+                  <CheckCircle2 className="w-4 h-4 text-[#2563eb] shrink-0" />
+                  <div className="flex-1">
+                    <span className="font-bold">Chosen Domain: </span>
+                    <span className="font-extrabold text-[#2563eb]">
+                      {formData.selectedDomain === 'Software' ? '1. Software' : '2. Hardware'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded border border-blue-200 text-slate-600">
+                    Domain Selected
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Track Selection Section (Select out of 23 Tracks) */}
             <div className="space-y-3 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
@@ -1454,6 +1710,20 @@ export default function Registration() {
                   </div>
 
                   <div className="space-y-2.5">
+                    {/* Chosen Domain */}
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-blue-200/80 text-xs">
+                      <Cpu className="w-4 h-4 text-[#2563eb] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-slate-400 font-semibold text-[11px] block uppercase">Domain</span>
+                        <span className="font-extrabold text-[#062b59] truncate block">
+                          {formData.selectedDomain ? (formData.selectedDomain === 'Software' ? '1. Software' : '2. Hardware') : '1. Software'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#2563eb] bg-blue-50 px-2 py-0.5 rounded uppercase shrink-0 border border-blue-100">
+                        Domain Verified
+                      </span>
+                    </div>
+
                     {/* Chosen Competition Track */}
                     <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-emerald-200/80 text-xs">
                       <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
@@ -1791,27 +2061,42 @@ export default function Registration() {
 
             {/* Registration Summary Card */}
             <div className="p-5 rounded-2xl bg-[#faf9f6] border border-[#edebe6] text-left space-y-3 shadow-2xs">
-              <div className="grid grid-cols-2 gap-3 pb-3 border-b border-[#edebe6] text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-[#edebe6] text-xs">
                 <div>
-                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Registration ID</span>
-                  <span className="text-base sm:text-lg font-black text-[#062b59] font-mono tracking-tight">
-                    {registrationId || 'AI26-108'}
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Assigned Team ID</span>
+                  <span className="text-base sm:text-lg font-black text-[#ea580c] font-mono tracking-tight bg-orange-50 px-2.5 py-0.5 rounded border border-orange-200 inline-block mt-0.5">
+                    {teamId || 'TEAM-CONFIRMED'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Team Name</span>
-                  <span className="text-sm sm:text-base font-extrabold text-[#062b59]">
-                    {formData.teamName || 'AiTHON Team'}
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Registration ID</span>
+                  <span className="text-base sm:text-lg font-black text-[#062b59] font-mono tracking-tight inline-block mt-0.5">
+                    {registrationId || (teamId ? teamId.replace('TEAM-', 'AI26-') : 'AI26-CONFIRMED')}
                   </span>
                 </div>
               </div>
 
-              <div className="pb-3 border-b border-[#edebe6] text-xs">
-                <span className="text-slate-400 block font-bold text-[11px] uppercase">Competition Track</span>
-                <span className="text-sm font-extrabold text-[#062b59] flex items-center gap-1.5 mt-0.5">
-                  <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
-                  <span>{formData.selectedTrack || 'Track Selected'}</span>
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-3 border-b border-[#edebe6] text-xs">
+                <div>
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Team Name</span>
+                  <span className="text-sm sm:text-base font-extrabold text-[#062b59] block truncate">
+                    {formData.teamName || 'AiTHON Team'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Domain</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-[#062b59] flex items-center gap-1.5 mt-0.5">
+                    <Cpu className="w-4 h-4 text-[#2563eb] shrink-0" />
+                    <span className="truncate">{formData.selectedDomain === 'Hardware' ? '2. Hardware' : '1. Software'}</span>
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-bold text-[11px] uppercase">Competition Track</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-[#062b59] flex items-center gap-1.5 mt-0.5">
+                    <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
+                    <span className="truncate">{formData.selectedTrack || 'Track Selected'}</span>
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
@@ -2001,6 +2286,80 @@ export default function Registration() {
                 >
                   OK, I'll Enter UTR
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================
+            FULL-SCREEN SUBMISSION OVERLAY (TAKE A BREATH & DON'T HIT BACK)
+            ================================================== */}
+        {isSubmitting && (
+          <div className="fixed inset-0 z-50 bg-[#062b59]/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn select-none">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-blue-100 text-center space-y-6 relative animate-scaleIn">
+              {/* Calming Animated Icon Badge */}
+              <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+                <span className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping" />
+                <span className="absolute inset-1.5 rounded-full bg-blue-500/20 animate-pulse" />
+                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#062b59] via-[#0b3b75] to-[#2563eb] text-white flex items-center justify-center shadow-lg shadow-blue-900/30">
+                  <Sparkles className="w-8 h-8 text-amber-300 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Title & "Take a Deep Breath" Callout */}
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
+                  <span> Take a Deep Breath & Relax</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-[#062b59] uppercase tracking-tight">
+                  Processing Your Entry
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xs mx-auto leading-relaxed">
+                  We are uploading your presentation slides and recording your details with the committee.
+                </p>
+              </div>
+
+              {/* Dynamic Live Status Stage Card */}
+              <div className="p-4 sm:p-4.5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-blue-50/90 border border-blue-200/90 text-left space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] uppercase font-extrabold tracking-wider text-[#2563eb] bg-white px-2.5 py-0.5 rounded border border-blue-200">
+                    {SUBMISSION_STAGES[submitMessageIndex].badge}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-600">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>Working...</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 text-[#062b59]">
+                  <RefreshCw className="w-4 h-4 text-[#2563eb] animate-spin shrink-0 mt-0.5" />
+                  <div className="space-y-0.5 min-w-0">
+                    <h4 className="text-xs sm:text-sm font-extrabold text-[#062b59] tracking-tight">
+                      {SUBMISSION_STAGES[submitMessageIndex].title}
+                    </h4>
+                    <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                      {SUBMISSION_STAGES[submitMessageIndex].desc}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Animated Shimmering Progress Bar */}
+                <div className="w-full bg-blue-200/70 h-2 rounded-full overflow-hidden mt-2 relative">
+                  <div className="h-full bg-gradient-to-r from-[#2563eb] via-[#ea580c] to-[#2563eb] rounded-full animate-progressShimmer w-full" />
+                </div>
+              </div>
+
+              {/* Strictly Anti-Back Alert Warning */}
+              <div className="p-3.5 rounded-2xl bg-rose-50/90 border border-rose-200 text-rose-950 text-xs flex items-start gap-2.5 text-left leading-relaxed">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block text-rose-900 font-extrabold uppercase tracking-wider text-[10.5px]">
+                    Do NOT Press the Back Button or Refresh
+                  </strong>
+                  <span className="text-[11px] text-rose-800 font-medium">
+                    Google Drive upload takes 5 to 10 seconds. Your confirmation slip will open automatically as soon as it completes.
+                  </span>
+                </div>
               </div>
             </div>
           </div>

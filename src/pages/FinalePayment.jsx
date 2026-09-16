@@ -27,6 +27,7 @@ import {
   Download,
   QrCode,
   Copy,
+  Cpu,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -50,7 +51,8 @@ export default function FinalePayment() {
   const paramTeamName = (searchParams.get('teamName') || searchParams.get('team') || '').trim()
   const paramLeadName = (searchParams.get('leadName') || searchParams.get('name') || searchParams.get('leader') || searchParams.get('leaderName') || '').trim()
   const paramLeadEmail = (searchParams.get('email') || searchParams.get('leadEmail') || '').trim()
-  const paramTrack = (searchParams.get('track') || searchParams.get('selectedTrack') || searchParams.get('domain') || '').trim()
+  const paramDomain = (searchParams.get('domain') || searchParams.get('selectedDomain') || '').trim()
+  const paramTrack = (searchParams.get('track') || searchParams.get('selectedTrack') || '').trim()
   const paramPhone = (searchParams.get('phone') || searchParams.get('leadPhone') || searchParams.get('mobile') || '').trim()
   const paramFee = parseInt(searchParams.get('fee') || searchParams.get('amount') || '0', 10)
 
@@ -63,6 +65,7 @@ export default function FinalePayment() {
     leadEmail: paramLeadEmail || '',
     leadPhone: paramPhone || '',
     teamSize: paramSize >= 4 && paramSize <= 6 ? paramSize : 4,
+    selectedDomain: paramDomain || 'Software',
     selectedTrack: paramTrack || 'General AI Track',
     round2PaymentStatus: 'Pending',
   })
@@ -107,6 +110,7 @@ export default function FinalePayment() {
           leadEmail: data.leadEmail || paramLeadEmail || '',
           leadPhone: data.leadPhone || paramPhone || '',
           teamSize: resolvedSize,
+          selectedDomain: data.selectedDomain || paramDomain || 'Software',
           selectedTrack: data.selectedTrack || paramTrack || 'General AI Track',
           round2PaymentStatus: data.round2PaymentStatus || 'Pending',
         })
@@ -535,6 +539,13 @@ export default function FinalePayment() {
                     <span className="text-slate-500 font-medium block">Leader Email</span>
                     <strong className="text-slate-700 font-mono text-xs block mt-0.5">
                       {teamData.leadEmail || '—'}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 font-medium block">Project Domain</span>
+                    <strong className="text-[#062b59] font-bold block mt-0.5">
+                      {teamData.selectedDomain === 'Hardware' ? '2. Hardware' : '1. Software'}
                     </strong>
                   </div>
 
