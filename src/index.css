@@ -54,14 +54,16 @@ body {
   padding: 0;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--heading);
-  font-weight: 700;
-  color: #062b59;
-  letter-spacing: -0.025em;
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--heading);
+    font-weight: 700;
+    color: #062b59;
+    letter-spacing: -0.025em;
+  }
 }
 
 p {

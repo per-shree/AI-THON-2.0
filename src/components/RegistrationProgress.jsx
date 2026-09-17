@@ -1,8 +1,10 @@
 import { CheckIcon } from './Icons'
+import { BookOpen } from 'lucide-react'
 
 export default function RegistrationProgress({ currentStep, steps, onStepClick, maxStepReached = currentStep }) {
   const totalSteps = steps.length
-  const progressPercent = totalSteps > 1 ? ((currentStep - 1) / (totalSteps - 1)) * 100 : 0
+  const currentIndex = Math.max(0, steps.findIndex((s) => s.number === currentStep))
+  const progressPercent = totalSteps > 1 ? (currentIndex / (totalSteps - 1)) * 100 : 0
 
   return (
     <div className="w-full mb-8 sm:mb-10 select-none">
@@ -45,6 +47,8 @@ export default function RegistrationProgress({ currentStep, steps, onStepClick, 
               >
                 {isCompleted && !isActive ? (
                   <CheckIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                ) : step.number === 0 ? (
+                  <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 ) : (
                   <span>0{step.number}</span>
                 )}
