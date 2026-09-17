@@ -1,6 +1,6 @@
 import { CheckIcon } from './Icons'
 
-export default function RegistrationProgress({ currentStep, steps, onStepClick }) {
+export default function RegistrationProgress({ currentStep, steps, onStepClick, maxStepReached = currentStep }) {
   const totalSteps = steps.length
   const progressPercent = totalSteps > 1 ? ((currentStep - 1) / (totalSteps - 1)) * 100 : 0
 
@@ -21,7 +21,8 @@ export default function RegistrationProgress({ currentStep, steps, onStepClick }
         {steps.map((step) => {
           const isCompleted = step.number < currentStep
           const isActive = step.number === currentStep
-          const isPending = step.number > currentStep
+          const isUnlocked = step.number <= Math.max(currentStep, maxStepReached) && step.number !== 5
+          const isPending = !isUnlocked && !isActive
 
           return (
             <div
@@ -32,17 +33,17 @@ export default function RegistrationProgress({ currentStep, steps, onStepClick }
               <button
                 type="button"
                 disabled={isPending}
-                onClick={() => isCompleted && onStepClick && onStepClick(step.number)}
+                onClick={() => isUnlocked && onStepClick && onStepClick(step.number)}
                 aria-label={`Step ${step.number}: ${step.title}`}
                 className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[11px] sm:text-xs font-bold transition-all duration-300 ${
-                  isCompleted
-                    ? 'bg-[#062b59] text-white cursor-pointer hover:bg-[#2563eb] shadow-xs hover:scale-105'
-                    : isActive
+                  isActive
                     ? 'bg-white text-[#2563eb] border-2 border-[#2563eb] ring-4 ring-blue-100 shadow-sm scale-110'
+                    : isCompleted || isUnlocked
+                    ? 'bg-[#062b59] text-white cursor-pointer hover:bg-[#2563eb] shadow-xs hover:scale-105'
                     : 'bg-[#faf9f6] text-slate-400 border border-[#edebe6] cursor-not-allowed'
                 }`}
               >
-                {isCompleted ? (
+                {isCompleted && !isActive ? (
                   <CheckIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                 ) : (
                   <span>0{step.number}</span>
