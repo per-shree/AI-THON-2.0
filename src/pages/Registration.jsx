@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -42,7 +43,9 @@ import {
   QrCode,
   Laptop,
   Cpu,
+  Printer,
 } from 'lucide-react'
+import { RegistrationSlip, RegistrationSlipModal } from '../components/RegistrationSlip'
 import {
   UserIcon,
   MailIcon,
@@ -56,8 +59,8 @@ const STEPS = [
   { number: 0, title: 'Instructions' },
   { number: 1, title: 'Team Lead' },
   { number: 2, title: 'Team Members' },
-  { number: 3, title: 'PPT Submission' },
-  { number: 4, title: 'Payment' },
+  { number: 3, title: 'Track & Payment' },
+  { number: 4, title: 'PPT / PDF Upload' },
   { number: 5, title: 'Completed' },
 ]
 
@@ -214,6 +217,17 @@ export default function Registration() {
   const [utrError, setUtrError] = useState('')
   const [isSendingReport, setIsSendingReport] = useState(false)
   const [reportSentMessage, setReportSentMessage] = useState('')
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [slipSubmissionDate, setSlipSubmissionDate] = useState(() =>
+    new Date().toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+  )
   const fileInputRef = useRef(null)
 
   // Auto-Save UI & Feedback State
@@ -556,7 +570,7 @@ export default function Registration() {
     return Object.keys(errs).length === 0
   }
 
-  // Validate Step 3: Domain, Track Selection & PPT Upload
+  // Validate Step 3: Domain, Track Selection & Evaluation Payment (₹50)
   const validateStep3 = () => {
     const errs = {}
     if (!formData.selectedDomain || !formData.selectedDomain.trim()) {
@@ -565,23 +579,49 @@ export default function Registration() {
     if (!formData.selectedTrack || !formData.selectedTrack.trim()) {
       errs.selectedTrack = 'Please select your competition track out of the 23 tracks before proceeding'
     }
-    if (!formData.pptFileName) {
-      errs.ppt = 'Please upload your completed presentation (.ppt or .pptx) before proceeding'
+    const rawUtr = (formData.paymentUtr || '').trim()
+    if (!rawUtr || rawUtr.length < 6) {
+      errs.paymentUtr = 'Payment reference or 12-digit UPI UTR is strictly required to proceed'
+      setUtrError('Payment reference or 12-digit UPI UTR is strictly required to confirm registration.')
+    }
+    if (!paymentConfirmed) {
+      errs.paymentConfirmed = 'Please tick the confirmation checkbox certifying that your team has completed the ₹50 evaluation fee'
+      if (!errs.paymentUtr) {
+        setUtrError('Please check the confirmation box verifying that you have completed payment.')
+      }
     }
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
-  // Handle PPT File Drop & Selection
+  // Validate Step 4: Presentation Upload (PPT/PPTX or PDF) & Review Confirmation
+  const validateStep4 = () => {
+    const errs = {}
+    if (!formData.pptFileName || !formData.pptBase64) {
+      errs.ppt = 'Please upload your completed presentation (.ppt, .pptx, or .pdf) before submitting'
+    }
+    if (!formData.confirmedReview) {
+      errs.confirmedReview = 'Please confirm that your team details and uploaded presentation are final.'
+    }
+    const rawUtr = (formData.paymentUtr || '').trim()
+    if (!rawUtr || rawUtr.length < 6) {
+      errs.paymentUtr = 'Payment reference or 12-digit UTR is missing. Please return to Step 3 to complete payment.'
+      setUtrError('Payment reference or 12-digit UTR is missing.')
+    }
+    setErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  // Handle Presentation File Drop & Selection (.ppt, .pptx, .pdf)
   const handleFileProcess = (file) => {
     if (!file) return
-    const validExts = ['.ppt', '.pptx']
+    const validExts = ['.ppt', '.pptx', '.pdf']
     const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
 
     if (!validExts.includes(ext)) {
       setErrors((prev) => ({
         ...prev,
-        ppt: 'Invalid file format. Please upload a PowerPoint presentation (.ppt or .pptx).',
+        ppt: 'Invalid file format. Please upload a PowerPoint presentation (.ppt, .pptx) or PDF document (.pdf).',
       }))
       return
     }
@@ -590,7 +630,7 @@ export default function Registration() {
     if (file.size > 25 * 1024 * 1024) {
       setErrors((prev) => ({
         ...prev,
-        ppt: 'File size exceeds 25MB limit. Please compress images or media in your presentation.',
+        ppt: 'File size exceeds 25MB limit. Please compress images or media in your presentation document.',
       }))
       return
     }
@@ -604,13 +644,23 @@ export default function Registration() {
     const reader = new FileReader()
     reader.onload = () => {
       const base64Data = reader.result
+      let detectedMime = file.type
+      if (!detectedMime) {
+        if (ext === '.pdf') {
+          detectedMime = 'application/pdf'
+        } else if (ext === '.ppt') {
+          detectedMime = 'application/vnd.ms-powerpoint'
+        } else {
+          detectedMime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        }
+      }
       setFormData((prev) => ({
         ...prev,
         pptFileName: file.name,
         pptFileSize: formattedSize,
         pptUploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         pptBase64: base64Data,
-        pptMimeType: file.type || 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        pptMimeType: detectedMime,
       }))
       setIsReadingPpt(false)
     }
@@ -712,22 +762,6 @@ export default function Registration() {
     }
   }
 
-  const handleProceedToPayment = () => {
-    if (!formData.confirmedReview) {
-      setErrors((prev) => ({
-        ...prev,
-        confirmedReview: 'Please confirm that the details and uploaded PPT are final before proceeding to payment.',
-      }))
-      return
-    }
-    setErrors((prev) => {
-      const next = { ...prev }
-      delete next.confirmedReview
-      return next
-    })
-    setStep4View('payment')
-    window.scrollTo({ top: 120, behavior: 'smooth' })
-  }
 
   // Report payment problem helper
   const handleReportPaymentProblem = async (reason) => {
@@ -757,6 +791,10 @@ export default function Registration() {
   // Final Registration & Payment Submission
   const handleFinalSubmit = async (e, overrideUtr) => {
     if (e && e.preventDefault) e.preventDefault()
+
+    if (!validateStep4()) {
+      return
+    }
 
     // 🛡️ STRICT VALIDATION: Form cannot be submitted without actual verified payment
     const rawUtr = (overrideUtr || formData.paymentUtr || '').trim()
@@ -867,6 +905,15 @@ export default function Registration() {
         sessionStorage.removeItem('aithon_allocated_team_id')
         sessionStorage.removeItem('aithon_allocated_reg_id')
       } catch (e) {}
+      const finalDate = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      })
+      setSlipSubmissionDate(finalDate)
       setCurrentStep(5)
       window.scrollTo({ top: 100, behavior: 'smooth' })
     } catch (err) {
@@ -874,6 +921,16 @@ export default function Registration() {
       await clearRegistrationDraft()
       setTeamId(currentTeamId)
       setRegistrationId(currentRegId)
+      setSlipSubmissionDate(
+        new Date().toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+      )
       // Even if network fails, ensure UI gracefully confirms
       setCurrentStep(5)
       window.scrollTo({ top: 100, behavior: 'smooth' })
@@ -1451,7 +1508,7 @@ export default function Registration() {
                 onClick={handleNextFromStep2}
                 className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer group"
               >
-                <span>Continue to PPT Submission</span>
+                <span>Continue to Track & Payment</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
@@ -1459,83 +1516,54 @@ export default function Registration() {
         )}
 
         {/* ==================================================
-            STEP 03 — IDEA / PPT SUBMISSION
+            STEP 03 — DOMAIN, TRACK & EVALUATION PAYMENT
             ================================================== */}
         {currentStep === 3 && (
           <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
             {/* Step Card Header */}
             <div className="pb-4 border-b border-[#edebe6]">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563eb] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 inline-block mb-1.5">
-                STEP 03 OF 04
+                STEP 03 OF 04 • TRACK & PAYMENT
               </span>
               <h2 className="text-lg sm:text-xl font-black text-[#062b59] uppercase tracking-tight">
-                Your Idea Submission
+                Domain, Track Selection & Evaluation Payment
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1 leading-relaxed">
-                Download the official AiTHON 2.0 presentation format, complete it with your project idea, and upload the final PPT below.
+                Choose your project domain, match your competition track, and complete the ₹50 evaluation fee to verify your team entry.
               </p>
             </div>
 
-            {/* PPT Template Download Section */}
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#062b59]/[0.03] via-blue-50/40 to-transparent border border-blue-200/60 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-[#ea580c]/10 text-[#ea580c] flex items-center justify-center shrink-0 border border-[#ea580c]/20">
-                    <FileText className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ea580c] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 inline-block mb-1">
-                      Official Presentation Template
-                    </span>
-                    <h3 className="text-sm sm:text-base font-extrabold text-[#062b59]">
-                      AITHON 2.0 Official Presentation Format (.PPTX)
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Includes the mandatory slide structure: Problem Statement, Proposed AI Architecture, Tech Stack, & Demo Plan.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Direct Download Button */}
-                <a
-                  href="/AITHON_2.0_Presentation.pptx"
-                  download="AITHON_2.0_Presentation.pptx"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm shrink-0 hover:shadow-md cursor-pointer group"
-                >
-                  <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-                  <span>Download PPT Template</span>
-                </a>
+            {/* Anti-Fraud & Genuine Entry Policy Notice Banner */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/90 border-2 border-amber-300/90 text-amber-950 shadow-xs flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-800 flex items-center justify-center shrink-0 border border-amber-400/40 mt-0.5">
+                <AlertTriangle className="w-5 h-5 text-amber-700" />
               </div>
-
-              {/* Format Slide Quick Preview Checklist */}
-              <div className="pt-3 border-t border-blue-100/70 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
-                  <span>Slide 1: Team & Title</span>
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded border border-amber-300/80">
+                    Anti-Fraud & Genuine Entry Policy
+                  </span>
+                  <span className="text-[11px] font-bold text-amber-800/80">
+                    Important Verification Notice
+                  </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
-                  <span>Slide 2: Problem Scope</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
-                  <span>Slide 3: AI Architecture</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
-                  <span>Slide 4: Tech & Feasibility</span>
-                </div>
+                <h4 className="text-sm sm:text-base font-extrabold text-[#062b59] tracking-tight">
+                  Why is the ₹50 evaluation fee required upfront?
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+                  We are taking payment first strictly to <strong className="text-[#ea580c]">avoid dummy, duplicate, bot, and fake placeholder entries</strong>. This ensures evaluation slots, server bandwidth, and mentor evaluation time are reserved exclusively for committed, genuine participants.
+                </p>
               </div>
             </div>
 
-            {/* Domain Selection Section (1. Software / 2. Hardware) */}
+            {/* 1. Domain Selection Section (1. Software / 2. Hardware) */}
             <div className="space-y-3 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <label
                   className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center gap-2"
                 >
                   <Cpu className="w-4 h-4 text-[#2563eb]" />
-                  <span>Select Domain <span className="text-[#ea580c] font-bold">*</span></span>
+                  <span>1. Select Domain <span className="text-[#ea580c] font-bold">*</span></span>
                 </label>
                 <span className="text-[11px] text-slate-500 font-medium">
                   Choose whether your project is Software or Hardware
@@ -1639,7 +1667,7 @@ export default function Registration() {
               )}
             </div>
 
-            {/* Track Selection Section (Select out of 23 Tracks) */}
+            {/* 2. Track Selection Section (Select out of 23 Tracks) */}
             <div className="space-y-3 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <label
@@ -1647,10 +1675,10 @@ export default function Registration() {
                   className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center gap-2"
                 >
                   <Layers className="w-4 h-4 text-[#2563eb]" />
-                  <span>Select Competition Track (Out of 23 Tracks) <span className="text-[#ea580c] font-bold">*</span></span>
+                  <span>2. Select Competition Track (Out of 23 Tracks) <span className="text-[#ea580c] font-bold">*</span></span>
                 </label>
                 <span className="text-[11px] text-slate-500 font-medium">
-                  Matches your PPT solution domain
+                  Matches your project solution topic
                 </span>
               </div>
 
@@ -1703,18 +1731,307 @@ export default function Registration() {
               )}
             </div>
 
-            {/* Drag & Drop Upload Section */}
+            {/* 3. Official UPI Evaluation Payment (₹50) Section */}
+            <div className="space-y-5 p-5 sm:p-6 rounded-2xl bg-[#faf9f6] border border-[#edebe6] shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#edebe6]">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-[#2563eb]" />
+                  <h3 className="text-sm sm:text-base font-extrabold text-[#062b59] uppercase tracking-wide">
+                    3. Evaluation Fee Payment (₹50)
+                  </h3>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold self-start sm:self-auto">
+                  <span>Team Fee:</span>
+                  <span className="text-base font-black text-emerald-600">₹50</span>
+                  <span className="text-[11px] text-emerald-700 font-medium">({formData.teamName || 'Team'})</span>
+                </div>
+              </div>
+
+              {/* Official UPI Payment Box */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/60 border-2 border-blue-200/80 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-blue-100">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-[#062b59]" />
+                    <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#062b59]">
+                      Official UPI Payment (₹50)
+                    </span>
+                  </div>
+                  <span className="text-[10px] sm:text-[11px] font-extrabold bg-emerald-600 text-white px-3 py-1 rounded-full uppercase tracking-wider self-start sm:self-auto">
+                    GPay • PhonePe • Paytm • Any UPI
+                  </span>
+                </div>
+
+                {/* Dedicated Full-Width UPI ID Box with One-Click Copy */}
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-blue-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 min-w-0">
+                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Official Recipient UPI ID:
+                    </span>
+                    <div className="font-mono text-sm sm:text-base font-black text-[#062b59] tracking-tight select-all whitespace-nowrap overflow-x-auto">
+                      {OFFICIAL_UPI_ID}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyUpi}
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-xs"
+                  >
+                    {copiedUpi ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-300" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>Copy UPI ID</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* QR Code and Quick Instructions Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
+                  {/* Interactive QR Code (Enlarged & Centered) */}
+                  <div className="flex flex-col items-center text-center space-y-2.5">
+                    <div className="p-3 sm:p-3.5 bg-white rounded-2xl border-2 border-blue-300 shadow-md inline-block">
+                      <img
+                        src="/qr-50.jpg"
+                        alt="Scan to Pay ₹50 via UPI - Shree A. Ugale (9404665180@centralbank)"
+                        className="w-52 h-auto sm:w-60 md:w-64 max-w-full rounded-xl object-contain shadow-xs"
+                        loading="eager"
+                      />
+                    </div>
+                    <span className="text-[11px] sm:text-xs font-extrabold text-[#062b59] uppercase tracking-wider flex items-center gap-1.5 bg-white px-3.5 py-1 rounded-full border border-blue-200 shadow-2xs">
+                      <QrCode className="w-3.5 h-3.5 text-[#2563eb]" />
+                      <span>Scan to Pay ₹50 with Any UPI App</span>
+                    </span>
+                  </div>
+
+                  {/* Payment Instructions */}
+                  <div className="space-y-3 text-left">
+                    <div className="p-4 rounded-xl bg-white border border-blue-100 text-xs text-slate-700 space-y-2 shadow-2xs">
+                      <div className="font-extrabold text-[#062b59] uppercase tracking-wider text-[11px]">
+                        Payment Instructions:
+                      </div>
+                      <ol className="list-decimal pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed font-medium">
+                        <li>
+                          Scan the QR code or transfer ₹50 directly to <strong className="font-mono text-[#062b59] whitespace-nowrap">{OFFICIAL_UPI_ID}</strong>.
+                        </li>
+                        <li>
+                          From your UPI payment confirmation receipt, copy the <strong>12-digit UPI UTR / Transaction Reference ID</strong>.
+                        </li>
+                        <li>
+                          Paste the 12-digit UTR number below and confirm your payment to proceed to project presentation upload.
+                        </li>
+                      </ol>
+                    </div>
+
+                    {/* Direct Mobile Intent Link */}
+                    <a
+                      href={OFFICIAL_UPI_URI}
+                      className="sm:hidden inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-xl bg-blue-100 hover:bg-blue-200 text-[#062b59] text-xs font-bold transition-colors"
+                    >
+                      <span>Tap to Open Installed UPI App</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* UTR Input Section */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between">
+                  <span>
+                    Transaction Reference / 12-Digit UPI UTR <span className="text-red-600 font-bold">*</span>
+                  </span>
+                  {formData.paymentUtr && formData.paymentUtr.trim().length >= 6 && (
+                    <span className="text-[11px] font-bold text-emerald-600 normal-case flex items-center gap-0.5">
+                      ✓ Entered
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  name="paymentUtr"
+                  value={formData.paymentUtr}
+                  onChange={(e) => {
+                    handleChange(e)
+                    if (utrError) setUtrError('')
+                    if (errors.paymentUtr) {
+                      setErrors((prev) => {
+                        const next = { ...prev }
+                        delete next.paymentUtr
+                        return next
+                      })
+                    }
+                  }}
+                  placeholder="e.g. 12-digit UTR from GPay / PhonePe / Paytm"
+                  className={`w-full px-4 py-3 rounded-xl bg-white border text-sm font-sans focus:outline-none transition-all ${
+                    utrError || errors.paymentUtr
+                      ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20'
+                      : 'border-[#edebe6] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
+                  }`}
+                />
+                {(utrError || errors.paymentUtr) && (
+                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{utrError || errors.paymentUtr}</span>
+                  </p>
+                )}
+                <span className="text-[11px] text-slate-500 block">
+                  Enter the 12-digit UPI UTR number or transaction reference from your payment receipt.
+                </span>
+              </div>
+
+              {/* Payment Confirmation Checkbox */}
+              <div>
+                <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none hover:bg-blue-50/40 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={paymentConfirmed}
+                    onChange={(e) => {
+                      setPaymentConfirmed(e.target.checked)
+                      if (utrError) setUtrError('')
+                      if (errors.paymentConfirmed) {
+                        setErrors((prev) => {
+                          const next = { ...prev }
+                          delete next.paymentConfirmed
+                          return next
+                        })
+                      }
+                    }}
+                    className="mt-0.5 w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer"
+                  />
+                  <span className="text-xs text-slate-700 font-medium leading-relaxed">
+                    I confirm that our team has completed the <strong className="text-[#062b59]">₹50 evaluation fee</strong> and entered the correct 12-digit UTR.
+                  </span>
+                </label>
+                {errors.paymentConfirmed && (
+                  <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errors.paymentConfirmed}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* 24-Hour Review Notice Callout */}
+              <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/90 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
+                <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Review Policy:</strong> Once submitted, your UTR and team registration will be verified against bank records within 24 hours.
+                </span>
+              </div>
+            </div>
+
+            {/* Action Footer */}
+            <div className="pt-4 border-t border-[#edebe6] flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentStep(2)
+                  window.scrollTo({ top: 120, behavior: 'smooth' })
+                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Members</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextFromStep3}
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer group"
+              >
+                <span>Continue to PPT / PDF Upload</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================
+            STEP 04 — PPT / PDF UPLOAD, REVIEW & FINAL SUBMIT
+            ================================================== */}
+        {currentStep === 4 && (
+          <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
+            {/* Step Card Header */}
+            <div className="pb-4 border-b border-[#edebe6]">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563eb] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 inline-block mb-1.5">
+                STEP 04 OF 04 • PROJECT PRESENTATION
+              </span>
+              <h2 className="text-lg sm:text-xl font-black text-[#062b59] uppercase tracking-tight">
+                Upload Project Presentation (PPT or PDF)
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1 leading-relaxed">
+                Download the official presentation template, complete your idea deck, and upload in <strong>.ppt, .pptx, or .pdf</strong> format. Both formats are acceptable.
+              </p>
+            </div>
+
+            {/* PPT Template Download Section */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#062b59]/[0.03] via-blue-50/40 to-transparent border border-blue-200/60 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-[#ea580c]/10 text-[#ea580c] flex items-center justify-center shrink-0 border border-[#ea580c]/20">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ea580c] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 inline-block mb-1">
+                      Official Presentation Template
+                    </span>
+                    <h3 className="text-sm sm:text-base font-extrabold text-[#062b59]">
+                      AITHON 2.0 Official Presentation Format (.PPTX)
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Includes the mandatory slide structure: Problem Statement, Proposed AI Architecture, Tech Stack, & Demo Plan.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Direct Download Button */}
+                <a
+                  href="/AITHON_2.0_Presentation.pptx"
+                  download="AITHON_2.0_Presentation.pptx"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm shrink-0 hover:shadow-md cursor-pointer group"
+                >
+                  <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                  <span>Download PPT Template</span>
+                </a>
+              </div>
+
+              {/* Format Slide Quick Preview Checklist */}
+              <div className="pt-3 border-t border-blue-100/70 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 font-medium">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
+                  <span>Slide 1: Team & Title</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
+                  <span>Slide 2: Problem Scope</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
+                  <span>Slide 3: AI Architecture</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" />
+                  <span>Slide 4: Tech & Feasibility</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Drag & Drop Upload Section (Accepts PPT, PPTX & PDF) */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between">
-                <span>Upload Completed PPT <span className="text-[#ea580c] font-bold">*</span></span>
-                <span className="text-[11px] text-slate-400 font-normal normal-case">Accepted: PPT, PPTX (Max 25MB)</span>
+                <span>Upload Completed Presentation <span className="text-[#ea580c] font-bold">*</span></span>
+                <span className="text-[11px] text-slate-500 font-medium">Accepted: .ppt, .pptx, or .pdf (Max 25MB)</span>
               </label>
 
               {/* Hidden File Input */}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
                 onChange={(e) => e.target.files && handleFileProcess(e.target.files[0])}
                 className="hidden"
               />
@@ -1726,8 +2043,8 @@ export default function Registration() {
                     <span className="w-6 h-6 border-2 border-[#2563eb] border-t-transparent rounded-full animate-spin" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-bold text-[#062b59]">Processing presentation file...</p>
-                    <p className="text-xs text-slate-500">Preparing presentation for automatic Google Drive sync</p>
+                    <p className="text-sm font-bold text-[#062b59]">Processing presentation document...</p>
+                    <p className="text-xs text-slate-500">Preparing file for automatic Google Drive sync</p>
                   </div>
                 </div>
               ) : !formData.pptFileName ? (
@@ -1751,11 +2068,11 @@ export default function Registration() {
 
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-[#062b59]">
-                      Drag and drop your completed PPT here, or{' '}
+                      Drag and drop your completed PPT or PDF here, or{' '}
                       <span className="text-[#2563eb] underline underline-offset-2">Browse Files</span>
                     </p>
                     <p className="text-xs text-slate-400 font-medium">
-                      Ensure all slides are completed according to the official format
+                      Accepted: .ppt, .pptx, or .pdf (Max 25MB) • Both presentation and document formats are supported
                     </p>
                   </div>
                 </div>
@@ -1772,11 +2089,16 @@ export default function Registration() {
                           ✓ {formData.pptFileName}
                         </span>
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded uppercase shrink-0">
-                          Ready for Drive
+                          {formData.pptFileName.toLowerCase().endsWith('.pdf') ? 'PDF Ready' : 'PPT Ready'}
                         </span>
                       </div>
                       <p className="text-xs text-slate-600 font-medium mt-0.5">
-                        {formData.pptFileSize} • Saved to Drive folder as <strong>{teamId ? `${teamId}.pptx` : 'TEAM-[ID].pptx'}</strong>
+                        {formData.pptFileSize} • Saved to Drive as{' '}
+                        <strong>
+                          {teamId
+                            ? `${teamId}${formData.pptFileName.slice(formData.pptFileName.lastIndexOf('.')).toLowerCase()}`
+                            : `TEAM-[ID]${formData.pptFileName.slice(formData.pptFileName.lastIndexOf('.')).toLowerCase()}`}
+                        </strong>
                       </p>
                     </div>
                   </div>
@@ -1800,465 +2122,139 @@ export default function Registration() {
               )}
             </div>
 
+            {/* Registration Summary & Verification Review Card */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#2563eb]" />
+                  <span>Team & Payment Summary Review</span>
+                </h3>
+                <span className="text-[11px] text-slate-500 font-medium">Verify before final submission</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {/* Team & Lead Card */}
+                <div className="p-4 rounded-xl bg-[#faf9f6] border border-[#edebe6] space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#edebe6]">
+                    <span className="font-extrabold text-[#062b59] uppercase tracking-wide">
+                      Team & Lead Details
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(1)}
+                      className="text-[11px] font-bold text-[#2563eb] hover:underline cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-semibold text-[10.5px] uppercase">Team Name</span>
+                    <strong className="text-[#062b59] text-xs sm:text-sm">{formData.teamName || '—'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-semibold text-[10.5px] uppercase">Leader</span>
+                    <span className="text-slate-800 font-bold">{formData.leadFullName || '—'}</span>
+                    <span className="text-slate-500 block text-[11px]">{formData.leadEmail} • {formData.leadPhone}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-semibold text-[10.5px] uppercase">Members</span>
+                    <span className="text-slate-700 font-medium">{teamSizeNum} Total ({formData.teamSize} Members)</span>
+                  </div>
+                </div>
+
+                {/* Track & Payment Card */}
+                <div className="p-4 rounded-xl bg-[#faf9f6] border border-[#edebe6] space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#edebe6]">
+                    <span className="font-extrabold text-[#062b59] uppercase tracking-wide">
+                      Domain, Track & Payment
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(3)}
+                      className="text-[11px] font-bold text-[#2563eb] hover:underline cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-semibold text-[10.5px] uppercase">Domain</span>
+                    <strong className="text-[#062b59]">{formData.selectedDomain === 'Hardware' ? '2. Hardware' : '1. Software'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-semibold text-[10.5px] uppercase">Competition Track</span>
+                    <strong className="text-[#062b59] block truncate">{formData.selectedTrack || '—'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-semibold text-[10.5px] uppercase">₹50 Fee UTR Reference</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="font-mono font-bold text-[#062b59] bg-white px-2 py-0.5 rounded border border-slate-200">
+                        {formData.paymentUtr || '—'}
+                      </span>
+                      <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase">
+                        Verified
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mandatory Final Confirmation Checkbox */}
+            <div className="pt-2">
+              <label className="flex items-start gap-3 cursor-pointer select-none p-3.5 rounded-xl bg-[#faf9f6] border border-[#edebe6] hover:border-slate-300 transition-colors">
+                <input
+                  type="checkbox"
+                  name="confirmedReview"
+                  checked={formData.confirmedReview}
+                  onChange={handleChange}
+                  className="mt-0.5 w-4 h-4 text-[#2563eb] rounded border-slate-300 focus:ring-[#2563eb] cursor-pointer"
+                />
+                <span className="text-xs text-slate-700 font-medium leading-relaxed">
+                  I confirm that our team details, selected track, and payment UTR are accurate, and this presentation is our final submission for AITHON 2.0 evaluation.
+                </span>
+              </label>
+
+              {errors.confirmedReview && (
+                <p className="text-xs font-semibold text-rose-600 flex items-center gap-1 mt-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{errors.confirmedReview}</span>
+                </p>
+              )}
+            </div>
+
             {/* Action Footer */}
             <div className="pt-4 border-t border-[#edebe6] flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={() => {
-                  setCurrentStep(2)
+                  setCurrentStep(3)
                   window.scrollTo({ top: 120, behavior: 'smooth' })
                 }}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
+                <span>Back to Payment & Track</span>
               </button>
 
               <button
                 type="button"
-                onClick={handleNextFromStep3}
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer group"
+                disabled={isSubmitting}
+                onClick={handleFinalSubmit}
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-[#062b59] hover:bg-[#1d4ed8] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
               >
-                <span>Continue to Review</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Submitting Entry...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Submit Final Registration</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
             </div>
-          </div>
-        )}
-
-        {/* ==================================================
-            STEP 04 — REVIEW & PAYMENT
-            ================================================== */}
-        {currentStep === 4 && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* SUB-VIEW 1: REVIEW YOUR REGISTRATION */}
-            {step4View === 'review' && (
-              <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6">
-                {/* Header */}
-                <div className="pb-4 border-b border-[#edebe6]">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563eb] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 inline-block mb-1.5">
-                    STEP 04 OF 04 • REVIEW
-                  </span>
-                  <h2 className="text-lg sm:text-xl font-black text-[#062b59] uppercase tracking-tight">
-                    Review Your Registration
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
-                    Carefully verify your team information and presentation submission before proceeding to evaluation fee payment.
-                  </p>
-                </div>
-
-                {/* Summary Card 1: Team & Leader */}
-                <div className="p-4 sm:p-5 rounded-xl bg-[#faf9f6] border border-[#edebe6] space-y-3">
-                  <div className="flex items-center justify-between pb-2.5 border-b border-[#edebe6]">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-md bg-[#062b59] text-white flex items-center justify-center text-xs font-bold">
-                        1
-                      </span>
-                      <h3 className="text-xs sm:text-sm font-bold text-[#062b59] uppercase">
-                        Team & Leader Details
-                      </h3>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(1)}
-                      className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="text-slate-400 block font-semibold text-[11px] uppercase">Team Name</span>
-                      <strong className="text-[#062b59] text-sm">{formData.teamName || '—'}</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block font-semibold text-[11px] uppercase">Team Leader</span>
-                      <strong className="text-[#062b59] text-sm">{formData.leadFullName || '—'}</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block font-semibold text-[11px] uppercase">Leader Contact</span>
-                      <span className="text-slate-700 font-medium">{formData.leadEmail} • {formData.leadPhone}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block font-semibold text-[11px] uppercase">College & Course</span>
-                      <span className="text-slate-700 font-medium">
-                        {formData.leadCollege} ({isOtherCourse(formData.leadCourse) && formData.leadCourseOther?.trim() ? formData.leadCourseOther.trim() : formData.leadCourse} • {formData.leadYear})
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Summary Card 2: Team Members */}
-                <div className="p-4 sm:p-5 rounded-xl bg-[#faf9f6] border border-[#edebe6] space-y-3">
-                  <div className="flex items-center justify-between pb-2.5 border-b border-[#edebe6]">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-md bg-[#2563eb] text-white flex items-center justify-center text-xs font-bold">
-                        2
-                      </span>
-                      <h3 className="text-xs sm:text-sm font-bold text-[#062b59] uppercase">
-                        Team Members ({additionalMembersCount} Additional Members)
-                      </h3>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(2)}
-                      className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                  </div>
-
-                  <div className="space-y-2.5 text-xs">
-                    {formData.members.slice(0, additionalMembersCount).map((m, idx) => (
-                      <div
-                        key={idx}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-white border border-[#edebe6] gap-1"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-bold">
-                            {idx + 2}
-                          </span>
-                          <strong className="text-[#062b59]">{m.fullName || `Teammate ${idx + 1}`}</strong>
-                          <span className="text-slate-400">• {m.email}</span>
-                        </div>
-                        <span className="text-slate-500 text-[11px] font-medium sm:text-right">
-                          {m.college} ({isOtherCourse(m.course) && m.courseOther?.trim() ? m.courseOther.trim() : m.course} • {m.year})
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Summary Card 3: Uploaded PPT & Selected Track */}
-                <div className="p-4 sm:p-5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-3">
-                  <div className="flex items-center justify-between pb-2.5 border-b border-emerald-200/60">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
-                        3
-                      </span>
-                      <h3 className="text-xs sm:text-sm font-bold text-[#062b59] uppercase">
-                        Idea Presentation & Track
-                      </h3>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(3)}
-                      className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
-                    >
-                      Edit Submission
-                    </button>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {/* Chosen Domain */}
-                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-blue-200/80 text-xs">
-                      <Cpu className="w-4 h-4 text-[#2563eb] shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-slate-400 font-semibold text-[11px] block uppercase">Domain</span>
-                        <span className="font-extrabold text-[#062b59] truncate block">
-                          {formData.selectedDomain ? (formData.selectedDomain === 'Software' ? '1. Software' : '2. Hardware') : '1. Software'}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-bold text-[#2563eb] bg-blue-50 px-2 py-0.5 rounded uppercase shrink-0 border border-blue-100">
-                        Domain Verified
-                      </span>
-                    </div>
-
-                    {/* Chosen Competition Track */}
-                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-emerald-200/80 text-xs">
-                      <Layers className="w-4 h-4 text-[#2563eb] shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-slate-400 font-semibold text-[11px] block uppercase">Competition Track</span>
-                        <span className="font-extrabold text-[#062b59] truncate block">
-                          {formData.selectedTrack || 'No Track Selected'}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase shrink-0">
-                        Track Verified
-                      </span>
-                    </div>
-
-                    {/* Uploaded PPT File Details */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
-                      <div className="flex items-center gap-2 text-xs">
-                        <FileText className="w-4 h-4 text-emerald-700 shrink-0" />
-                        <span className="font-bold text-[#062b59]">{formData.pptFileName || 'Uploaded PPT'}</span>
-                        <span className="text-slate-400">({formData.pptFileSize})</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-emerald-200">
-                          Drive Name: {teamId ? `${teamId}.pptx` : 'TEAM-[ID].pptx'}
-                        </span>
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase">
-                          Ready
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mandatory Confirmation Checkbox */}
-                <div className="pt-2">
-                  <label className="flex items-start gap-3 cursor-pointer select-none p-3.5 rounded-xl bg-[#faf9f6] border border-[#edebe6] hover:border-slate-300 transition-colors">
-                    <input
-                      type="checkbox"
-                      name="confirmedReview"
-                      checked={formData.confirmedReview}
-                      onChange={handleChange}
-                      className="mt-0.5 w-4 h-4 text-[#2563eb] rounded border-slate-300 focus:ring-[#2563eb] cursor-pointer"
-                    />
-                    <span className="text-xs text-slate-700 font-medium leading-relaxed">
-                      I confirm that the information provided is correct and the uploaded PPT is my team's final submission.
-                    </span>
-                  </label>
-
-                  {errors.confirmedReview && (
-                    <p className="text-xs font-semibold text-rose-600 flex items-center gap-1 mt-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{errors.confirmedReview}</span>
-                    </p>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-4 border-t border-[#edebe6] flex items-center justify-between gap-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrentStep(3)
-                      window.scrollTo({ top: 120, behavior: 'smooth' })
-                    }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>Back to PPT</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleProceedToPayment}
-                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer group"
-                  >
-                    <span>Proceed to Payment (₹50)</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* SUB-VIEW 2: PAYMENT SECTION */}
-            {step4View === 'payment' && (
-              <div className="bg-white border border-[#edebe6] rounded-2xl p-5 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
-                {/* Clean Header */}
-                <div className="pb-4 border-b border-[#edebe6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ea580c] bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200 inline-block mb-1.5">
-                      STEP 04 OF 04 • EVALUATION FEE
-                    </span>
-                    <h2 className="text-lg sm:text-xl font-black text-[#062b59] uppercase tracking-tight">
-                      First PPT Evaluation Fee
-                    </h2>
-                  </div>
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold self-start sm:self-auto">
-                    <span>Team Fee:</span>
-                    <span className="text-base font-black text-emerald-600">₹50</span>
-                    <span className="text-[11px] text-emerald-700 font-medium">({formData.teamName || 'Team'})</span>
-                  </div>
-                </div>
-
-                {/* Clean UPI Payment Card */}
-                <div className="space-y-5">
-                  {/* Official UPI Payment Box */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/60 border-2 border-blue-200/80 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-blue-100">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-[#062b59]" />
-                        <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#062b59]">
-                          Official UPI Payment (₹50)
-                        </span>
-                      </div>
-                      <span className="text-[10px] sm:text-[11px] font-extrabold bg-emerald-600 text-white px-3 py-1 rounded-full uppercase tracking-wider self-start sm:self-auto">
-                        GPay • PhonePe • Paytm • Any UPI
-                      </span>
-                    </div>
-
-                    {/* Dedicated Full-Width UPI ID Box with One-Click Copy */}
-                    <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-blue-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="space-y-0.5 min-w-0">
-                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                          Official Recipient UPI ID:
-                        </span>
-                        <div className="font-mono text-sm sm:text-base font-black text-[#062b59] tracking-tight select-all whitespace-nowrap overflow-x-auto">
-                          {OFFICIAL_UPI_ID}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleCopyUpi}
-                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-xs"
-                      >
-                        {copiedUpi ? (
-                          <>
-                            <Check className="w-4 h-4 text-emerald-300" />
-                            <span>Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            <span>Copy UPI ID</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* QR Code and Quick Instructions Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
-                      {/* Interactive QR Code (Enlarged & Centered) */}
-                      <div className="flex flex-col items-center text-center space-y-2.5">
-                        <div className="p-3 sm:p-3.5 bg-white rounded-2xl border-2 border-blue-300 shadow-md inline-block">
-                          <img
-                            src="/qr-50.jpg"
-                            alt="Scan to Pay ₹50 via UPI - Shree A. Ugale (9404665180@centralbank)"
-                            className="w-52 h-auto sm:w-60 md:w-64 max-w-full rounded-xl object-contain shadow-xs"
-                            loading="eager"
-                          />
-                        </div>
-                        <span className="text-[11px] sm:text-xs font-extrabold text-[#062b59] uppercase tracking-wider flex items-center gap-1.5 bg-white px-3.5 py-1 rounded-full border border-blue-200 shadow-2xs">
-                          <QrCode className="w-3.5 h-3.5 text-[#2563eb]" />
-                          <span>Scan to Pay ₹50 with Any UPI App</span>
-                        </span>
-                      </div>
-
-                      {/* Payment Instructions */}
-                      <div className="space-y-3 text-left">
-                        <div className="p-4 rounded-xl bg-white border border-blue-100 text-xs text-slate-700 space-y-2 shadow-2xs">
-                          <div className="font-extrabold text-[#062b59] uppercase tracking-wider text-[11px]">
-                            Quick Instructions:
-                          </div>
-                          <ol className="list-decimal pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed font-medium">
-                            <li>
-                              Scan the QR code or transfer ₹50 directly to <strong className="font-mono text-[#062b59] whitespace-nowrap">{OFFICIAL_UPI_ID}</strong>.
-                            </li>
-                            <li>
-                              From your payment confirmation receipt, copy the <strong>12-digit UPI UTR / Reference ID</strong>.
-                            </li>
-                            <li>
-                              Paste the 12-digit UTR number below and submit your team entry.
-                            </li>
-                          </ol>
-                        </div>
-
-                        {/* Direct Mobile Intent Link */}
-                        <a
-                          href={OFFICIAL_UPI_URI}
-                          className="sm:hidden inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-xl bg-blue-100 hover:bg-blue-200 text-[#062b59] text-xs font-bold transition-colors"
-                        >
-                          <span>Tap to Open Installed UPI App</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* UTR Input Section */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-[#062b59] flex items-center justify-between">
-                      <span>
-                        Transaction Reference / 12-Digit UPI UTR <span className="text-red-600 font-bold">*</span>
-                      </span>
-                      {formData.paymentUtr && formData.paymentUtr.trim().length >= 6 && (
-                        <span className="text-[11px] font-bold text-emerald-600 normal-case flex items-center gap-0.5">
-                          ✓ Entered
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      type="text"
-                      name="paymentUtr"
-                      value={formData.paymentUtr}
-                      onChange={(e) => {
-                        handleChange(e)
-                        if (utrError) setUtrError('')
-                      }}
-                      placeholder="e.g. 12-digit UTR from GPay / PhonePe / Paytm"
-                      className={`w-full px-4 py-2.5 rounded-lg bg-white border text-sm font-sans focus:outline-none transition-all ${
-                        utrError
-                          ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20'
-                          : 'border-[#edebe6] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20'
-                      }`}
-                    />
-                    {utrError && (
-                      <p className="text-[11px] text-red-600 font-semibold flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{utrError}</span>
-                      </p>
-                    )}
-                    <span className="text-[11px] text-slate-500 block">
-                      Enter the 12-digit UPI UTR number or transaction reference from your payment receipt.
-                    </span>
-                  </div>
-
-                  {/* Payment Confirmation Checkbox */}
-                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none hover:bg-blue-50/40 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={paymentConfirmed}
-                      onChange={(e) => {
-                        setPaymentConfirmed(e.target.checked)
-                        if (utrError) setUtrError('')
-                      }}
-                      className="mt-0.5 w-4 h-4 rounded text-[#2563eb] focus:ring-[#2563eb] cursor-pointer"
-                    />
-                    <span className="text-xs text-slate-700 font-medium leading-relaxed">
-                      I confirm that our team has completed the <strong className="text-[#062b59]">₹50 evaluation fee</strong> and entered the correct 12-digit UTR.
-                    </span>
-                  </label>
-
-                  {/* 24-Hour Review Notice Callout */}
-                  <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/90 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
-                    <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                    <span>
-                      <strong>Review Policy:</strong> Once you submit your UTR, your registration will be queued for manual verification. We will review your entry shortly (takes up to 24 hours) before confirming.
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-4 border-t border-[#edebe6] flex items-center justify-between gap-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep4View('review')
-                      window.scrollTo({ top: 120, behavior: 'smooth' })
-                    }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>Back to Review</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={handleFinalSubmit}
-                    className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-[#062b59] hover:bg-[#1d4ed8] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Submitting Entry...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Submit Entry for Review (24 Hrs)</span>
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -2404,15 +2400,27 @@ export default function Registration() {
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={() => window.print()}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                onClick={() => {
+                  window.print()
+                }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#062b59] hover:bg-[#1d4ed8] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer group"
               >
-                Print / Save Slip
+                <Printer className="w-4 h-4 text-blue-300 group-hover:text-white transition-colors" />
+                <span>Print / Save Slip</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsReceiptModalOpen(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                <FileText className="w-4 h-4 text-[#2563eb]" />
+                <span>Preview Slip</span>
               </button>
 
               <Link
                 to="/"
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 text-center shadow-xs cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider transition-all duration-200 text-center cursor-pointer"
               >
                 Back to Homepage
               </Link>
@@ -2420,11 +2428,35 @@ export default function Registration() {
           </div>
         )}
 
+        {/* Dedicated Single-Page Portal Print Mount (Mounted directly into document.body outside #root) */}
+        {currentStep === 5 && typeof document !== 'undefined' && createPortal(
+          <div id="print-slip-root" className="hidden print:block">
+            <RegistrationSlip
+              formData={formData}
+              teamId={teamId}
+              registrationId={registrationId}
+              submissionDate={slipSubmissionDate}
+              id="printable-receipt"
+            />
+          </div>,
+          document.body
+        )}
+
+        {/* Dedicated Official Registration Slip Modal Preview */}
+        <RegistrationSlipModal
+          isOpen={isReceiptModalOpen}
+          onClose={() => setIsReceiptModalOpen(false)}
+          formData={formData}
+          teamId={teamId}
+          registrationId={registrationId}
+          submissionDate={slipSubmissionDate}
+        />
+
         {/* ==================================================
             PAYMENT ALERT & PROBLEM POPUP MODAL
             ================================================== */}
-        {paymentModal && paymentModal.isOpen && (
-          <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+        {paymentModal && paymentModal.isOpen && typeof document !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-[#edebe6] space-y-5 relative animate-scaleIn">
               {/* Close Icon */}
               <button
@@ -2529,14 +2561,15 @@ export default function Registration() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* ==================================================
             FULL-SCREEN SUBMISSION OVERLAY (TAKE A BREATH & DON'T HIT BACK)
             ================================================== */}
-        {isSubmitting && (
-          <div className="fixed inset-0 z-50 bg-[#062b59]/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn select-none">
+        {isSubmitting && typeof document !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[100] bg-[#062b59]/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn select-none">
             <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-blue-100 text-center space-y-6 relative animate-scaleIn">
               {/* Calming Animated Icon Badge */}
               <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
@@ -2603,7 +2636,8 @@ export default function Registration() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </main>
 

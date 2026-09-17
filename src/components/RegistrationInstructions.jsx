@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   FileText,
   Download,
@@ -26,6 +27,18 @@ import { TRACK_OPTIONS, DOMAIN_OPTIONS } from '../pages/Registration'
 export default function RegistrationInstructions({ onProceed, rulesAgreed, setRulesAgreed }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [validationError, setValidationError] = useState('')
+
+  // Prevent background scrolling when confirmation modal is visible
+  useEffect(() => {
+    if (showConfirmModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showConfirmModal])
 
   const getCategoryForTrack = (trackName) => {
     const lower = trackName.toLowerCase()
@@ -124,7 +137,7 @@ export default function RegistrationInstructions({ onProceed, rulesAgreed, setRu
   ]
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8">
       {/* ==================================================
           PAGE HERO BANNER
           ================================================== */}
@@ -205,7 +218,7 @@ export default function RegistrationInstructions({ onProceed, rulesAgreed, setRu
                 1. Official PPT Presentation Format
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
-                Download the official template below. You will be required to upload your completed presentation in Step 3.
+                Download the official template below. You will be required to upload your completed presentation in Step 4.
               </p>
             </div>
           </div>
@@ -314,7 +327,7 @@ export default function RegistrationInstructions({ onProceed, rulesAgreed, setRu
           <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-slate-700 leading-relaxed flex items-start gap-2.5">
             <FileCheck className="w-5 h-5 text-[#2563eb] shrink-0 mt-0.5" />
             <div>
-              <strong className="text-[#062b59]">File Upload Requirements:</strong> Only <strong>.ppt</strong> or <strong>.pptx</strong> formats are accepted. Maximum allowed file size is <strong>25MB</strong>. Please compress heavy media or high-res images before uploading in Step 3.
+              <strong className="text-[#062b59]">File Upload Requirements:</strong> Both <strong>.ppt / .pptx</strong> and <strong>.pdf</strong> formats are accepted. Maximum allowed file size is <strong>25MB</strong>. Please compress heavy media or high-res images before uploading in Step 4.
             </div>
           </div>
         </div>
@@ -519,12 +532,14 @@ export default function RegistrationInstructions({ onProceed, rulesAgreed, setRu
           </div>
 
           <a
-            href="/AITHON_2.0_Official_Rulebook.pdf"
-            download="AITHON_2.0_Official_Rulebook.pdf"
+            href="https://drive.google.com/file/d/1kLBCXC_ZQBwb6IPuXlvfn7u2SdvMm6c6/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer self-start sm:self-auto"
           >
             <Download className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Download Rulebook (PDF)</span>
+            <span>Official Rulebook (Google Drive)</span>
+            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
           </a>
         </div>
 
@@ -621,8 +636,8 @@ export default function RegistrationInstructions({ onProceed, rulesAgreed, setRu
           MODAL: CONFIRMATION PROMPT
           "ask that i read rulebook and agree with it"
           ================================================== */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-fadeIn">
+      {showConfirmModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-fadeIn">
           <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 animate-scaleIn">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -660,25 +675,30 @@ export default function RegistrationInstructions({ onProceed, rulesAgreed, setRu
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
+              <a
+                href="https://drive.google.com/file/d/1kLBCXC_ZQBwb6IPuXlvfn7u2SdvMm6c6/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setShowConfirmModal(false)}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-full sm:w-auto h-11 inline-flex items-center justify-center gap-2 px-5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-[#062b59] hover:border-slate-400 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap shadow-2xs cursor-pointer text-center shrink-0"
               >
-                Review Rulebook Again
-              </button>
+                <BookOpen className="w-4 h-4 text-[#ea580c] shrink-0" />
+                <span>View Rulebook (PDF)</span>
+                <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              </a>
 
               <button
                 type="button"
                 onClick={handleConfirmAgreement}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
+                className="w-full sm:w-auto h-11 inline-flex items-center justify-center gap-2 px-6 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap shadow-sm hover:shadow-md cursor-pointer shrink-0"
               >
-                <Check className="w-4 h-4" />
+                <Check className="w-4 h-4 text-emerald-400 shrink-0 stroke-[2.5]" />
                 <span>Yes, I Read & Agree</span>
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
