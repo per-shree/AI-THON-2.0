@@ -6,8 +6,8 @@ export default function SponsorsSection() {
       name: 'Sumago Infotech Pvt. Ltd.',
       logo: '/sumago_logo.png',
       url: 'https://sumagoinfotech.com/',
-      tier: 'ASSOCIATE SPONSOR',
-      desc: 'Official Technology Partner',
+      tier: 'TITLE SPONSOR',
+      desc: 'Official Title Sponsor',
       isActive: true,
       isLargeLogo: true,
       isWideLogo: true
@@ -97,6 +97,7 @@ export default function SponsorsSection() {
     <div className="flex items-center gap-5 shrink-0 pr-5" aria-hidden={isAriaHidden}>
       {sponsors.map((item, idx) => {
         const hasValidLink = item.url && item.url !== '#'
+        const isTitleSponsor = item.tier === 'TITLE SPONSOR'
 
         if (item.isActive && hasValidLink) {
           return (
@@ -105,7 +106,11 @@ export default function SponsorsSection() {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative bg-white border border-[#edebe6] hover:border-blue-500 rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 shadow-xs hover:shadow-md transition-all duration-300 shrink-0 w-max cursor-pointer"
+              className={`group relative bg-white border ${
+                isTitleSponsor
+                  ? 'border-amber-300 bg-gradient-to-b from-amber-50/40 to-white hover:border-amber-400 shadow-xs hover:shadow-md'
+                  : 'border-[#edebe6] hover:border-blue-500 shadow-xs hover:shadow-md'
+              } rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 transition-all duration-300 shrink-0 w-max cursor-pointer`}
             >
               {/* Logo Box */}
               <div
@@ -116,6 +121,8 @@ export default function SponsorsSection() {
                 } rounded-xl ${
                   item.isFullBox
                     ? 'bg-black border border-slate-900'
+                    : isTitleSponsor
+                    ? 'bg-amber-50/50 border border-amber-200/70 p-2 group-hover:bg-amber-100/60'
                     : 'bg-slate-50 border border-slate-100 p-2 group-hover:bg-slate-100/80'
                 } flex items-center justify-center shrink-0 transition-colors overflow-hidden`}
               >
@@ -134,8 +141,14 @@ export default function SponsorsSection() {
 
               {/* Details */}
               <div className="min-w-max pr-1">
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none whitespace-nowrap">
-                  {item.tier}
+                <span
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider leading-none whitespace-nowrap ${
+                    isTitleSponsor
+                      ? 'text-amber-900 bg-amber-100 border border-amber-300 font-extrabold'
+                      : 'text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5]'
+                  }`}
+                >
+                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : item.tier}
                 </span>
                 <h3 className="text-xs sm:text-sm font-bold text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap">
                   {item.name}

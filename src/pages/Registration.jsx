@@ -4,6 +4,12 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import RegistrationProgress from '../components/RegistrationProgress'
 import FormInput from '../components/FormInput'
+import AutoSaveIndicator from '../components/AutoSaveIndicator'
+import {
+  saveRegistrationDraft,
+  loadRegistrationDraft,
+  clearRegistrationDraft,
+} from '../utils/formDraftStorage'
 import { useAdmin } from '../context/AdminContext'
 import { submitRegistrationToGoogleSheet, fetchNextSerialId, syncRegistrationStep } from '../services/googleSheetsService'
 import {
@@ -117,17 +123,73 @@ export const isOtherCourse = (course) =>
 export const OFFICIAL_UPI_ID = '9404665180@centralbank'
 export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
 
+// Default blank form state
+const INITIAL_FORM_DATA = {
+  // Step 1: Team & Lead Details
+  teamName: '',
+  leadFullName: '',
+  leadEmail: '',
+  leadPhone: '',
+  leadCollege: '',
+  leadCourse: '',
+  leadCourseOther: '',
+  leadYear: '',
+  leadCity: '',
+
+  // Step 2: Team Members Details (Min 4, Max 6 total = Lead + 3 to 5 teammates)
+  teamSize: '4', // default 4 members
+  members: [
+    { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+    { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+    { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+    { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+    { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
+  ],
+
+  // Step 3: Domain, PPT Submission & Track Selection
+  selectedDomain: '',
+  selectedTrack: '',
+  pptFileName: '',
+  pptFileSize: '',
+  pptUploadedAt: '',
+  pptBase64: '',
+  pptMimeType: '',
+
+  // Step 4: Review Confirmation & Payment
+  confirmedReview: false,
+  paymentUtr: '',
+}
+
+// Synchronous local storage reader to resume without any delay or UI flicker
+function getInitialDraft() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('aithon_registration_progress_v2')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (parsed && parsed.formData && Number(parsed.currentStep) < 5) {
+      return parsed
+    }
+  } catch (e) {}
+  return null
+}
+
 export default function Registration() {
   const { registerTeam, getNextSerialTeamId, syncNextSerialNum } = useAdmin()
 
+  const savedDraft = getInitialDraft()
+
   // Stepper State (1: Lead, 2: Members, 3: PPT, 4: Payment (with Review), 5: Completed)
-  const [currentStep, setCurrentStep] = useState(1)
-  const [step4View, setStep4View] = useState('review') // 'review' | 'payment'
+  // Automatically resumes directly at the step where the user previously left off!
+  const [currentStep, setCurrentStep] = useState(() => (savedDraft ? Number(savedDraft.currentStep) || 1 : 1))
+  const [maxStepReached, setMaxStepReached] = useState(() => (savedDraft ? Number(savedDraft.maxStepReached) || Number(savedDraft.currentStep) || 1 : 1))
+  const [step4View, setStep4View] = useState(() => (savedDraft ? savedDraft.step4View || 'review' : 'review'))
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isReadingPpt, setIsReadingPpt] = useState(false)
-  const [drivePptUrl, setDrivePptUrl] = useState('')
+  const [drivePptUrl, setDrivePptUrl] = useState(() => (savedDraft ? savedDraft.drivePptUrl || '' : ''))
   const [registrationId, setRegistrationId] = useState(() => {
+    if (savedDraft && savedDraft.registrationId) return savedDraft.registrationId
     try {
       return sessionStorage.getItem('aithon_allocated_reg_id') || ''
     } catch (e) {
@@ -135,6 +197,7 @@ export default function Registration() {
     }
   })
   const [teamId, setTeamId] = useState(() => {
+    if (savedDraft && savedDraft.teamId) return savedDraft.teamId
     try {
       return sessionStorage.getItem('aithon_allocated_team_id') || ''
     } catch (e) {
@@ -144,11 +207,18 @@ export default function Registration() {
   const [copiedUpi, setCopiedUpi] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [paymentModal, setPaymentModal] = useState(null)
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false)
+  const [paymentConfirmed, setPaymentConfirmed] = useState(() => (savedDraft ? Boolean(savedDraft.paymentConfirmed) : false))
   const [utrError, setUtrError] = useState('')
   const [isSendingReport, setIsSendingReport] = useState(false)
   const [reportSentMessage, setReportSentMessage] = useState('')
   const fileInputRef = useRef(null)
+
+  // Auto-Save UI & Feedback State
+  const [saveStatus, setSaveStatus] = useState('saved') // 'idle' | 'saving' | 'saved'
+  const [lastSavedAt, setLastSavedAt] = useState(() => (savedDraft ? savedDraft.savedAt || Date.now() : null))
+  const [isRestoredBannerVisible, setIsRestoredBannerVisible] = useState(() =>
+    Boolean(savedDraft && (savedDraft.currentStep > 1 || savedDraft.formData?.teamName?.trim()))
+  )
 
   const [submitMessageIndex, setSubmitMessageIndex] = useState(0)
 
@@ -224,42 +294,132 @@ export default function Registration() {
     }
   }, [syncNextSerialNum])
 
-  // Form State
-  const [formData, setFormData] = useState({
-    // Step 1: Team & Lead Details
-    teamName: '',
-    leadFullName: '',
-    leadEmail: '',
-    leadPhone: '',
-    leadCollege: '',
-    leadCourse: '',
-    leadCourseOther: '',
-    leadYear: '',
-    leadCity: '',
-
-    // Step 2: Team Members Details (Min 4, Max 6 total = Lead + 3 to 5 teammates)
-    teamSize: '4', // default 4 members
-    members: [
-      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
-      { fullName: '', email: '', college: '', course: '', courseOther: '', year: '' },
-    ],
-
-    // Step 3: Domain, PPT Submission & Track Selection
-    selectedDomain: '',
-    selectedTrack: '',
-    pptFileName: '',
-    pptFileSize: '',
-    pptUploadedAt: '',
-    pptBase64: '',
-    pptMimeType: '',
-
-    // Step 4: Review Confirmation & Payment
-    confirmedReview: false,
-    paymentUtr: '',
+  // Form State (restored automatically from saved draft if available)
+  const [formData, setFormData] = useState(() => {
+    if (savedDraft && savedDraft.formData) {
+      return {
+        ...INITIAL_FORM_DATA,
+        ...savedDraft.formData,
+        members: Array.isArray(savedDraft.formData.members) && savedDraft.formData.members.length > 0
+          ? savedDraft.formData.members
+          : INITIAL_FORM_DATA.members,
+      }
+    }
+    return INITIAL_FORM_DATA
   })
+
+  // Asynchronously rehydrate presentation file if stored in IndexedDB
+  useEffect(() => {
+    let isMounted = true
+    loadRegistrationDraft().then((fullDraft) => {
+      if (isMounted && fullDraft && fullDraft.formData) {
+        if (fullDraft.formData.pptBase64) {
+          setFormData((prev) => ({
+            ...prev,
+            pptBase64: fullDraft.formData.pptBase64,
+            pptFileName: fullDraft.formData.pptFileName || prev.pptFileName,
+            pptFileSize: fullDraft.formData.pptFileSize || prev.pptFileSize,
+            pptMimeType: fullDraft.formData.pptMimeType || prev.pptMimeType,
+            pptUploadedAt: fullDraft.formData.pptUploadedAt || prev.pptUploadedAt,
+          }))
+        }
+      }
+    })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Auto-Save Effect: Automatically saves progress whenever fields or steps change
+  const saveTimeoutRef = useRef(null)
+  const isFirstRender = useRef(true)
+
+  useEffect(() => {
+    // Don't save if already reached completed step
+    if (currentStep === 5) return
+
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+
+    setSaveStatus('saving')
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      await saveRegistrationDraft({
+        formData,
+        currentStep,
+        maxStepReached,
+        step4View,
+        teamId,
+        registrationId,
+        drivePptUrl,
+        paymentConfirmed,
+      })
+      setLastSavedAt(Date.now())
+      setSaveStatus('saved')
+    }, 400)
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [formData, currentStep, maxStepReached, step4View, teamId, registrationId, drivePptUrl, paymentConfirmed])
+
+  // Flush save synchronously if closing window or navigating away
+  useEffect(() => {
+    const handleUnloadSave = () => {
+      if (currentStep < 5) {
+        saveRegistrationDraft({
+          formData,
+          currentStep,
+          maxStepReached,
+          step4View,
+          teamId,
+          registrationId,
+          drivePptUrl,
+          paymentConfirmed,
+        })
+      }
+    }
+    window.addEventListener('beforeunload', handleUnloadSave)
+    window.addEventListener('pagehide', handleUnloadSave)
+    return () => {
+      window.removeEventListener('beforeunload', handleUnloadSave)
+      window.removeEventListener('pagehide', handleUnloadSave)
+    }
+  }, [formData, currentStep, maxStepReached, step4View, teamId, registrationId, drivePptUrl, paymentConfirmed])
+
+  // Clear/Reset Draft Handler
+  const handleResetDraft = async () => {
+    await clearRegistrationDraft()
+    setFormData(INITIAL_FORM_DATA)
+    setCurrentStep(1)
+    setMaxStepReached(1)
+    setStep4View('review')
+    setTeamId('')
+    setRegistrationId('')
+    setDrivePptUrl('')
+    setPaymentConfirmed(false)
+    setErrors({})
+    setIsRestoredBannerVisible(false)
+    setLastSavedAt(null)
+    setSaveStatus('idle')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    window.scrollTo({ top: 100, behavior: 'smooth' })
+  }
+
+  const hasDraftData = Boolean(
+    formData.teamName?.trim() ||
+    formData.leadFullName?.trim() ||
+    formData.leadEmail?.trim() ||
+    formData.pptFileName ||
+    currentStep > 1
+  )
 
   // Validation Errors
   const [errors, setErrors] = useState({})
@@ -485,6 +645,7 @@ export default function Registration() {
   const handleNextFromStep1 = () => {
     if (validateStep1()) {
       setCurrentStep(2)
+      setMaxStepReached((prev) => Math.max(prev, 2))
       window.scrollTo({ top: 120, behavior: 'smooth' })
 
       // ⚡ REAL-TIME ALLOCATION: First person to start registration gets earliest Team ID immediately!
@@ -511,6 +672,7 @@ export default function Registration() {
   const handleNextFromStep2 = () => {
     if (validateStep2()) {
       setCurrentStep(3)
+      setMaxStepReached((prev) => Math.max(prev, 3))
       window.scrollTo({ top: 120, behavior: 'smooth' })
 
       // ⚡ REAL-TIME SYNC: Update member details to Google Sheet in real time
@@ -529,6 +691,7 @@ export default function Registration() {
   const handleNextFromStep3 = () => {
     if (validateStep3()) {
       setCurrentStep(4)
+      setMaxStepReached((prev) => Math.max(prev, 4))
       setStep4View('review')
       window.scrollTo({ top: 120, behavior: 'smooth' })
 
@@ -693,6 +856,7 @@ export default function Registration() {
       }
 
       // 4. Advance to Step 05: Completed (Under 24-Hour Review)
+      await clearRegistrationDraft()
       try {
         sessionStorage.removeItem('aithon_allocated_team_id')
         sessionStorage.removeItem('aithon_allocated_reg_id')
@@ -701,6 +865,7 @@ export default function Registration() {
       window.scrollTo({ top: 100, behavior: 'smooth' })
     } catch (err) {
       console.error('[Registration] Error completing registration:', err)
+      await clearRegistrationDraft()
       setTeamId(currentTeamId)
       setRegistrationId(currentRegId)
       // Even if network fails, ensure UI gracefully confirms
@@ -751,20 +916,63 @@ export default function Registration() {
           </p>
         </section>
 
+        {/* Restored Draft Welcome Banner */}
+        {isRestoredBannerVisible && currentStep < 5 && (
+          <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200/90 shadow-2xs flex items-start sm:items-center justify-between gap-3 animate-fadeIn">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="p-2 rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-blue-950">
+                  Welcome back! We restored your registration progress
+                </h4>
+                <p className="text-[11px] sm:text-xs text-blue-800/90 mt-0.5">
+                  Resumed right where you left off at{' '}
+                  <span className="font-bold underline underline-offset-2">
+                    {STEPS[currentStep - 1]?.title || `Step ${currentStep}`}
+                  </span>
+                  . All entered details are safely preserved in this browser.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsRestoredBannerVisible(false)}
+              className="text-blue-500 hover:text-blue-800 p-1.5 rounded-lg hover:bg-blue-100/60 transition-colors shrink-0 cursor-pointer"
+              title="Dismiss notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* ==================================================
             VISUAL PROGRESS INDICATOR (5 Steps)
             ================================================== */}
         <RegistrationProgress
           currentStep={currentStep}
+          maxStepReached={maxStepReached}
           steps={STEPS}
           onStepClick={(stepNum) => {
-            // Allow stepping back to previously visited steps
-            if (stepNum < currentStep && currentStep !== 5) {
+            // Allow stepping to any unlocked step
+            if (stepNum <= Math.max(currentStep, maxStepReached) && currentStep !== 5) {
               setCurrentStep(stepNum)
               window.scrollTo({ top: 120, behavior: 'smooth' })
             }
           }}
         />
+
+        {/* Auto-Save & Draft State Pill */}
+        {currentStep < 5 && (
+          <AutoSaveIndicator
+            saveStatus={saveStatus}
+            lastSavedAt={lastSavedAt}
+            currentStep={currentStep}
+            hasDraftData={hasDraftData}
+            onResetDraft={handleResetDraft}
+          />
+        )}
 
         {/* ==================================================
             LIVE ALLOCATED TEAM ID BADGE (Real-Time Sheet Sync)
