@@ -107,6 +107,7 @@ export async function saveRegistrationDraft({
   registrationId,
   drivePptUrl,
   paymentConfirmed,
+  rulesAgreed,
 }) {
   if (typeof window === 'undefined') return
 
@@ -134,13 +135,14 @@ export async function saveRegistrationDraft({
 
     const payload = {
       formData: formDataToSave,
-      currentStep: currentStep || 1,
-      maxStepReached: Math.max(maxStepReached || 1, currentStep || 1),
+      currentStep: typeof currentStep === 'number' ? currentStep : 0,
+      maxStepReached: Math.max(typeof maxStepReached === 'number' ? maxStepReached : 0, typeof currentStep === 'number' ? currentStep : 0),
       step4View: step4View || 'review',
       teamId: teamId || '',
       registrationId: registrationId || '',
       drivePptUrl: drivePptUrl || '',
       paymentConfirmed: Boolean(paymentConfirmed),
+      rulesAgreed: Boolean(rulesAgreed),
       savedAt: Date.now(),
       version: 2,
     }
@@ -157,13 +159,14 @@ export async function saveRegistrationDraft({
       }
       const fallbackPayload = {
         formData: trimmedFormData,
-        currentStep: currentStep || 1,
-        maxStepReached: Math.max(maxStepReached || 1, currentStep || 1),
+        currentStep: typeof currentStep === 'number' ? currentStep : 0,
+        maxStepReached: Math.max(typeof maxStepReached === 'number' ? maxStepReached : 0, typeof currentStep === 'number' ? currentStep : 0),
         step4View: step4View || 'review',
         teamId: teamId || '',
         registrationId: registrationId || '',
         drivePptUrl: drivePptUrl || '',
         paymentConfirmed: Boolean(paymentConfirmed),
+        rulesAgreed: Boolean(rulesAgreed),
         savedAt: Date.now(),
         version: 2,
       }

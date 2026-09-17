@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import RegistrationProgress from '../components/RegistrationProgress'
+import RegistrationInstructions from '../components/RegistrationInstructions'
 import FormInput from '../components/FormInput'
 import AutoSaveIndicator from '../components/AutoSaveIndicator'
 import {
@@ -52,6 +53,7 @@ import {
 } from '../components/Icons'
 
 const STEPS = [
+  { number: 0, title: 'Instructions' },
   { number: 1, title: 'Team Lead' },
   { number: 2, title: 'Team Members' },
   { number: 3, title: 'PPT Submission' },
@@ -179,10 +181,11 @@ export default function Registration() {
 
   const savedDraft = getInitialDraft()
 
-  // Stepper State (1: Lead, 2: Members, 3: PPT, 4: Payment (with Review), 5: Completed)
+  // Stepper State (0: Instructions, 1: Lead, 2: Members, 3: PPT, 4: Payment (with Review), 5: Completed)
   // Automatically resumes directly at the step where the user previously left off!
-  const [currentStep, setCurrentStep] = useState(() => (savedDraft ? Number(savedDraft.currentStep) || 1 : 1))
-  const [maxStepReached, setMaxStepReached] = useState(() => (savedDraft ? Number(savedDraft.maxStepReached) || Number(savedDraft.currentStep) || 1 : 1))
+  const [currentStep, setCurrentStep] = useState(() => (savedDraft ? Number(savedDraft.currentStep) || 0 : 0))
+  const [maxStepReached, setMaxStepReached] = useState(() => (savedDraft ? Number(savedDraft.maxStepReached) || Number(savedDraft.currentStep) || 0 : 0))
+  const [rulesAgreed, setRulesAgreed] = useState(() => (savedDraft ? Boolean(savedDraft.rulesAgreed) : false))
   const [step4View, setStep4View] = useState(() => (savedDraft ? savedDraft.step4View || 'review' : 'review'))
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -358,6 +361,7 @@ export default function Registration() {
         registrationId,
         drivePptUrl,
         paymentConfirmed,
+        rulesAgreed,
       })
       setLastSavedAt(Date.now())
       setSaveStatus('saved')
@@ -368,7 +372,7 @@ export default function Registration() {
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [formData, currentStep, maxStepReached, step4View, teamId, registrationId, drivePptUrl, paymentConfirmed])
+  }, [formData, currentStep, maxStepReached, step4View, teamId, registrationId, drivePptUrl, paymentConfirmed, rulesAgreed])
 
   // Flush save synchronously if closing window or navigating away
   useEffect(() => {
@@ -383,6 +387,7 @@ export default function Registration() {
           registrationId,
           drivePptUrl,
           paymentConfirmed,
+          rulesAgreed,
         })
       }
     }
@@ -392,14 +397,15 @@ export default function Registration() {
       window.removeEventListener('beforeunload', handleUnloadSave)
       window.removeEventListener('pagehide', handleUnloadSave)
     }
-  }, [formData, currentStep, maxStepReached, step4View, teamId, registrationId, drivePptUrl, paymentConfirmed])
+  }, [formData, currentStep, maxStepReached, step4View, teamId, registrationId, drivePptUrl, paymentConfirmed, rulesAgreed])
 
   // Clear/Reset Draft Handler
   const handleResetDraft = async () => {
     await clearRegistrationDraft()
     setFormData(INITIAL_FORM_DATA)
-    setCurrentStep(1)
-    setMaxStepReached(1)
+    setCurrentStep(0)
+    setMaxStepReached(0)
+    setRulesAgreed(false)
     setStep4View('review')
     setTeamId('')
     setRegistrationId('')
@@ -917,7 +923,7 @@ export default function Registration() {
         </section>
 
         {/* Restored Draft Welcome Banner */}
-        {isRestoredBannerVisible && currentStep < 5 && (
+        {isRestoredBannerVisible && currentStep < 5 && currentStep > 0 && (
           <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200/90 shadow-2xs flex items-start sm:items-center justify-between gap-3 animate-fadeIn">
             <div className="flex items-start sm:items-center gap-3">
               <div className="p-2 rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
@@ -930,7 +936,7 @@ export default function Registration() {
                 <p className="text-[11px] sm:text-xs text-blue-800/90 mt-0.5">
                   Resumed right where you left off at{' '}
                   <span className="font-bold underline underline-offset-2">
-                    {STEPS[currentStep - 1]?.title || `Step ${currentStep}`}
+                    {STEPS.find((s) => s.number === currentStep)?.title || `Step ${currentStep}`}
                   </span>
                   . All entered details are safely preserved in this browser.
                 </p>
@@ -948,7 +954,7 @@ export default function Registration() {
         )}
 
         {/* ==================================================
-            VISUAL PROGRESS INDICATOR (5 Steps)
+            VISUAL PROGRESS INDICATOR (6 Steps)
             ================================================== */}
         <RegistrationProgress
           currentStep={currentStep}
@@ -964,7 +970,7 @@ export default function Registration() {
         />
 
         {/* Auto-Save & Draft State Pill */}
-        {currentStep < 5 && (
+        {currentStep > 0 && currentStep < 5 && (
           <AutoSaveIndicator
             saveStatus={saveStatus}
             lastSavedAt={lastSavedAt}
@@ -977,7 +983,7 @@ export default function Registration() {
         {/* ==================================================
             LIVE ALLOCATED TEAM ID BADGE (Real-Time Sheet Sync)
             ================================================== */}
-        {teamId && currentStep < 5 && (
+        {teamId && currentStep > 0 && currentStep < 5 && (
           <div className="mb-6 flex items-center justify-between p-3.5 px-4 sm:px-5 rounded-2xl bg-gradient-to-r from-orange-50 via-amber-50/70 to-orange-50 border border-orange-200/90 shadow-2xs animate-fadeIn">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200/60 animate-pulse shrink-0" />
@@ -995,6 +1001,21 @@ export default function Registration() {
               Allocated in Sheet
             </span>
           </div>
+        )}
+
+        {/* ==================================================
+            STEP 00 — INSTRUCTIONS & OFFICIAL RULE BOOK
+            ================================================== */}
+        {currentStep === 0 && (
+          <RegistrationInstructions
+            rulesAgreed={rulesAgreed}
+            setRulesAgreed={setRulesAgreed}
+            onProceed={() => {
+              setCurrentStep(1)
+              setMaxStepReached((prev) => Math.max(prev, 1))
+              window.scrollTo({ top: 120, behavior: 'smooth' })
+            }}
+          />
         )}
 
         {/* ==================================================
@@ -1214,7 +1235,19 @@ export default function Registration() {
             </div>
 
             {/* Action Footer */}
-            <div className="pt-4 border-t border-[#edebe6] flex items-center justify-end">
+            <div className="pt-4 border-t border-[#edebe6] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentStep(0)
+                  window.scrollTo({ top: 120, behavior: 'smooth' })
+                }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Instructions</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleNextFromStep1}
