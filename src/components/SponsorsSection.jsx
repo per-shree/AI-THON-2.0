@@ -55,7 +55,9 @@ export default function SponsorsSection() {
       tier: 'ASSOCIATE PARTNER',
       desc: 'Real Estate & Developers',
       isActive: true,
-      isLargeLogo: true
+      isLargeLogo: true,
+      isWideLogo: true,
+      scaleClass: 'scale-115'
     },
     {
       name: 'Vajra Infra',
@@ -148,8 +150,12 @@ export default function SponsorsSection() {
                     item.isFullBox
                       ? 'w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-300'
                       : item.isLargeLogo
-                      ? 'max-h-12 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
-                      : 'max-h-10 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
+                      ? `max-h-12 max-w-full object-contain group-hover:scale-105 transition-transform duration-300 ${
+                          item.scaleClass || ''
+                        }`
+                      : `max-h-10 max-w-full object-contain group-hover:scale-105 transition-transform duration-300 ${
+                          item.scaleClass || ''
+                        }`
                   }
                 />
               </div>
@@ -217,8 +223,8 @@ export default function SponsorsSection() {
                     item.isFullBox
                       ? 'w-full h-full object-contain p-1'
                       : item.isLargeLogo
-                      ? 'max-h-12 max-w-full object-contain'
-                      : 'max-h-10 max-w-full object-contain'
+                      ? `max-h-12 max-w-full object-contain ${item.scaleClass || ''}`
+                      : `max-h-10 max-w-full object-contain ${item.scaleClass || ''}`
                   }
                 />
               </div>

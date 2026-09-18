@@ -43,6 +43,7 @@ const partnersList = [
     url: '',
     role: 'Real Estate & Developers',
     desc: 'Leading infrastructure and premier real estate developers committed to regional development.',
+    scaleClass: 'scale-125',
   },
   {
     name: 'Vajra Infra',
@@ -237,7 +238,9 @@ export default function OurSponsors() {
                     <img
                       src={sponsor.logo}
                       alt={sponsor.name}
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                      className={`max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 ${
+                        sponsor.scaleClass || ''
+                      }`}
                     />
                   </div>
 
