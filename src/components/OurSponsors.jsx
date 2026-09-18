@@ -1,12 +1,17 @@
-import { ExternalLink, Sparkles, Trophy } from 'lucide-react'
+import { ExternalLink, Gem, Trophy } from 'lucide-react'
 
 const titleSponsor = {
   name: 'Sumago Infotech Pvt. Ltd.',
   logo: '/sumago_logo.png',
   url: 'https://sumagoinfotech.com/',
   role: 'TITLE SPONSOR',
-  tagline: 'Premier Software Development & IT Consulting Leader',
-  desc: 'Proud Title Sponsor of AITHON 2.0 — Driving technological innovation, mentoring emerging engineering talent, and empowering next-generation AI solutions.',
+}
+
+const platinumSponsor = {
+  name: 'DASS Chemtech Pvt. Ltd.',
+  logo: '/dass_chemtech_logo.png',
+  url: '',
+  role: 'PLATINUM SPONSOR',
 }
 
 const partnersList = [
@@ -93,20 +98,14 @@ export default function OurSponsors() {
           </p>
         </div>
 
-        {/* Featured Title Sponsor Spotlight Card */}
-        <div className="mb-12 sm:mb-16 max-w-4xl mx-auto">
-          <div className="text-center mb-3.5">
-            <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-[0.2em] text-amber-800 bg-amber-100/90 border border-amber-300/90 shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-              <span>TITLE SPONSOR SPOTLIGHT</span>
-            </span>
-          </div>
-
+        {/* Top-Tier Sponsors Grid (Title Sponsor & Platinum Sponsor) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto mb-12 sm:mb-16 items-stretch">
+          {/* Title Sponsor Card */}
           <a
             href={titleSponsor.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative block bg-gradient-to-b from-white via-[#fffdfa] to-amber-50/25 border-2 border-amber-300 hover:border-amber-400 rounded-3xl p-6 sm:p-8 md:p-10 shadow-[0_10px_35px_rgba(245,158,11,0.09)] hover:shadow-[0_20px_50px_rgba(245,158,11,0.18)] transition-all duration-300 overflow-hidden cursor-pointer text-center"
+            className="group relative flex-1 bg-gradient-to-b from-white via-[#fffdfa] to-amber-50/25 border-2 border-amber-300 hover:border-amber-400 rounded-3xl p-6 sm:p-8 md:p-10 shadow-[0_10px_35px_rgba(245,158,11,0.09)] hover:shadow-[0_20px_50px_rgba(245,158,11,0.18)] transition-all duration-300 overflow-hidden cursor-pointer text-center flex flex-col justify-between"
           >
             {/* Top Amber-to-Orange Accent Gradient Bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-[#2563eb]" />
@@ -115,58 +114,78 @@ export default function OurSponsors() {
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-200/25 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-100/30 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col items-center max-w-2xl mx-auto">
+            <div className="relative z-10 flex flex-col items-center">
               {/* Official Title Sponsor Badge */}
-              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-4 sm:mb-5 text-amber-900 bg-amber-100 border border-amber-300 shadow-2xs">
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-5 sm:mb-6 text-amber-900 bg-amber-100 border border-amber-300 shadow-2xs">
                 <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                 <span>OFFICIAL TITLE SPONSOR</span>
               </div>
 
-              {/* Grand Wide Logo Frame - Perfectly Sized for High-Res Logo */}
-              <div className="w-full max-w-lg bg-white rounded-2xl border border-amber-200/80 p-5 sm:p-7 shadow-2xs group-hover:bg-amber-50/30 group-hover:border-amber-300 transition-all duration-300 mb-5 flex items-center justify-center">
+              {/* Big Grand Logo Frame */}
+              <div className="w-full bg-white rounded-2xl border border-amber-200/90 p-6 sm:p-8 shadow-2xs group-hover:bg-amber-50/30 group-hover:border-amber-300 transition-all duration-300 mb-6 flex items-center justify-center h-40 sm:h-48 md:h-52">
                 <img
                   src={titleSponsor.logo}
                   alt={titleSponsor.name}
-                  className="h-11 xs:h-13 sm:h-16 md:h-20 w-auto max-w-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-xs"
+                  className="h-20 sm:h-24 md:h-28 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
                 />
               </div>
 
-              {/* Title Sponsor Headline */}
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-[#062b59] group-hover:text-[#2563eb] transition-colors tracking-tight mb-2">
+              {/* Big Title Sponsor Name */}
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#062b59] group-hover:text-[#2563eb] transition-colors tracking-tight text-center leading-tight mb-4">
                 {titleSponsor.name}
               </h3>
+            </div>
 
-              <p className="text-xs sm:text-sm md:text-base font-bold text-[#ea580c] mb-3">
-                {titleSponsor.tagline}
-              </p>
-
-              <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed mb-5 max-w-xl">
-                {titleSponsor.desc}
-              </p>
-
-              {/* Domain Badges / Capabilities */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-                <span className="px-3 py-1 rounded-lg text-[11px] font-bold bg-[#f5ede4] text-[#062b59] border border-[#e2d5c5]">
-                  Software Development
-                </span>
-                <span className="px-3 py-1 rounded-lg text-[11px] font-bold bg-[#f5ede4] text-[#062b59] border border-[#e2d5c5]">
-                  IT Consulting
-                </span>
-                <span className="px-3 py-1 rounded-lg text-[11px] font-bold bg-[#f5ede4] text-[#062b59] border border-[#e2d5c5]">
-                  AI & Cloud Solutions
-                </span>
-                <span className="px-3 py-1 rounded-lg text-[11px] font-bold bg-[#f5ede4] text-[#062b59] border border-[#e2d5c5]">
-                  Innovation Partner
-                </span>
-              </div>
-
-              {/* CTA Button */}
+            {/* CTA Button */}
+            <div className="relative z-10 pt-4">
               <span className="inline-flex items-center gap-2 px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#062b59] to-[#0b3b75] text-white font-bold text-xs sm:text-sm uppercase tracking-wider group-hover:from-[#2563eb] group-hover:to-blue-700 transition-all shadow-xs group-hover:shadow-md group-hover:-translate-y-0.5">
                 <span>Visit Official Website</span>
                 <ExternalLink className="w-4 h-4" />
               </span>
             </div>
           </a>
+
+          {/* Platinum Sponsor Card */}
+          <div
+            className="group relative flex-1 bg-gradient-to-b from-white via-[#fcfdff] to-sky-50/20 border-2 border-slate-300 hover:border-blue-400 rounded-3xl p-6 sm:p-8 md:p-10 shadow-[0_10px_35px_rgba(0,114,188,0.08)] hover:shadow-[0_20px_50px_rgba(0,114,188,0.16)] transition-all duration-300 overflow-hidden text-center flex flex-col justify-between"
+          >
+            {/* Top Accent Gradient Bar in DASS Chemtech Colors */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#0072bc] via-[#22c55e] to-[#00529b]" />
+
+            {/* Subtle Platinum & Cyan Glow Accents */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-100/25 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-sky-100/30 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col items-center">
+              {/* Official Platinum Sponsor Badge */}
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-5 sm:mb-6 text-slate-900 bg-gradient-to-r from-slate-100 via-sky-50 to-slate-100 border border-slate-300 shadow-2xs">
+                <Gem className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
+                <span>OFFICIAL PLATINUM SPONSOR</span>
+              </div>
+
+              {/* Big Grand Logo Frame */}
+              <div className="w-full bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-2xs group-hover:bg-slate-50/40 group-hover:border-blue-300 transition-all duration-300 mb-6 flex items-center justify-center h-40 sm:h-48 md:h-52">
+                <img
+                  src={platinumSponsor.logo}
+                  alt={platinumSponsor.name}
+                  className="h-20 sm:h-24 md:h-28 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
+                />
+              </div>
+
+              {/* Big Platinum Sponsor Name */}
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#062b59] group-hover:text-[#2563eb] transition-colors tracking-tight text-center leading-tight mb-4">
+                {platinumSponsor.name}
+              </h3>
+            </div>
+
+            {/* Official Sponsor Pill / CTA */}
+            <div className="relative z-10 pt-4">
+              <span className="inline-flex items-center gap-2 px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#062b59] to-[#0b3b75] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-xs">
+                <Gem className="w-4 h-4 text-cyan-400" />
+                <span>Official Platinum Sponsor</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Section Subtitle for Co-Sponsors & Partners */}
