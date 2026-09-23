@@ -1,4 +1,29 @@
+import { useState, useEffect, useRef } from 'react'
+import { RollingNumber, RollingText } from '@kitlangton/rolling-number/react'
+
 export default function PrizesSection() {
+  const [prizeValue, setPrizeValue] = useState(0)
+  const [symbolText, setSymbolText] = useState(' ')
+  const sectionRef = useRef(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setPrizeValue(100000)
+          setSymbolText('₹')
+        }
+      },
+      { threshold: 0.2 }
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
   const prizes = [
     { title: '1st Prize', note: 'Winner Champion Trophy & Award', status: 'Coming Soon' },
     { title: '2nd Prize', note: 'Runner Up Trophy & Award', status: 'Coming Soon' },
@@ -7,7 +32,7 @@ export default function PrizesSection() {
   ]
 
   return (
-    <section id="prizes" className="w-full bg-[#f5ede4] py-20 lg:py-28 px-6 lg:px-8">
+    <section id="prizes" ref={sectionRef} className="w-full bg-[#f5ede4] py-20 lg:py-28 px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-16">
         
         {/* Large Typography Prize Header */}
@@ -16,8 +41,17 @@ export default function PrizesSection() {
             REWARDS & RECOGNITION
           </p>
 
-          <h2 className="text-5xl sm:text-7xl font-black text-[#062b59] tracking-tight">
-            ₹1,00,000
+          <h2 className="text-5xl sm:text-7xl font-black text-[#062b59] tracking-tight inline-flex items-baseline justify-center">
+            <RollingText
+              text={symbolText}
+              transition="direct"
+              duration={1000}
+            />
+            <RollingNumber
+              value={prizeValue}
+              locales="en-IN"
+              duration={1000}
+            />
           </h2>
           <p className="text-lg sm:text-xl font-bold text-slate-500 uppercase tracking-widest">
             TOTAL PRIZE POOL

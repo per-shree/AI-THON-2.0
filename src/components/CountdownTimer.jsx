@@ -1,48 +1,41 @@
 import { useState, useEffect } from 'react'
+import { RollingNumber } from '@kitlangton/rolling-number/react'
 
 export default function CountdownTimer({ variant = 'default' }) {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  })
-  const [isExpired, setIsExpired] = useState(false)
-
-  useEffect(() => {
+  const calculateTimeLeft = () => {
     // Registration deadline: 04 October 2026 at 11:59:59 PM IST
     const targetDate = new Date('2026-10-04T23:59:59+05:30').getTime()
+    const now = new Date().getTime()
+    const difference = targetDate - now
 
-    const updateTimer = () => {
-      const now = new Date().getTime()
-      const difference = targetDate - now
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000)
-
-        setTimeLeft({ days, hours, minutes, seconds })
-        setIsExpired(false)
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-        setIsExpired(true)
+    if (difference > 0) {
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((difference % (1000 * 60)) / 1000),
+        isExpired: false,
       }
     }
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true }
+  }
 
-    updateTimer()
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft)
+
+  useEffect(() => {
+    const updateTimer = () => {
+      setTimeLeft(calculateTimeLeft())
+    }
+
     const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
   }, [])
 
-  const formatNumber = (num) => String(num).padStart(2, '0')
-
   const timeUnits = [
-    { label: 'DAYS', value: formatNumber(timeLeft.days) },
-    { label: 'HOURS', value: formatNumber(timeLeft.hours) },
-    { label: 'MINUTES', value: formatNumber(timeLeft.minutes) },
-    { label: 'SECONDS', value: formatNumber(timeLeft.seconds) },
+    { label: 'DAYS', value: timeLeft.days },
+    { label: 'HOURS', value: timeLeft.hours },
+    { label: 'MINUTES', value: timeLeft.minutes },
+    { label: 'SECONDS', value: timeLeft.seconds },
   ]
 
   if (variant === 'hero') {
@@ -55,7 +48,11 @@ export default function CountdownTimer({ variant = 'default' }) {
               className="bg-white/95 backdrop-blur-sm border border-[#edebe6] rounded-xl py-1.5 xs:py-2 sm:py-2.5 px-1.5 xs:px-2 sm:px-3 shadow-2xs flex flex-col items-center justify-center space-y-0.5 hover:border-[#2563eb]/40 transition-colors"
             >
               <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-black text-[#062b59] font-mono tabular-nums tracking-tight leading-none">
-                {unit.value}
+                <RollingNumber
+                  value={unit.value}
+                  format={{ minimumIntegerDigits: 2 }}
+                  duration={450}
+                />
               </span>
               <span className="text-[7.5px] xs:text-[8.5px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-widest leading-none mt-0.5 sm:mt-1">
                 {unit.label}
@@ -73,7 +70,7 @@ export default function CountdownTimer({ variant = 'default' }) {
       <div className="flex flex-col items-center text-center mb-8 sm:mb-12 space-y-3">
         <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-[#e2d5c5] shadow-xs">
           <span className="text-sm sm:text-base font-extrabold text-[#062b59] uppercase tracking-wider">
-            {isExpired ? 'REGISTRATIONS CLOSED' : 'REGISTRATIONS CLOSE IN'}
+            {timeLeft.isExpired ? 'REGISTRATIONS CLOSED' : 'REGISTRATIONS CLOSE IN'}
           </span>
         </div>
         <p className="text-xs sm:text-sm font-semibold text-slate-500 tracking-widest uppercase">
@@ -93,7 +90,11 @@ export default function CountdownTimer({ variant = 'default' }) {
 
             {/* Digit Display */}
             <span className="block text-4xl sm:text-5xl lg:text-6xl font-black text-[#062b59] font-mono tabular-nums tracking-tight group-hover:text-[#ea580c] transition-colors">
-              {unit.value}
+              <RollingNumber
+                value={unit.value}
+                format={{ minimumIntegerDigits: 2 }}
+                duration={450}
+              />
             </span>
 
             {/* Formatted Badge Unit Label */}
