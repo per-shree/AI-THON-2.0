@@ -2,26 +2,37 @@ import { useState, useEffect, useRef } from 'react'
 import { RollingNumber, RollingText } from '@kitlangton/rolling-number/react'
 
 export default function PrizesSection() {
-  const [prizeValue, setPrizeValue] = useState(0)
-  const [symbolText, setSymbolText] = useState(' ')
-  const sectionRef = useRef(null)
+  const [isActive, setIsActive] = useState(false)
+  const headingRef = useRef(null)
 
   useEffect(() => {
+    let timer = null
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setPrizeValue(100000)
-          setSymbolText('₹')
+          // Delay briefly after user scrolls into view so the animation starts right before their eyes
+          timer = setTimeout(() => {
+            setIsActive(true)
+          }, 200)
+        } else {
+          clearTimeout(timer)
+          setIsActive(false)
         }
       },
-      { threshold: 0.2 }
+      {
+        threshold: 0.5,
+      }
     )
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
+    if (headingRef.current) {
+      observer.observe(headingRef.current)
     }
 
-    return () => observer.disconnect()
+    return () => {
+      clearTimeout(timer)
+      observer.disconnect()
+    }
   }, [])
 
   const prizes = [
@@ -32,25 +43,27 @@ export default function PrizesSection() {
   ]
 
   return (
-    <section id="prizes" ref={sectionRef} className="w-full bg-[#f5ede4] py-20 lg:py-28 px-6 lg:px-8">
+    <section id="prizes" className="w-full bg-[#f5ede4] py-20 lg:py-28 px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-16">
         
         {/* Large Typography Prize Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
+        <div ref={headingRef} className="text-center max-w-3xl mx-auto space-y-4">
           <p className="text-xs font-bold text-[#ea580c] uppercase tracking-widest">
             REWARDS & RECOGNITION
           </p>
 
           <h2 className="text-5xl sm:text-7xl font-black text-[#062b59] tracking-tight inline-flex items-baseline justify-center">
             <RollingText
-              text={symbolText}
+              text={isActive ? "₹" : " "}
               transition="direct"
-              duration={1000}
+              duration={1200}
+              pauseOffscreen={false}
             />
             <RollingNumber
-              value={prizeValue}
+              value={isActive ? 100000 : 0}
               locales="en-IN"
-              duration={1000}
+              duration={1200}
+              pauseOffscreen={false}
             />
           </h2>
           <p className="text-lg sm:text-xl font-bold text-slate-500 uppercase tracking-widest">
