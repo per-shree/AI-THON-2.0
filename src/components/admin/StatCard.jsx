@@ -1,4 +1,5 @@
 import { TrendingUpIcon, TrendingDownIcon } from '../Icons'
+import { RollingNumber } from '@kitlangton/rolling-number/react'
 
 export default function StatCard({
   title,
@@ -8,6 +9,9 @@ export default function StatCard({
   subtext,
   icon: Icon,
 }) {
+  const isNumeric = typeof value === 'number' || (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '')
+  const numericVal = isNumeric ? Number(value) : 0
+
   return (
     <div className="relative rounded-xl bg-[#0d111d] border border-slate-800/90 p-5 hover:border-cyan-500/30 transition-colors duration-200 group">
       <div className="flex items-start justify-between">
@@ -16,7 +20,11 @@ export default function StatCard({
             {title}
           </span>
           <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
-            {value}
+            {isNumeric ? (
+              <RollingNumber value={numericVal} duration={500} />
+            ) : (
+              value
+            )}
           </div>
         </div>
 

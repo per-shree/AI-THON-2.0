@@ -1,13 +1,36 @@
+import { useState, useEffect, useRef } from 'react'
+import { RollingNumber } from '@kitlangton/rolling-number/react'
+
 export default function AboutSection() {
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+        }
+      },
+      { threshold: 0.2 }
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
   const stats = [
-    { label: 'NATIONAL LEVEL', value: 'COLLEGE AI HACKATHON' },
-    { label: 'DURATION', value: '12 HOURS NON-STOP' },
-    { label: 'FOCUS DOMAIN', value: 'ARTIFICIAL INTELLIGENCE' },
-    { label: 'EXPECTED PARTICIPANTS', value: '400+ STUDENT HACKERS' },
+    { label: 'NATIONAL LEVEL', text: 'COLLEGE AI HACKATHON' },
+    { label: 'DURATION', num: 12, suffix: ' HOURS NON-STOP' },
+    { label: 'FOCUS DOMAIN', text: 'ARTIFICIAL INTELLIGENCE' },
+    { label: 'EXPECTED PARTICIPANTS', num: 400, suffix: '+ STUDENT HACKERS' },
   ]
 
   return (
-    <section className="w-full bg-[#f5ede4] py-16 lg:py-24 px-6 lg:px-8">
+    <section ref={sectionRef} className="w-full bg-[#f5ede4] py-16 lg:py-24 px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-16">
         
         {/* Editorial Two-Column Header */}
@@ -41,7 +64,14 @@ export default function AboutSection() {
                 {s.label}
               </span>
               <span className="block text-base sm:text-lg font-extrabold text-[#062b59]">
-                {s.value}
+                {s.num !== undefined ? (
+                  <>
+                    <RollingNumber value={isVisible ? s.num : 0} duration={800} />
+                    {s.suffix}
+                  </>
+                ) : (
+                  s.text
+                )}
               </span>
             </div>
           ))}

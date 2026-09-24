@@ -1,4 +1,5 @@
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import aithonHeroLogo from '../assets/aithon-hero-logo.png'
 
 export default function Footer() {
   const location = useLocation()
@@ -21,12 +22,16 @@ export default function Footer() {
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8 border-b border-[#1e3a8a]/70 pb-6">
         
         {/* Brand Info */}
-        <div className="space-y-2 max-w-sm">
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-extrabold tracking-tight text-white m-0">
-              AITHON 2.0
-            </h2>
-          </div>
+        <div className="space-y-3 max-w-sm">
+          <Link to="/" className="inline-block group focus:outline-hidden" aria-label="AITHON 2.0 Home">
+            <img
+              src={aithonHeroLogo}
+              alt="AITHON 2.0"
+              className="h-8 sm:h-9 w-auto object-contain brightness-0 invert select-none opacity-95 group-hover:opacity-100 transition-opacity"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
+            <span className="sr-only">AITHON 2.0</span>
+          </Link>
           <p className="text-slate-300 text-xs leading-relaxed">
             Department of Artificial Intelligence & Data Science<br/>
             Amrutvahini College of Engineering, Sangamner

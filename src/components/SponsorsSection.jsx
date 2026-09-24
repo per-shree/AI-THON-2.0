@@ -7,7 +7,27 @@ export default function SponsorsSection() {
       logo: '/sumago_logo.png',
       url: 'https://sumagoinfotech.com/',
       tier: 'TITLE SPONSOR',
-      desc: 'Official Title Sponsor',
+      desc: '',
+      isActive: true,
+      isLargeLogo: true,
+      isWideLogo: true
+    },
+    {
+      name: 'DASS Chemtech Pvt. Ltd.',
+      logo: '/dass_chemtech_logo.png',
+      url: '',
+      tier: 'PLATINUM SPONSOR',
+      desc: '',
+      isActive: true,
+      isLargeLogo: true,
+      isWideLogo: true
+    },
+    {
+      name: 'Oakya IT Services Pvt. Ltd.',
+      logo: '/oakya_logo.png',
+      url: 'https://oakyaitservices.com/',
+      tier: 'GOLD SPONSOR',
+      desc: 'Empower Explore Execute',
       isActive: true,
       isLargeLogo: true,
       isWideLogo: true
@@ -45,7 +65,9 @@ export default function SponsorsSection() {
       tier: 'ASSOCIATE PARTNER',
       desc: 'Real Estate & Developers',
       isActive: true,
-      isLargeLogo: true
+      isLargeLogo: true,
+      isWideLogo: true,
+      scaleClass: 'scale-115'
     },
     {
       name: 'Vajra Infra',
@@ -98,6 +120,8 @@ export default function SponsorsSection() {
       {sponsors.map((item, idx) => {
         const hasValidLink = item.url && item.url !== '#'
         const isTitleSponsor = item.tier === 'TITLE SPONSOR'
+        const isPlatinumSponsor = item.tier === 'PLATINUM SPONSOR'
+        const isGoldSponsor = item.tier === 'GOLD SPONSOR'
 
         if (item.isActive && hasValidLink) {
           return (
@@ -109,6 +133,10 @@ export default function SponsorsSection() {
               className={`group relative bg-white border ${
                 isTitleSponsor
                   ? 'border-amber-300 bg-gradient-to-b from-amber-50/40 to-white hover:border-amber-400 shadow-xs hover:shadow-md'
+                  : isPlatinumSponsor
+                  ? 'border-slate-300 bg-gradient-to-b from-slate-50/50 to-white hover:border-blue-400 shadow-xs hover:shadow-md'
+                  : isGoldSponsor
+                  ? 'border-amber-300 bg-gradient-to-b from-yellow-50/40 to-white hover:border-amber-400 shadow-xs hover:shadow-md'
                   : 'border-[#edebe6] hover:border-blue-500 shadow-xs hover:shadow-md'
               } rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 transition-all duration-300 shrink-0 w-max cursor-pointer`}
             >
@@ -123,6 +151,10 @@ export default function SponsorsSection() {
                     ? 'bg-black border border-slate-900'
                     : isTitleSponsor
                     ? 'bg-amber-50/50 border border-amber-200/70 p-2 group-hover:bg-amber-100/60'
+                    : isPlatinumSponsor
+                    ? 'bg-slate-50/70 border border-slate-200 p-2 group-hover:bg-slate-100'
+                    : isGoldSponsor
+                    ? 'bg-amber-50/40 border border-amber-200/80 p-2 group-hover:bg-amber-100/50'
                     : 'bg-slate-50 border border-slate-100 p-2 group-hover:bg-slate-100/80'
                 } flex items-center justify-center shrink-0 transition-colors overflow-hidden`}
               >
@@ -133,8 +165,12 @@ export default function SponsorsSection() {
                     item.isFullBox
                       ? 'w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-300'
                       : item.isLargeLogo
-                      ? 'max-h-12 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
-                      : 'max-h-10 max-w-full object-contain group-hover:scale-105 transition-transform duration-300'
+                      ? `max-h-12 max-w-full object-contain group-hover:scale-105 transition-transform duration-300 ${
+                          item.scaleClass || ''
+                        }`
+                      : `max-h-10 max-w-full object-contain group-hover:scale-105 transition-transform duration-300 ${
+                          item.scaleClass || ''
+                        }`
                   }
                 />
               </div>
@@ -145,17 +181,23 @@ export default function SponsorsSection() {
                   className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider leading-none whitespace-nowrap ${
                     isTitleSponsor
                       ? 'text-amber-900 bg-amber-100 border border-amber-300 font-extrabold'
+                      : isPlatinumSponsor
+                      ? 'text-slate-900 bg-gradient-to-r from-slate-100 to-sky-50 border border-slate-300 font-extrabold'
+                      : isGoldSponsor
+                      ? 'text-amber-950 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 font-extrabold'
                       : 'text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5]'
                   }`}
                 >
-                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : item.tier}
+                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : item.tier}
                 </span>
-                <h3 className="text-xs sm:text-sm font-bold text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap">
+                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap`}>
                   {item.name}
                 </h3>
-                <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5 whitespace-nowrap">
-                  {item.desc}
-                </p>
+                {item.desc && (
+                  <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5 whitespace-nowrap">
+                    {item.desc}
+                  </p>
+                )}
               </div>
 
               <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 ml-1" />
@@ -167,7 +209,15 @@ export default function SponsorsSection() {
           return (
             <div
               key={`${keyPrefix}-${idx}`}
-              className="group relative bg-white border border-[#edebe6] rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 shadow-xs shrink-0 w-max cursor-default"
+              className={`group relative bg-white border ${
+                isTitleSponsor
+                  ? 'border-amber-300 bg-gradient-to-b from-amber-50/40 to-white shadow-xs'
+                  : isPlatinumSponsor
+                  ? 'border-slate-300 bg-gradient-to-b from-slate-50/50 to-white shadow-xs'
+                  : isGoldSponsor
+                  ? 'border-amber-300 bg-gradient-to-b from-yellow-50/40 to-white shadow-xs'
+                  : 'border-[#edebe6] shadow-xs'
+              } rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 shrink-0 w-max cursor-default`}
             >
               {/* Logo Box */}
               <div
@@ -178,6 +228,12 @@ export default function SponsorsSection() {
                 } rounded-xl ${
                   item.isFullBox
                     ? 'bg-black border border-slate-900'
+                    : isTitleSponsor
+                    ? 'bg-amber-50/50 border border-amber-200/70 p-2'
+                    : isPlatinumSponsor
+                    ? 'bg-slate-50/70 border border-slate-200 p-2'
+                    : isGoldSponsor
+                    ? 'bg-amber-50/40 border border-amber-200/80 p-2'
                     : 'bg-slate-50 border border-slate-100 p-2'
                 } flex items-center justify-center shrink-0 overflow-hidden`}
               >
@@ -188,23 +244,35 @@ export default function SponsorsSection() {
                     item.isFullBox
                       ? 'w-full h-full object-contain p-1'
                       : item.isLargeLogo
-                      ? 'max-h-12 max-w-full object-contain'
-                      : 'max-h-10 max-w-full object-contain'
+                      ? `max-h-12 max-w-full object-contain ${item.scaleClass || ''}`
+                      : `max-h-10 max-w-full object-contain ${item.scaleClass || ''}`
                   }
                 />
               </div>
 
               {/* Details */}
               <div className="min-w-max pr-1">
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5] leading-none whitespace-nowrap">
-                  {item.tier}
+                <span
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider leading-none whitespace-nowrap ${
+                    isTitleSponsor
+                      ? 'text-amber-900 bg-amber-100 border border-amber-300 font-extrabold'
+                      : isPlatinumSponsor
+                      ? 'text-slate-900 bg-gradient-to-r from-slate-100 to-sky-50 border border-slate-300 font-extrabold'
+                      : isGoldSponsor
+                      ? 'text-amber-950 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 font-extrabold'
+                      : 'text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5]'
+                  }`}
+                >
+                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : item.tier}
                 </span>
-                <h3 className="text-xs sm:text-sm font-bold text-[#062b59] leading-snug mt-1 whitespace-nowrap">
+                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] leading-snug mt-1 whitespace-nowrap`}>
                   {item.name}
                 </h3>
-                <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5 whitespace-nowrap">
-                  {item.desc}
-                </p>
+                {item.desc && (
+                  <p className="text-xs font-medium text-slate-500 leading-normal mt-0.5 whitespace-nowrap">
+                    {item.desc}
+                  </p>
+                )}
               </div>
             </div>
           )

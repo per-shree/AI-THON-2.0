@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { RollingNumber } from '@kitlangton/rolling-number/react'
 import { useAdmin } from '../../context/AdminContext'
 import AdminLayout from '../../components/admin/AdminLayout'
 import StatusBadge from '../../components/admin/StatusBadge'
@@ -107,28 +108,28 @@ export default function AdminTeams() {
               onClick={() => handleFilterChange('ALL')}
               className="px-3 py-1.5 rounded-lg bg-[#0d111d] border border-slate-800 text-slate-300 hover:border-cyan-500/40 transition-colors cursor-pointer"
             >
-              Total: <strong className="text-cyan-400">{teamStats.total}</strong>
+              Total: <strong className="text-cyan-400"><RollingNumber value={teamStats.total} duration={400} /></strong>
             </button>
             <button
               type="button"
               onClick={() => handleFilterChange('APPROVED')}
               className="px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-950/60 transition-colors cursor-pointer"
             >
-              Approved: <strong>{teamStats.approved}</strong>
+              Approved: <strong><RollingNumber value={teamStats.approved} duration={400} /></strong>
             </button>
             <button
               type="button"
               onClick={() => handleFilterChange('PENDING')}
               className="px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-400 hover:bg-amber-950/60 transition-colors cursor-pointer"
             >
-              Pending: <strong>{teamStats.pending}</strong>
+              Pending: <strong><RollingNumber value={teamStats.pending} duration={400} /></strong>
             </button>
             <button
               type="button"
               onClick={() => handleFilterChange('REJECTED')}
               className="px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-400 hover:bg-rose-950/60 transition-colors cursor-pointer"
             >
-              Rejected: <strong>{teamStats.rejected}</strong>
+              Rejected: <strong><RollingNumber value={teamStats.rejected} duration={400} /></strong>
             </button>
           </div>
         </div>
