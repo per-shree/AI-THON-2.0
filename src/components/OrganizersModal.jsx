@@ -88,7 +88,7 @@ export default function OrganizersModal({ isOpen, onClose }) {
       org: 'Dept. of AI & DS',
       type: 'STUDENT',
       category: 'STUDENT TEAM',
-      email: 'aiesa.avcoe@gmail.com',
+      email: 'ai.veer2k26@gmail.com',
       initials: 'AI'
     }
   ]
