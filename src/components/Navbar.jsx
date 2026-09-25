@@ -38,23 +38,29 @@ export default function Navbar() {
           
           {/* Brand Logos */}
           <div className="flex items-center shrink-0">
-            <Link to="/" className="flex items-center gap-3 sm:gap-4 group focus:outline-none py-0.5 shrink-0">
+            <Link to="/" className="flex items-center gap-2 xs:gap-2.5 sm:gap-3 group focus:outline-none py-0.5 shrink-0">
+              <img
+                src="/amrutvahini_university_logo.png"
+                alt="Amrutvahini University"
+                className="h-6 xs:h-7 sm:h-9 md:h-11 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+              />
+              <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 shrink-0" />
               <img
                 src="/amrutvahini_logo.png"
                 alt="Amrutvahini College of Engineering"
-                className="h-12 sm:h-16 md:h-20 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-8 xs:h-9 sm:h-11 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
-              <div className="h-8 sm:h-11 w-px bg-slate-200 hidden sm:block shrink-0" />
+              <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 hidden xs:block shrink-0" />
               <img
                 src="/iste_logo.png"
                 alt="ISTE"
-                className="h-9 sm:h-11 md:h-14 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-8 xs:h-9 sm:h-11 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
-              <div className="h-8 sm:h-11 w-px bg-slate-200 hidden sm:block shrink-0" />
+              <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 hidden sm:block shrink-0" />
               <img
                 src="/aiesa_logo.png"
                 alt="AIESA"
-                className="h-8 sm:h-10 md:h-11 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-5 xs:h-6 sm:h-7 md:h-8.5 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
             </Link>
           </div>
