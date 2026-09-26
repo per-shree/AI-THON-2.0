@@ -33,6 +33,17 @@ export default function SponsorsSection() {
       isWideLogo: true
     },
     {
+      name: 'Amayra Industries',
+      logo: '/amayra_logo.png',
+      url: '',
+      tier: 'ASSOCIATE SPONSOR',
+      desc: 'CNC & VMC Machining Job Work',
+      isActive: true,
+      isLargeLogo: true,
+      isWideLogo: true,
+      isWhiteBg: true
+    },
+    {
       name: 'NEXA (Mahalaxmi Automotives, Sangamner)',
       logo: '/nexa_logo.png',
       url: 'https://www.nexaexperience.com/',
@@ -122,6 +133,7 @@ export default function SponsorsSection() {
         const isTitleSponsor = item.tier === 'TITLE SPONSOR'
         const isPlatinumSponsor = item.tier === 'PLATINUM SPONSOR'
         const isGoldSponsor = item.tier === 'GOLD SPONSOR'
+        const isAssociateSponsor = item.tier === 'ASSOCIATE SPONSOR'
 
         if (item.isActive && hasValidLink) {
           return (
@@ -137,6 +149,8 @@ export default function SponsorsSection() {
                   ? 'border-slate-300 bg-gradient-to-b from-slate-50/50 to-white hover:border-blue-400 shadow-xs hover:shadow-md'
                   : isGoldSponsor
                   ? 'border-amber-300 bg-gradient-to-b from-yellow-50/40 to-white hover:border-amber-400 shadow-xs hover:shadow-md'
+                  : isAssociateSponsor
+                  ? 'border-blue-200 bg-gradient-to-b from-blue-50/30 to-white hover:border-blue-400 shadow-xs hover:shadow-md'
                   : 'border-[#edebe6] hover:border-blue-500 shadow-xs hover:shadow-md'
               } rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 transition-all duration-300 shrink-0 w-max cursor-pointer`}
             >
@@ -149,6 +163,8 @@ export default function SponsorsSection() {
                 } rounded-xl ${
                   item.isFullBox
                     ? 'bg-black border border-slate-900'
+                    : item.isWhiteBg
+                    ? 'bg-white border border-slate-200 p-1.5'
                     : isTitleSponsor
                     ? 'bg-amber-50/50 border border-amber-200/70 p-2 group-hover:bg-amber-100/60'
                     : isPlatinumSponsor
@@ -190,7 +206,7 @@ export default function SponsorsSection() {
                 >
                   {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : item.tier}
                 </span>
-                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap`}>
+                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor || isAssociateSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap`}>
                   {item.name}
                 </h3>
                 {item.desc && (
@@ -216,6 +232,8 @@ export default function SponsorsSection() {
                   ? 'border-slate-300 bg-gradient-to-b from-slate-50/50 to-white shadow-xs'
                   : isGoldSponsor
                   ? 'border-amber-300 bg-gradient-to-b from-yellow-50/40 to-white shadow-xs'
+                  : isAssociateSponsor
+                  ? 'border-blue-200 bg-gradient-to-b from-blue-50/30 to-white shadow-xs'
                   : 'border-[#edebe6] shadow-xs'
               } rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 shrink-0 w-max cursor-default`}
             >
@@ -228,6 +246,8 @@ export default function SponsorsSection() {
                 } rounded-xl ${
                   item.isFullBox
                     ? 'bg-black border border-slate-900'
+                    : item.isWhiteBg
+                    ? 'bg-white border border-slate-200 p-1.5'
                     : isTitleSponsor
                     ? 'bg-amber-50/50 border border-amber-200/70 p-2'
                     : isPlatinumSponsor
@@ -265,7 +285,7 @@ export default function SponsorsSection() {
                 >
                   {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : item.tier}
                 </span>
-                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] leading-snug mt-1 whitespace-nowrap`}>
+                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor || isAssociateSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] leading-snug mt-1 whitespace-nowrap`}>
                   {item.name}
                 </h3>
                 {item.desc && (

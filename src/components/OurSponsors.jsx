@@ -23,6 +23,14 @@ const goldSponsor = {
 
 const partnersList = [
   {
+    name: 'Amayra Industries',
+    logo: '/amayra_logo.png',
+    url: '',
+    role: 'ASSOCIATE SPONSOR',
+    desc: 'All Types of CNC and VMC Machining Job Work | GST No. 27BLQK2784K1ZD',
+    isWhiteBg: true,
+  },
+  {
     name: 'NEXA (Mahalaxmi Automotives)',
     logo: '/nexa_logo.png',
     url: 'https://www.nexaexperience.com/',
@@ -252,8 +260,8 @@ export default function OurSponsors() {
           </div>
         </div>
 
-        {/* Proper Static Sponsor Cards Grid (Balanced 4x2 Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+        {/* Proper Static Sponsor Cards Grid (Balanced 3x3 Grid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {partnersList.map((sponsor) => {
             const hasLink = Boolean(sponsor.url)
             const CardWrapper = hasLink ? 'a' : 'div'
@@ -284,6 +292,8 @@ export default function OurSponsors() {
                     className={`w-full h-24 sm:h-28 rounded-xl flex items-center justify-center p-3 mb-4 overflow-hidden transition-colors ${
                       sponsor.isDarkBg
                         ? 'bg-black border border-slate-900'
+                        : sponsor.isWhiteBg
+                        ? 'bg-white border border-slate-200'
                         : 'bg-slate-50 border border-slate-100 group-hover:bg-slate-100/70'
                     }`}
                   >
@@ -321,7 +331,7 @@ export default function OurSponsors() {
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400">
-                      <span>Official Partner</span>
+                      <span>{sponsor.role === 'ASSOCIATE SPONSOR' ? 'Official Associate Sponsor' : 'Official Partner'}</span>
                     </span>
                   )}
                 </div>
