@@ -25,7 +25,7 @@ export default function BackgroundMusic() {
     }
   }, [])
 
-  // Set initial audio properties and attempt playback
+  // Set initial audio properties and attempt playback across all devices and views
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
@@ -40,20 +40,32 @@ export default function BackgroundMusic() {
       return
     }
 
-    let started = false
+    // Preload audio for mobile browsers (WebKit/Safari)
+    try {
+      if (audio.readyState === 0) {
+        audio.load()
+      }
+    } catch {
+      // ignore
+    }
+
+    let isStarted = false
 
     const attemptPlay = () => {
-      if (started) return
-      const playPromise = audio.play()
+      if (isStarted || userHasPaused || isAdminRoute) return
+      const currentAudio = audioRef.current
+      if (!currentAudio) return
+
+      const playPromise = currentAudio.play()
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            started = true
+            isStarted = true
             setIsPlaying(true)
-            cleanupListeners()
+            removeInteractionListeners()
           })
           .catch(() => {
-            // Autoplay blocked by browser policy until first user interaction
+            // Autoplay policy prevented playback until user interaction; keep listeners active
             setIsPlaying(false)
           })
       }
@@ -63,37 +75,51 @@ export default function BackgroundMusic() {
       attemptPlay()
     }
 
-    const cleanupListeners = () => {
-      window.removeEventListener('click', onUserInteraction, { capture: true })
-      window.removeEventListener('keydown', onUserInteraction, { capture: true })
-      window.removeEventListener('touchstart', onUserInteraction, { capture: true })
-      window.removeEventListener('pointerdown', onUserInteraction, { capture: true })
-      window.removeEventListener('scroll', onUserInteraction, { capture: true })
-      document.removeEventListener('click', onUserInteraction, { capture: true })
-      document.removeEventListener('keydown', onUserInteraction, { capture: true })
-      document.removeEventListener('touchstart', onUserInteraction, { capture: true })
-      document.removeEventListener('pointerdown', onUserInteraction, { capture: true })
-      document.removeEventListener('scroll', onUserInteraction, { capture: true })
+    // Comprehensive list of events to catch any interaction on mobile, tablet, or desktop
+    const INTERACTION_EVENTS = [
+      'touchstart',
+      'touchend',
+      'touchmove',
+      'pointerdown',
+      'pointerup',
+      'click',
+      'mousedown',
+      'mouseup',
+      'keydown',
+      'scroll',
+      'wheel',
+    ]
+
+    const listenerOpts = { passive: true, capture: true }
+
+    const addInteractionListeners = () => {
+      INTERACTION_EVENTS.forEach((evt) => {
+        window.addEventListener(evt, onUserInteraction, listenerOpts)
+        document.addEventListener(evt, onUserInteraction, listenerOpts)
+        if (document.body) {
+          document.body.addEventListener(evt, onUserInteraction, listenerOpts)
+        }
+      })
     }
 
-    // Try direct play
+    const removeInteractionListeners = () => {
+      INTERACTION_EVENTS.forEach((evt) => {
+        window.removeEventListener(evt, onUserInteraction, listenerOpts)
+        document.removeEventListener(evt, onUserInteraction, listenerOpts)
+        if (document.body) {
+          document.body.removeEventListener(evt, onUserInteraction, listenerOpts)
+        }
+      })
+    }
+
+    // 1. Try immediate playback (works on desktop if allowed, or if interaction already occurred)
     attemptPlay()
 
-    // Attach listeners for first interaction if blocked by browser policy
-    const listenerOpts = { passive: true, capture: true }
-    window.addEventListener('click', onUserInteraction, listenerOpts)
-    window.addEventListener('keydown', onUserInteraction, listenerOpts)
-    window.addEventListener('touchstart', onUserInteraction, listenerOpts)
-    window.addEventListener('pointerdown', onUserInteraction, listenerOpts)
-    window.addEventListener('scroll', onUserInteraction, listenerOpts)
-    document.addEventListener('click', onUserInteraction, listenerOpts)
-    document.addEventListener('keydown', onUserInteraction, listenerOpts)
-    document.addEventListener('touchstart', onUserInteraction, listenerOpts)
-    document.addEventListener('pointerdown', onUserInteraction, listenerOpts)
-    document.addEventListener('scroll', onUserInteraction, listenerOpts)
+    // 2. Attach listeners for first interaction on mobile / restrictive browsers
+    addInteractionListeners()
 
     return () => {
-      cleanupListeners()
+      removeInteractionListeners()
     }
   }, [isAdminRoute, userHasPaused, isMuted, volume])
 
@@ -106,11 +132,41 @@ export default function BackgroundMusic() {
       audio.pause()
       setIsPlaying(false)
     } else if (!userHasPaused) {
-      audio.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false))
+      if (audio.paused) {
+        audio.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {
+            // Will resume on interaction
+          })
+      } else {
+        setIsPlaying(true)
+      }
     }
   }, [location.pathname, isAdminRoute, userHasPaused])
+
+  // Resume playback when returning to the tab on mobile devices (e.g. app switch, screen unlock, back navigation)
+  useEffect(() => {
+    const handleResume = () => {
+      const audio = audioRef.current
+      if (!audio || isAdminRoute || userHasPaused) return
+
+      if (document.visibilityState === 'visible' && audio.paused) {
+        audio.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {})
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleResume)
+    window.addEventListener('focus', handleResume)
+    window.addEventListener('pageshow', handleResume)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleResume)
+      window.removeEventListener('focus', handleResume)
+      window.removeEventListener('pageshow', handleResume)
+    }
+  }, [isAdminRoute, userHasPaused])
 
   // Sync volume & mute changes with audio element
   useEffect(() => {
@@ -156,42 +212,41 @@ export default function BackgroundMusic() {
     }
   }
 
-  // Do not render UI on admin routes
-  if (isAdminRoute) {
-    return (
-      <audio
-        ref={audioRef}
-        loop
-        preload="auto"
-        playsInline
-      >
-        <source src="/journey.mp3" type="audio/mpeg" />
-        <source src="/Tim%20Schaufert%20-%20Journey.mp3" type="audio/mpeg" />
-      </audio>
-    )
-  }
-
   return (
     <>
-      {/* Hidden HTML5 Audio Element in infinite loop */}
+      {/* Persistent HTML5 Audio Element in infinite loop */}
       <audio
         ref={audioRef}
+        src="/journey.mp3"
         loop
         autoPlay
         preload="auto"
         playsInline
+        webkit-playsinline="true"
         onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPause={() => {
+          if (audioRef.current?.paused) {
+            setIsPlaying(false)
+          }
+        }}
+        onEnded={() => {
+          const audio = audioRef.current
+          if (audio && !isAdminRoute && !userHasPaused) {
+            audio.currentTime = 0
+            audio.play().catch(() => {})
+          }
+        }}
       >
         <source src="/journey.mp3" type="audio/mpeg" />
         <source src="/Tim%20Schaufert%20-%20Journey.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* Floating Very Small Ambient Music Tag - Right Hand Side */}
-      <aside
-        aria-label="Background audio player"
-        className="no-print fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-40 transition-all duration-300 select-none flex flex-col items-end"
-      >
+      {/* Floating Very Small Ambient Music Tag - Right Hand Side (public routes only) */}
+      {!isAdminRoute && (
+        <aside
+          aria-label="Background audio player"
+          className="no-print fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 transition-all duration-300 select-none flex flex-col items-end"
+        >
         {/* Optional Micro Popover for Volume Adjustment */}
         {isExpanded && (
           <div className="mb-2 p-2.5 w-48 bg-white/95 hover:bg-white backdrop-blur-md border border-[#edebe6] shadow-[0_8px_25px_rgba(6,43,89,0.12)] rounded-xl animate-fadeIn flex flex-col gap-2">
@@ -317,6 +372,7 @@ export default function BackgroundMusic() {
           </button>
         </div>
       </aside>
+      )}
     </>
   )
 }
