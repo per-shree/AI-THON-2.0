@@ -12,21 +12,28 @@ export default function BackgroundMusic() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [userHasPaused, setUserHasPaused] = useState(() => {
-    return localStorage.getItem('aithon_music_paused') === 'true'
-  })
+  const [userHasPaused, setUserHasPaused] = useState(false)
 
   const isAdminRoute = location.pathname.startsWith('/admin')
+
+  // Clear any legacy paused flags from localStorage so music is always ON by default on enter/refresh
+  useEffect(() => {
+    try {
+      localStorage.removeItem('aithon_music_paused')
+    } catch {
+      // ignore
+    }
+  }, [])
 
   // Set initial audio properties and attempt playback
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    audio.volume = volume
+    audio.volume = isMuted ? 0 : volume
     audio.loop = true
 
-    // If on admin route or user explicitly paused, don't autoplay
+    // If on admin route or user explicitly paused in this session, don't play
     if (isAdminRoute || userHasPaused) {
       audio.pause()
       setIsPlaying(false)
@@ -37,16 +44,19 @@ export default function BackgroundMusic() {
 
     const attemptPlay = () => {
       if (started) return
-      audio.play()
-        .then(() => {
-          started = true
-          setIsPlaying(true)
-          cleanupListeners()
-        })
-        .catch(() => {
-          // Autoplay blocked by browser policy until first user interaction
-          setIsPlaying(false)
-        })
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            started = true
+            setIsPlaying(true)
+            cleanupListeners()
+          })
+          .catch(() => {
+            // Autoplay blocked by browser policy until first user interaction
+            setIsPlaying(false)
+          })
+      }
     }
 
     const onUserInteraction = () => {
@@ -54,25 +64,38 @@ export default function BackgroundMusic() {
     }
 
     const cleanupListeners = () => {
-      window.removeEventListener('click', onUserInteraction)
-      window.removeEventListener('keydown', onUserInteraction)
-      window.removeEventListener('touchstart', onUserInteraction)
-      window.removeEventListener('scroll', onUserInteraction)
+      window.removeEventListener('click', onUserInteraction, { capture: true })
+      window.removeEventListener('keydown', onUserInteraction, { capture: true })
+      window.removeEventListener('touchstart', onUserInteraction, { capture: true })
+      window.removeEventListener('pointerdown', onUserInteraction, { capture: true })
+      window.removeEventListener('scroll', onUserInteraction, { capture: true })
+      document.removeEventListener('click', onUserInteraction, { capture: true })
+      document.removeEventListener('keydown', onUserInteraction, { capture: true })
+      document.removeEventListener('touchstart', onUserInteraction, { capture: true })
+      document.removeEventListener('pointerdown', onUserInteraction, { capture: true })
+      document.removeEventListener('scroll', onUserInteraction, { capture: true })
     }
 
     // Try direct play
     attemptPlay()
 
-    // Attach listeners for first interaction if blocked
-    window.addEventListener('click', onUserInteraction, { once: true, passive: true })
-    window.addEventListener('keydown', onUserInteraction, { once: true, passive: true })
-    window.addEventListener('touchstart', onUserInteraction, { once: true, passive: true })
-    window.addEventListener('scroll', onUserInteraction, { once: true, passive: true })
+    // Attach listeners for first interaction if blocked by browser policy
+    const listenerOpts = { passive: true, capture: true }
+    window.addEventListener('click', onUserInteraction, listenerOpts)
+    window.addEventListener('keydown', onUserInteraction, listenerOpts)
+    window.addEventListener('touchstart', onUserInteraction, listenerOpts)
+    window.addEventListener('pointerdown', onUserInteraction, listenerOpts)
+    window.addEventListener('scroll', onUserInteraction, listenerOpts)
+    document.addEventListener('click', onUserInteraction, listenerOpts)
+    document.addEventListener('keydown', onUserInteraction, listenerOpts)
+    document.addEventListener('touchstart', onUserInteraction, listenerOpts)
+    document.addEventListener('pointerdown', onUserInteraction, listenerOpts)
+    document.addEventListener('scroll', onUserInteraction, listenerOpts)
 
     return () => {
       cleanupListeners()
     }
-  }, [isAdminRoute, userHasPaused])
+  }, [isAdminRoute, userHasPaused, isMuted, volume])
 
   // React to route changes (silence in admin, resume in public)
   useEffect(() => {
@@ -104,13 +127,11 @@ export default function BackgroundMusic() {
       audio.pause()
       setIsPlaying(false)
       setUserHasPaused(true)
-      localStorage.setItem('aithon_music_paused', 'true')
     } else {
       audio.play()
         .then(() => {
           setIsPlaying(true)
           setUserHasPaused(false)
-          localStorage.removeItem('aithon_music_paused')
         })
         .catch(console.error)
     }
@@ -156,6 +177,7 @@ export default function BackgroundMusic() {
       <audio
         ref={audioRef}
         loop
+        autoPlay
         preload="auto"
         playsInline
         onPlay={() => setIsPlaying(true)}
