@@ -37,6 +37,8 @@ export default function HeroSection() {
             <img
               src="/sumago_logo.png"
               alt="Sumago Infotech Pvt. Ltd."
+              width="300"
+              height="35"
               className="h-6 xs:h-7 sm:h-8 md:h-9 w-auto max-w-[210px] xs:max-w-[240px] sm:max-w-[300px] md:max-w-[360px] object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </a>
@@ -62,6 +64,8 @@ export default function HeroSection() {
             <img
               src={aithonHeroLogo}
               alt="AITHON 2.0 - National Level AI Hackathon"
+              width="600"
+              height="158"
               className="w-full max-w-[280px] xs:max-w-[340px] sm:max-w-[440px] md:max-w-[520px] lg:max-w-[600px] xl:max-w-[660px] 2xl:max-w-[720px] h-auto object-contain drop-shadow-[0_10px_25px_rgba(6,43,89,0.07)] hover:scale-[1.01] transition-transform duration-500 ease-out select-none"
               style={{ aspectRatio: '1017 / 268' }}
               loading="eager"

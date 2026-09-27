@@ -1,0 +1,36 @@
+# AI-THON 2.0 | National Level AI Hackathon
+
+> AI-THON 2.0 is a premier 12-hour national-level artificial intelligence hackathon organized by the Department of Artificial Intelligence & Data Science at Amrutvahini College of Engineering (AVCOE), Sangamner, Maharashtra, India.
+
+AI-THON 2.0 convenes India's brightest student innovators, developers, and researchers to engineer high-impact solutions leveraging Artificial Intelligence, Machine Learning, Deep Learning, and Computer Vision across critical national priority sectors.
+
+## Key Event Details
+- **Event**: AI-THON 2.0 (National Level AI Hackathon)
+- **Organizer**: Department of Artificial Intelligence & Data Science, Amrutvahini College of Engineering, Sangamner
+- **Mode**: Hybrid (Round 1: Online Idea Abstract PPT Submission; Round 2: 12-Hour Non-Stop Offline Grand Finale)
+- **Prize Pool**: Over ₹1,00,000 in cash awards, certificates, domain sponsorships, and incubator access
+- **Venue**: AVCOE Campus, Near Pune-Nashik Highway, Ghulewadi, Sangamner, Maharashtra 422608
+- **Grand Finale Date**: 23 October 2026
+- **Round 1 Submission Deadline**: 04 October 2026
+
+## Essential Links & Resources
+- [Official Website](https://aithon2-0.xyz/): Main portal with event details, timeline, and announcements.
+- [Registration & Abstract Submission](https://aithon2-0.xyz/register): Team registration, problem track selection, and PPT upload.
+- [Problem Statements & Tracks](https://aithon2-0.xyz/#problem-statement): 8 tracks spanning Healthcare, Agriculture, Mobility, FinTech, Cyber Defense, EdTech, Dental Diagnostics, and Open Innovation.
+- [Guidelines & Rules](https://aithon2-0.xyz/#guidelines): Eligibility criteria, team composition (2-4 members), code of conduct, and submission specifications.
+- [Event Timeline](https://aithon2-0.xyz/#timeline): Key milestones from registrations to Grand Finale day-of-event schedule.
+- [Prizes & Awards](https://aithon2-0.xyz/#prizes): Cash prizes, track winners, runner-up awards, and special partner recognitions.
+- [Chief Guest](https://aithon2-0.xyz/#chief-guest): Dr. L. K. Gite, Scientist 'F', ARDE DRDO, presiding over the inaugural keynote.
+- [Sponsors & Partners](https://aithon2-0.xyz/#our-sponsors): Title Sponsor Sumago Infotech, Platinum Sponsor DASS Chemtech, Gold Sponsor Oakya IT Services, Automotive Partner NEXA, Domain Partner .XYZ, and regional partners.
+- [FAQ](https://aithon2-0.xyz/#faq): Answers to questions regarding team formation, payments, PPT template, travel, and accommodation.
+- [Contact Support](https://aithon2-0.xyz/#contact): Student coordinators, faculty conveners, and official helpdesk channels.
+
+## Hackathon Tracks
+1. **AI in Healthcare & Medicine**: Predictive medical diagnostics, medical imaging, oncology triage, patient monitoring, and clinical workflows.
+2. **AI in Dental Science & Diagnostics**: Automated caries classification, panoramic radiograph anomaly detection, and periodontal treatment modeling.
+3. **Precision Agriculture & Rural Tech**: Crop disease diagnosis, smart irrigation scheduling, yield estimation, and farmer advisory platforms.
+4. **Smart Mobility & Infrastructure**: Intelligent traffic routing, predictive infrastructure maintenance, transit analytics, and road safety vision systems.
+5. **FinTech, Fraud Detection & Security**: Real-time transaction fraud detection, AML anomaly clustering, credit assessment, and secure financial LLMs.
+6. **Cyber Defense & National Security**: Threat hunting, malware signature synthesis, autonomous SOC triage, and perimeter intrusion alert agents.
+7. **NextGen EdTech & Adaptive Learning**: Personalized curriculum pacing, multilingual tutoring assistants, automated grading, and accessibility tools.
+8. **Open Innovation & Societal Impact**: Multidisciplinary AI applications tackling UN Sustainable Development Goals, climate action, and community resilience.

@@ -47,16 +47,26 @@ export function RegistrationSlip({
       {/* ============================================================== */}
       <div className="border-b-2 border-[#062b59] pb-2 mb-2">
         <div className="flex items-center justify-between gap-2.5">
-          {/* AVCOE College Logo */}
-          <div className="w-14 h-14 shrink-0 flex items-center justify-center">
+          {/* Amrutvahini University & AVCOE College Logos */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <img
-              src="/amrutvahini_logo.png"
-              alt="AVCOE Logo"
-              className="max-h-full max-w-full object-contain"
+              src="/amrutvahini_university_logo.png"
+              alt="Amrutvahini University"
+              className="h-8 sm:h-9 w-auto object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none'
               }}
             />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center">
+              <img
+                src="/amrutvahini_logo.png"
+                alt="AVCOE Logo"
+                className="max-h-full max-w-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            </div>
           </div>
 
           {/* Central Title Hierarchy */}

@@ -34,7 +34,7 @@ export default function TimelineSection() {
       num: '06',
       stage: 'ROUND 2: GRAND FINALE',
       title: 'CAMPUS REPORTING & KICKOFF',
-      desc: 'Physical check-in at AVCOE Sangamner campus, ID verification, hack kits collection, and opening ceremony.',
+      desc: 'Physical check-in at AVCOE Sangamner campus, ID verification, hack kits collection, and Grand Inauguration Ceremony with Keynote Address by Chief Guest Dr. L. K. Gite (Scientist "F", ARDE DRDO).',
     },
     {
       num: '07',
@@ -52,7 +52,7 @@ export default function TimelineSection() {
       num: '09',
       stage: 'GRAND VALEDICTORY',
       title: 'AWARDS & FELICITATION',
-      desc: 'Grand valedictory ceremony, track & grand winners announcement, trophy presentation, and cash prize distribution.',
+      desc: 'Grand valedictory ceremony, track & grand winners announcement, trophy presentation, and cash prize distribution by dignitaries and jury panel.',
     },
   ]
 

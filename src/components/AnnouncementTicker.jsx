@@ -1,6 +1,7 @@
 export default function AnnouncementTicker() {
   const announcements = [
     'AITHON 2.0',
+    'CHIEF GUEST (INAUGURATION): DR. L. K. GITE (SCIENTIST "F" - ARDE PUNE, DRDO)',
     'OFFICIAL TITLE SPONSOR: SUMAGO INFOTECH',
     'OFFICIAL PLATINUM SPONSOR: DASS CHEMTECH',
     'OFFICIAL GOLD SPONSOR: OAKYA IT SERVICES',

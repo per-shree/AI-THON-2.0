@@ -28,14 +28,7 @@ const partnersList = [
     url: 'https://www.nexaexperience.com/',
     role: 'Official Automotive Partner',
     desc: 'Mahalaxmi Automotives, Sangamner — delivering premium luxury automotive experiences.',
-    isDarkBg: true,
-  },
-  {
-    name: 'Dainik Yuvavarta',
-    logo: '/yuvavarta_logo.png',
-    url: '',
-    role: 'Official Media Partner',
-    desc: 'Leading regional daily newspaper delivering trusted journalism and extensive media coverage.',
+    isWhiteBg: true,
   },
   {
     name: '.XYZ Domains',
@@ -65,6 +58,21 @@ const partnersList = [
     url: '',
     role: 'ASSOCIATE PARTNER',
     desc: 'Premier computer education, technical training, and skill development institute in Sangamner.',
+  },
+  {
+    name: 'Amayra Industries',
+    logo: '/amayra_logo.png',
+    url: '',
+    role: 'ASSOCIATE SPONSOR',
+    desc: 'All Types of CNC and VMC Machining Job Work | GST No. 27BLQK2784K1ZD',
+    isWhiteBg: true,
+  },
+  {
+    name: 'Dainik Yuvavarta',
+    logo: '/yuvavarta_logo.png',
+    url: '',
+    role: 'Official Media Partner',
+    desc: 'Leading regional daily newspaper delivering trusted journalism and extensive media coverage.',
   },
   {
     name: 'Qwicit Technologies',
@@ -134,6 +142,9 @@ export default function OurSponsors() {
                 <img
                   src={titleSponsor.logo}
                   alt={titleSponsor.name}
+                  width="320"
+                  height="96"
+                  loading="lazy"
                   className="h-16 sm:h-20 md:h-24 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
                 />
               </div>
@@ -176,6 +187,9 @@ export default function OurSponsors() {
                 <img
                   src={platinumSponsor.logo}
                   alt={platinumSponsor.name}
+                  width="320"
+                  height="96"
+                  loading="lazy"
                   className="h-16 sm:h-20 md:h-24 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
                 />
               </div>
@@ -221,6 +235,9 @@ export default function OurSponsors() {
                 <img
                   src={goldSponsor.logo}
                   alt={goldSponsor.name}
+                  width="320"
+                  height="96"
+                  loading="lazy"
                   className="h-16 sm:h-20 md:h-24 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
                 />
               </div>
@@ -252,8 +269,8 @@ export default function OurSponsors() {
           </div>
         </div>
 
-        {/* Proper Static Sponsor Cards Grid (Balanced 4x2 Grid) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+        {/* Proper Static Sponsor Cards Grid (Balanced 3x3 Grid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {partnersList.map((sponsor) => {
             const hasLink = Boolean(sponsor.url)
             const CardWrapper = hasLink ? 'a' : 'div'
@@ -284,12 +301,17 @@ export default function OurSponsors() {
                     className={`w-full h-24 sm:h-28 rounded-xl flex items-center justify-center p-3 mb-4 overflow-hidden transition-colors ${
                       sponsor.isDarkBg
                         ? 'bg-black border border-slate-900'
+                        : sponsor.isWhiteBg
+                        ? 'bg-white border border-slate-200'
                         : 'bg-slate-50 border border-slate-100 group-hover:bg-slate-100/70'
                     }`}
                   >
                     <img
                       src={sponsor.logo}
                       alt={sponsor.name}
+                      width="200"
+                      height="96"
+                      loading="lazy"
                       className={`max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 ${
                         sponsor.scaleClass || ''
                       }`}
@@ -321,7 +343,7 @@ export default function OurSponsors() {
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400">
-                      <span>Official Partner</span>
+                      <span>{sponsor.role === 'ASSOCIATE SPONSOR' ? 'Official Associate Sponsor' : 'Official Partner'}</span>
                     </span>
                   )}
                 </div>
