@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Registration from './pages/Registration'
 import FinalePayment from './pages/FinalePayment'
 import ScrollToHash from './components/ScrollToHash'
+import BackgroundMusic from './components/BackgroundMusic'
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin'
@@ -24,6 +25,7 @@ export default function App() {
     <AdminProvider>
       <BrowserRouter>
         <ScrollToHash />
+        <BackgroundMusic />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
