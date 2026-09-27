@@ -12,6 +12,8 @@ export default function BackgroundArtwork({ variant = 'hero' }) {
           <img
             src={citySkylineArtwork}
             alt="AITHON 2.0 Skyline Artwork"
+            width="960"
+            height="540"
             className="w-full h-full object-cover object-[center_78%] sm:object-[center_65%] md:object-[center_64%] lg:object-[center_63%] select-none contrast-[1.02] saturate-[1.03]"
             style={{
               WebkitMaskImage:

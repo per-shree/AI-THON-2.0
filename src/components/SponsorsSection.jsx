@@ -128,7 +128,11 @@ export default function SponsorsSection() {
   ]
 
   const renderStrapItems = (keyPrefix = 'strap1', isAriaHidden = false) => (
-    <div className="flex items-center gap-5 shrink-0 pr-5" aria-hidden={isAriaHidden}>
+    <div 
+      className="flex items-center gap-5 shrink-0 pr-5" 
+      aria-hidden={isAriaHidden ? 'true' : undefined}
+      inert={isAriaHidden ? '' : undefined}
+    >
       {sponsors.map((item, idx) => {
         const hasValidLink = item.url && item.url !== '#'
         const isTitleSponsor = item.tier === 'TITLE SPONSOR'
@@ -140,9 +144,11 @@ export default function SponsorsSection() {
           return (
             <a
               key={`${keyPrefix}-${idx}`}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={isAriaHidden ? undefined : item.url}
+              target={isAriaHidden ? undefined : "_blank"}
+              rel={isAriaHidden ? undefined : "noopener noreferrer"}
+              tabIndex={isAriaHidden ? -1 : undefined}
+              aria-hidden={isAriaHidden ? "true" : undefined}
               className={`group relative bg-white border ${
                 isTitleSponsor
                   ? 'border-amber-300 bg-gradient-to-b from-amber-50/40 to-white hover:border-amber-400 shadow-xs hover:shadow-md'
@@ -153,7 +159,9 @@ export default function SponsorsSection() {
                   : isAssociateSponsor
                   ? 'border-blue-200 bg-gradient-to-b from-blue-50/30 to-white hover:border-blue-400 shadow-xs hover:shadow-md'
                   : 'border-[#edebe6] hover:border-blue-500 shadow-xs hover:shadow-md'
-              } rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 transition-all duration-300 shrink-0 w-max cursor-pointer`}
+              } rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3.5 sm:gap-4 transition-all duration-300 shrink-0 w-max ${
+                isAriaHidden ? 'pointer-events-none' : 'cursor-pointer'
+              }`}
             >
               {/* Logo Box */}
               <div
@@ -178,6 +186,9 @@ export default function SponsorsSection() {
                 <img
                   src={item.logo}
                   alt={item.name}
+                  width="120"
+                  height="60"
+                  loading="lazy"
                   className={
                     item.isFullBox
                       ? 'w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-300'
@@ -261,6 +272,9 @@ export default function SponsorsSection() {
                 <img
                   src={item.logo}
                   alt={item.name}
+                  width="120"
+                  height="60"
+                  loading="lazy"
                   className={
                     item.isFullBox
                       ? 'w-full h-full object-contain p-1'

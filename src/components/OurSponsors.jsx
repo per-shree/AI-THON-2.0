@@ -142,6 +142,9 @@ export default function OurSponsors() {
                 <img
                   src={titleSponsor.logo}
                   alt={titleSponsor.name}
+                  width="320"
+                  height="96"
+                  loading="lazy"
                   className="h-16 sm:h-20 md:h-24 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
                 />
               </div>
@@ -184,6 +187,9 @@ export default function OurSponsors() {
                 <img
                   src={platinumSponsor.logo}
                   alt={platinumSponsor.name}
+                  width="320"
+                  height="96"
+                  loading="lazy"
                   className="h-16 sm:h-20 md:h-24 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
                 />
               </div>
@@ -229,6 +235,9 @@ export default function OurSponsors() {
                 <img
                   src={goldSponsor.logo}
                   alt={goldSponsor.name}
+                  width="320"
+                  height="96"
+                  loading="lazy"
                   className="h-16 sm:h-20 md:h-24 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
                 />
               </div>
@@ -300,6 +309,9 @@ export default function OurSponsors() {
                     <img
                       src={sponsor.logo}
                       alt={sponsor.name}
+                      width="200"
+                      height="96"
+                      loading="lazy"
                       className={`max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 ${
                         sponsor.scaleClass || ''
                       }`}

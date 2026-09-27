@@ -37,6 +37,8 @@ export default function ChiefGuestSection({ hideId = false }) {
                   <img
                     src={drLkGiteImg}
                     alt="Dr. L. K. Gite - Scientist 'F', ARDE DRDO"
+                    width="260"
+                    height="325"
                     className="w-full aspect-[4/5] object-cover rounded-lg"
                     loading="lazy"
                   />

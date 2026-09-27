@@ -1,0 +1,45 @@
+{
+  "$schema": "https://agenticresourcediscovery.org/schemas/v1/ai-catalog.json",
+  "name": "AI-THON 2.0 Agentic Resource Catalog",
+  "description": "Standardized Agentic Resource Discovery (ARD) catalog for AI-THON 2.0 National Level AI Hackathon.",
+  "version": "1.0.0",
+  "homepage": "https://aithon2-0.xyz",
+  "provider": {
+    "name": "Department of Artificial Intelligence & Data Science, AVCOE Sangamner",
+    "url": "https://aithon2-0.xyz"
+  },
+  "resources": [
+    {
+      "id": "event-overview",
+      "name": "AI-THON 2.0 Hackathon Overview",
+      "description": "Comprehensive event information, timeline, tracks, evaluation guidelines, and prize pool.",
+      "type": "documentation",
+      "url": "https://aithon2-0.xyz/llms.txt",
+      "contentType": "text/markdown"
+    },
+    {
+      "id": "registration-portal",
+      "name": "Registration & Submission Portal",
+      "description": "Official portal for team registration, payment verification, and abstract submission.",
+      "type": "portal",
+      "url": "https://aithon2-0.xyz/register",
+      "contentType": "text/html"
+    },
+    {
+      "id": "problem-statements",
+      "name": "Hackathon Problem Statement Tracks",
+      "description": "Details on the 8 core hackathon challenges across healthcare, agriculture, fintech, cybersecurity, and open innovation.",
+      "type": "documentation",
+      "url": "https://aithon2-0.xyz/#problem-statement",
+      "contentType": "text/html"
+    },
+    {
+      "id": "event-guidelines",
+      "name": "Rules, Eligibility & Evaluation Rubric",
+      "description": "Official rules, team eligibility requirements, and judging criteria for Round 1 and the Grand Finale.",
+      "type": "documentation",
+      "url": "https://aithon2-0.xyz/#guidelines",
+      "contentType": "text/html"
+    }
+  ]
+}

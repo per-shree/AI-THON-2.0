@@ -43,24 +43,32 @@ export default function Navbar() {
               <img
                 src="/amrutvahini_university_logo.png"
                 alt="Amrutvahini University"
+                width="140"
+                height="44"
                 className="h-6 xs:h-7 sm:h-9 md:h-11 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 shrink-0" />
               <img
                 src="/amrutvahini_logo.png"
                 alt="Amrutvahini College of Engineering"
+                width="52"
+                height="52"
                 className="h-8 xs:h-9 sm:h-11 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 hidden xs:block shrink-0" />
               <img
                 src="/iste_logo.png"
                 alt="ISTE"
+                width="52"
+                height="52"
                 className="h-8 xs:h-9 sm:h-11 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 hidden sm:block shrink-0" />
               <img
                 src="/aiesa_logo.png"
                 alt="AIESA"
+                width="105"
+                height="42"
                 className="h-5 xs:h-6 sm:h-7 md:h-8.5 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
             </Link>
@@ -90,7 +98,10 @@ export default function Navbar() {
 
           {/* Mobile Menu Toggle */}
           <button 
-            className="lg:hidden text-[#062b59]"
+            type="button"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            className="lg:hidden text-[#062b59] p-1.5 focus:outline-none focus:ring-2 focus:ring-[#2563eb] rounded-lg"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}

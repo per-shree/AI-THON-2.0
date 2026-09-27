@@ -27,6 +27,9 @@ export default function Footer() {
             <img
               src={aithonHeroLogo}
               alt="AITHON 2.0"
+              width="135"
+              height="36"
+              loading="lazy"
               className="h-8 sm:h-9 w-auto object-contain brightness-0 invert select-none opacity-95 group-hover:opacity-100 transition-opacity"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
