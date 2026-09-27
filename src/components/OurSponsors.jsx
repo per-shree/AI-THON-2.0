@@ -23,27 +23,12 @@ const goldSponsor = {
 
 const partnersList = [
   {
-    name: 'Amayra Industries',
-    logo: '/amayra_logo.png',
-    url: '',
-    role: 'ASSOCIATE SPONSOR',
-    desc: 'All Types of CNC and VMC Machining Job Work | GST No. 27BLQK2784K1ZD',
-    isWhiteBg: true,
-  },
-  {
     name: 'NEXA (Mahalaxmi Automotives)',
     logo: '/nexa_logo.png',
     url: 'https://www.nexaexperience.com/',
     role: 'Official Automotive Partner',
     desc: 'Mahalaxmi Automotives, Sangamner — delivering premium luxury automotive experiences.',
-    isDarkBg: true,
-  },
-  {
-    name: 'Dainik Yuvavarta',
-    logo: '/yuvavarta_logo.png',
-    url: '',
-    role: 'Official Media Partner',
-    desc: 'Leading regional daily newspaper delivering trusted journalism and extensive media coverage.',
+    isWhiteBg: true,
   },
   {
     name: '.XYZ Domains',
@@ -73,6 +58,21 @@ const partnersList = [
     url: '',
     role: 'ASSOCIATE PARTNER',
     desc: 'Premier computer education, technical training, and skill development institute in Sangamner.',
+  },
+  {
+    name: 'Amayra Industries',
+    logo: '/amayra_logo.png',
+    url: '',
+    role: 'ASSOCIATE SPONSOR',
+    desc: 'All Types of CNC and VMC Machining Job Work | GST No. 27BLQK2784K1ZD',
+    isWhiteBg: true,
+  },
+  {
+    name: 'Dainik Yuvavarta',
+    logo: '/yuvavarta_logo.png',
+    url: '',
+    role: 'Official Media Partner',
+    desc: 'Leading regional daily newspaper delivering trusted journalism and extensive media coverage.',
   },
   {
     name: 'Qwicit Technologies',

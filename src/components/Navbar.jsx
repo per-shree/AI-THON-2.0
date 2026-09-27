@@ -22,6 +22,7 @@ export default function Navbar() {
   const navLinks = [
     { label: 'Home', href: '#home' },
     { label: 'Sponsors', href: '#our-sponsors' },
+    { label: 'Chief Guest', href: '#chief-guest' },
     { label: 'About', href: '#about' },
     { label: 'Problem Statement', href: '#problem-statement' },
     { label: 'Guidelines', href: '#guidelines' },
@@ -66,13 +67,13 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-4 xl:gap-6 shrink-0">
-            <div className="flex items-center gap-3 xl:gap-4.5">
+          <div className="hidden lg:flex items-center gap-3 xl:gap-5 shrink-0">
+            <div className="flex items-center gap-2 xl:gap-3.5">
               {navLinks.map((link) => (
                 <a 
                   key={link.label}
                   href={getHref(link.href)}
-                  className="text-xs xl:text-sm font-bold text-slate-700 hover:text-[#2563eb] transition-colors uppercase tracking-wider whitespace-nowrap py-1"
+                  className="text-[11px] xl:text-[13px] font-bold text-slate-700 hover:text-[#2563eb] transition-colors uppercase tracking-wider whitespace-nowrap py-1"
                 >
                   {link.label}
                 </a>

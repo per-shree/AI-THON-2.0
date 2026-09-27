@@ -33,32 +33,13 @@ export default function SponsorsSection() {
       isWideLogo: true
     },
     {
-      name: 'Amayra Industries',
-      logo: '/amayra_logo.png',
-      url: '',
-      tier: 'ASSOCIATE SPONSOR',
-      desc: 'CNC & VMC Machining Job Work',
-      isActive: true,
-      isLargeLogo: true,
-      isWideLogo: true,
-      isWhiteBg: true
-    },
-    {
       name: 'NEXA (Mahalaxmi Automotives, Sangamner)',
       logo: '/nexa_logo.png',
       url: 'https://www.nexaexperience.com/',
       tier: 'ASSOCIATE PARTNER',
       desc: 'Official Automotive Partner',
       isActive: true,
-      isFullBox: true
-    },
-    {
-      name: 'Dainik Yuvavarta',
-      logo: '/yuvavarta_logo.png',
-      url: '#',
-      tier: 'MEDIA PARTNER',
-      desc: 'Official Media Partner',
-      isActive: true,
+      isWhiteBg: true,
       isLargeLogo: true
     },
     {
@@ -95,6 +76,26 @@ export default function SponsorsSection() {
       url: '',
       tier: 'ASSOCIATE PARTNER',
       desc: 'Computer Education & Training',
+      isActive: true,
+      isLargeLogo: true
+    },
+    {
+      name: 'Amayra Industries',
+      logo: '/amayra_logo.png',
+      url: '',
+      tier: 'ASSOCIATE SPONSOR',
+      desc: 'CNC & VMC Machining Job Work',
+      isActive: true,
+      isLargeLogo: true,
+      isWideLogo: true,
+      isWhiteBg: true
+    },
+    {
+      name: 'Dainik Yuvavarta',
+      logo: '/yuvavarta_logo.png',
+      url: '#',
+      tier: 'MEDIA PARTNER',
+      desc: 'Official Media Partner',
       isActive: true,
       isLargeLogo: true
     },

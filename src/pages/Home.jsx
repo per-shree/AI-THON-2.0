@@ -2,6 +2,7 @@ import Navbar from '../components/Navbar'
 import AnnouncementTicker from '../components/AnnouncementTicker'
 import HeroSection from '../components/HeroSection'
 import OurSponsors from '../components/OurSponsors'
+import ChiefGuestSection from '../components/ChiefGuestSection'
 import AboutSection from '../components/AboutSection'
 import ProblemStatements from '../components/ProblemStatements'
 import GuidelinesSection from '../components/GuidelinesSection'
@@ -30,10 +31,16 @@ export default function Home() {
       {/* 02 OUR SPONSORS (Static Cards with Info right after Home) */}
       <div id="our-sponsors">
         <OurSponsors />
-        <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-[#faf9f6]" />
+        <WaveTransition colorClass="text-white" bgClass="bg-[#faf9f6]" />
       </div>
 
-      {/* 03 ABOUT (Soft Professional Skin Tone) */}
+      {/* 03 CHIEF GUEST OF THE EVENT (Prestigious Dignitary) */}
+      <div id="chief-guest">
+        <ChiefGuestSection />
+        <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-white" />
+      </div>
+
+      {/* 04 ABOUT (Soft Professional Skin Tone) */}
       <div id="about">
         <AboutSection />
         <WaveTransition colorClass="text-white" bgClass="bg-[#f5ede4]" flip={true} />
