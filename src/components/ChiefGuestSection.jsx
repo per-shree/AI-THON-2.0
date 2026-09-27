@@ -1,8 +1,8 @@
 import drLkGiteImg from '../assets/dr_lk_gite.png'
 
-export default function ChiefGuestSection() {
+export default function ChiefGuestSection({ hideId = false }) {
   return (
-    <section id="chief-guest" className="w-full bg-white py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+    <section id={hideId ? undefined : 'chief-guest'} className="w-full bg-white py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 scroll-mt-16 sm:scroll-mt-20">
       <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10">
         
         {/* Section Header */}

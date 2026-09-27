@@ -5,6 +5,7 @@ import { AdminProvider } from './context/AdminContext'
 import Home from './pages/Home'
 import Registration from './pages/Registration'
 import FinalePayment from './pages/FinalePayment'
+import ScrollToHash from './components/ScrollToHash'
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin'
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <AdminProvider>
       <BrowserRouter>
+        <ScrollToHash />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />

@@ -35,8 +35,8 @@ export default function Home() {
       </div>
 
       {/* 03 CHIEF GUEST OF THE EVENT (Prestigious Dignitary) */}
-      <div id="chief-guest">
-        <ChiefGuestSection />
+      <div id="chief-guest" className="scroll-mt-16 sm:scroll-mt-20">
+        <ChiefGuestSection hideId={true} />
         <WaveTransition colorClass="text-[#f5ede4]" bgClass="bg-white" />
       </div>
 
