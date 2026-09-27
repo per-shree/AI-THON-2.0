@@ -40,82 +40,139 @@ export default function BackgroundMusic() {
       return
     }
 
-    // Preload audio for mobile browsers (WebKit/Safari)
-    try {
-      if (audio.readyState === 0) {
-        audio.load()
-      }
-    } catch {
-      // ignore
-    }
+    let isCallingPlay = false
+    const timeouts = []
 
-    let isStarted = false
-
-    const attemptPlay = () => {
-      if (isStarted || userHasPaused || isAdminRoute) return
+    // Actively try to turn on unmuted sound if browser permits
+    const attemptUnmuteNow = () => {
+      if (userHasPaused || isAdminRoute) return
       const currentAudio = audioRef.current
       if (!currentAudio) return
+
+      try {
+        currentAudio.muted = false
+        currentAudio.volume = volume
+
+        // If the browser paused playback due to unmuting without gesture, recover muted playback immediately
+        if (currentAudio.paused) {
+          currentAudio.muted = true
+          currentAudio.play().catch(() => {})
+        } else {
+          // Succeeded! Music is ON and playing with sound
+          setIsPlaying(true)
+          setIsMuted(false)
+          removeInteractionListeners()
+        }
+      } catch {
+        currentAudio.muted = true
+        currentAudio.play().catch(() => {})
+      }
+    }
+
+    // Attempt to start audio; tries unmuted first, then muted fallback (which all mobile browsers allow)
+    const startPlayback = () => {
+      if (userHasPaused || isAdminRoute) return
+      const currentAudio = audioRef.current
+      if (!currentAudio || isCallingPlay) return
+
+      isCallingPlay = true
+
+      // Try 1: Unmuted playback (works immediately on desktop / browsers with permissions)
+      currentAudio.muted = isMuted
+      currentAudio.volume = isMuted ? 0 : volume
 
       const playPromise = currentAudio.play()
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            isStarted = true
+            isCallingPlay = false
             setIsPlaying(true)
             removeInteractionListeners()
           })
           .catch(() => {
-            // Autoplay policy prevented playback until user interaction; keep listeners active
-            setIsPlaying(false)
+            // Try 2: If unmuted was blocked by mobile browser autoplay policy,
+            // start playing muted immediately (universally allowed by iOS Safari & Android Chrome)
+            currentAudio.muted = true
+            currentAudio
+              .play()
+              .then(() => {
+                isCallingPlay = false
+                setIsPlaying(true)
+
+                // Try 3: Actively attempt to unmute now and after micro-delays (e.g. if transient activation exists from link/QR click)
+                attemptUnmuteNow()
+                timeouts.push(setTimeout(attemptUnmuteNow, 150))
+                timeouts.push(setTimeout(attemptUnmuteNow, 400))
+              })
+              .catch(() => {
+                isCallingPlay = false
+                setIsPlaying(false)
+              })
           })
+      } else {
+        isCallingPlay = false
       }
     }
 
-    const onUserInteraction = () => {
-      attemptPlay()
+    // On any user interaction (touch, tap, click, key, scroll), immediately unmute and ensure playback
+    const unlockAndPlay = () => {
+      if (userHasPaused || isAdminRoute) return
+      const currentAudio = audioRef.current
+      if (!currentAudio) return
+
+      // Unmute to requested volume
+      currentAudio.muted = false
+      currentAudio.volume = volume
+
+      // Explicitly invoke play() inside the user gesture call stack to authorize unmuted playback in iOS Safari & Android Chrome
+      const p = currentAudio.play()
+      if (p !== undefined) {
+        p.then(() => {
+          setIsPlaying(true)
+          setIsMuted(false)
+          removeInteractionListeners()
+        }).catch(() => {
+          // If this gesture was not yet accepted (e.g. touchstart on iOS), keep listeners active so touchend/click succeeds
+        })
+      } else {
+        setIsPlaying(true)
+        setIsMuted(false)
+        removeInteractionListeners()
+      }
     }
 
-    // Comprehensive list of events to catch any interaction on mobile, tablet, or desktop
+    // All possible user interaction events across mobile, tablet, and desktop
     const INTERACTION_EVENTS = [
+      'pointerdown',
       'touchstart',
       'touchend',
-      'touchmove',
-      'pointerdown',
       'pointerup',
       'click',
-      'mousedown',
-      'mouseup',
       'keydown',
       'scroll',
-      'wheel',
     ]
 
-    const listenerOpts = { passive: true, capture: true }
+    const listenerOpts = { capture: true, passive: true }
 
     const addInteractionListeners = () => {
       INTERACTION_EVENTS.forEach((evt) => {
-        window.addEventListener(evt, onUserInteraction, listenerOpts)
-        document.addEventListener(evt, onUserInteraction, listenerOpts)
-        if (document.body) {
-          document.body.addEventListener(evt, onUserInteraction, listenerOpts)
-        }
+        window.addEventListener(evt, unlockAndPlay, listenerOpts)
+        document.addEventListener(evt, unlockAndPlay, listenerOpts)
       })
     }
 
     const removeInteractionListeners = () => {
+      timeouts.forEach(clearTimeout)
       INTERACTION_EVENTS.forEach((evt) => {
-        window.removeEventListener(evt, onUserInteraction, listenerOpts)
-        document.removeEventListener(evt, onUserInteraction, listenerOpts)
-        if (document.body) {
-          document.body.removeEventListener(evt, onUserInteraction, listenerOpts)
-        }
+        window.removeEventListener(evt, unlockAndPlay, listenerOpts)
+        document.removeEventListener(evt, unlockAndPlay, listenerOpts)
       })
     }
 
-    // 1. Try immediate playback (works on desktop if allowed, or if interaction already occurred)
-    attemptPlay()
+    // 1. Immediately attempt playback on mount
+    startPlayback()
 
-    // 2. Attach listeners for first interaction on mobile / restrictive browsers
+    // 2. Attach listeners to guarantee audio unmuting / playback on first gesture
     addInteractionListeners()
 
     return () => {
@@ -173,6 +230,7 @@ export default function BackgroundMusic() {
     const audio = audioRef.current
     if (!audio) return
     audio.volume = isMuted ? 0 : volume
+    audio.muted = isMuted
   }, [volume, isMuted])
 
   const togglePlay = () => {
@@ -184,6 +242,8 @@ export default function BackgroundMusic() {
       setIsPlaying(false)
       setUserHasPaused(true)
     } else {
+      audio.muted = isMuted
+      audio.volume = isMuted ? 0 : volume
       audio.play()
         .then(() => {
           setIsPlaying(true)
@@ -197,18 +257,26 @@ export default function BackgroundMusic() {
     e.stopPropagation()
     const nextMuted = !isMuted
     setIsMuted(nextMuted)
-    if (nextMuted && !isPlaying) {
-      // remain paused
-    } else if (!nextMuted && !isPlaying && !userHasPaused) {
-      audioRef.current?.play().then(() => setIsPlaying(true)).catch(console.error)
+    const audio = audioRef.current
+    if (audio) {
+      audio.muted = nextMuted
+      audio.volume = nextMuted ? 0 : volume
+      if (!nextMuted && !isPlaying && !userHasPaused) {
+        audio.play().then(() => setIsPlaying(true)).catch(console.error)
+      }
     }
   }
 
   const handleVolumeChange = (e) => {
     const newVol = parseFloat(e.target.value)
     setVolume(newVol)
-    if (newVol > 0 && isMuted) {
-      setIsMuted(false)
+    const audio = audioRef.current
+    if (audio) {
+      audio.volume = newVol
+      if (newVol > 0 && isMuted) {
+        setIsMuted(false)
+        audio.muted = false
+      }
     }
   }
 
