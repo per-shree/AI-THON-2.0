@@ -12,67 +12,173 @@ export default function BackgroundMusic() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [userHasPaused, setUserHasPaused] = useState(() => {
-    return localStorage.getItem('aithon_music_paused') === 'true'
-  })
+  const [userHasPaused, setUserHasPaused] = useState(false)
 
   const isAdminRoute = location.pathname.startsWith('/admin')
 
-  // Set initial audio properties and attempt playback
+  // Clear any legacy paused flags from localStorage so music is always ON by default on enter/refresh
+  useEffect(() => {
+    try {
+      localStorage.removeItem('aithon_music_paused')
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  // Set initial audio properties and attempt playback across all devices and views
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    audio.volume = volume
+    audio.volume = isMuted ? 0 : volume
     audio.loop = true
 
-    // If on admin route or user explicitly paused, don't autoplay
+    // If on admin route or user explicitly paused in this session, don't play
     if (isAdminRoute || userHasPaused) {
       audio.pause()
       setIsPlaying(false)
       return
     }
 
-    let started = false
+    let isCallingPlay = false
+    const timeouts = []
 
-    const attemptPlay = () => {
-      if (started) return
-      audio.play()
-        .then(() => {
-          started = true
+    // Actively try to turn on unmuted sound if browser permits
+    const attemptUnmuteNow = () => {
+      if (userHasPaused || isAdminRoute) return
+      const currentAudio = audioRef.current
+      if (!currentAudio) return
+
+      try {
+        currentAudio.muted = false
+        currentAudio.volume = volume
+
+        // If the browser paused playback due to unmuting without gesture, recover muted playback immediately
+        if (currentAudio.paused) {
+          currentAudio.muted = true
+          currentAudio.play().catch(() => {})
+        } else {
+          // Succeeded! Music is ON and playing with sound
           setIsPlaying(true)
-          cleanupListeners()
+          setIsMuted(false)
+          removeInteractionListeners()
+        }
+      } catch {
+        currentAudio.muted = true
+        currentAudio.play().catch(() => {})
+      }
+    }
+
+    // Attempt to start audio; tries unmuted first, then muted fallback (which all mobile browsers allow)
+    const startPlayback = () => {
+      if (userHasPaused || isAdminRoute) return
+      const currentAudio = audioRef.current
+      if (!currentAudio || isCallingPlay) return
+
+      isCallingPlay = true
+
+      // Try 1: Unmuted playback (works immediately on desktop / browsers with permissions)
+      currentAudio.muted = isMuted
+      currentAudio.volume = isMuted ? 0 : volume
+
+      const playPromise = currentAudio.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            isCallingPlay = false
+            setIsPlaying(true)
+            removeInteractionListeners()
+          })
+          .catch(() => {
+            // Try 2: If unmuted was blocked by mobile browser autoplay policy,
+            // start playing muted immediately (universally allowed by iOS Safari & Android Chrome)
+            currentAudio.muted = true
+            currentAudio
+              .play()
+              .then(() => {
+                isCallingPlay = false
+                setIsPlaying(true)
+
+                // Try 3: Actively attempt to unmute now and after micro-delays (e.g. if transient activation exists from link/QR click)
+                attemptUnmuteNow()
+                timeouts.push(setTimeout(attemptUnmuteNow, 150))
+                timeouts.push(setTimeout(attemptUnmuteNow, 400))
+              })
+              .catch(() => {
+                isCallingPlay = false
+                setIsPlaying(false)
+              })
+          })
+      } else {
+        isCallingPlay = false
+      }
+    }
+
+    // On any user interaction (touch, tap, click, key, scroll), immediately unmute and ensure playback
+    const unlockAndPlay = () => {
+      if (userHasPaused || isAdminRoute) return
+      const currentAudio = audioRef.current
+      if (!currentAudio) return
+
+      // Unmute to requested volume
+      currentAudio.muted = false
+      currentAudio.volume = volume
+
+      // Explicitly invoke play() inside the user gesture call stack to authorize unmuted playback in iOS Safari & Android Chrome
+      const p = currentAudio.play()
+      if (p !== undefined) {
+        p.then(() => {
+          setIsPlaying(true)
+          setIsMuted(false)
+          removeInteractionListeners()
+        }).catch(() => {
+          // If this gesture was not yet accepted (e.g. touchstart on iOS), keep listeners active so touchend/click succeeds
         })
-        .catch(() => {
-          // Autoplay blocked by browser policy until first user interaction
-          setIsPlaying(false)
-        })
+      } else {
+        setIsPlaying(true)
+        setIsMuted(false)
+        removeInteractionListeners()
+      }
     }
 
-    const onUserInteraction = () => {
-      attemptPlay()
+    // All possible user interaction events across mobile, tablet, and desktop
+    const INTERACTION_EVENTS = [
+      'pointerdown',
+      'touchstart',
+      'touchend',
+      'pointerup',
+      'click',
+      'keydown',
+      'scroll',
+    ]
+
+    const listenerOpts = { capture: true, passive: true }
+
+    const addInteractionListeners = () => {
+      INTERACTION_EVENTS.forEach((evt) => {
+        window.addEventListener(evt, unlockAndPlay, listenerOpts)
+        document.addEventListener(evt, unlockAndPlay, listenerOpts)
+      })
     }
 
-    const cleanupListeners = () => {
-      window.removeEventListener('click', onUserInteraction)
-      window.removeEventListener('keydown', onUserInteraction)
-      window.removeEventListener('touchstart', onUserInteraction)
-      window.removeEventListener('scroll', onUserInteraction)
+    const removeInteractionListeners = () => {
+      timeouts.forEach(clearTimeout)
+      INTERACTION_EVENTS.forEach((evt) => {
+        window.removeEventListener(evt, unlockAndPlay, listenerOpts)
+        document.removeEventListener(evt, unlockAndPlay, listenerOpts)
+      })
     }
 
-    // Try direct play
-    attemptPlay()
+    // 1. Immediately attempt playback on mount
+    startPlayback()
 
-    // Attach listeners for first interaction if blocked
-    window.addEventListener('click', onUserInteraction, { once: true, passive: true })
-    window.addEventListener('keydown', onUserInteraction, { once: true, passive: true })
-    window.addEventListener('touchstart', onUserInteraction, { once: true, passive: true })
-    window.addEventListener('scroll', onUserInteraction, { once: true, passive: true })
+    // 2. Attach listeners to guarantee audio unmuting / playback on first gesture
+    addInteractionListeners()
 
     return () => {
-      cleanupListeners()
+      removeInteractionListeners()
     }
-  }, [isAdminRoute, userHasPaused])
+  }, [isAdminRoute, userHasPaused, isMuted, volume])
 
   // React to route changes (silence in admin, resume in public)
   useEffect(() => {
@@ -83,17 +189,48 @@ export default function BackgroundMusic() {
       audio.pause()
       setIsPlaying(false)
     } else if (!userHasPaused) {
-      audio.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false))
+      if (audio.paused) {
+        audio.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {
+            // Will resume on interaction
+          })
+      } else {
+        setIsPlaying(true)
+      }
     }
   }, [location.pathname, isAdminRoute, userHasPaused])
+
+  // Resume playback when returning to the tab on mobile devices (e.g. app switch, screen unlock, back navigation)
+  useEffect(() => {
+    const handleResume = () => {
+      const audio = audioRef.current
+      if (!audio || isAdminRoute || userHasPaused) return
+
+      if (document.visibilityState === 'visible' && audio.paused) {
+        audio.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {})
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleResume)
+    window.addEventListener('focus', handleResume)
+    window.addEventListener('pageshow', handleResume)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleResume)
+      window.removeEventListener('focus', handleResume)
+      window.removeEventListener('pageshow', handleResume)
+    }
+  }, [isAdminRoute, userHasPaused])
 
   // Sync volume & mute changes with audio element
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
     audio.volume = isMuted ? 0 : volume
+    audio.muted = isMuted
   }, [volume, isMuted])
 
   const togglePlay = () => {
@@ -104,13 +241,13 @@ export default function BackgroundMusic() {
       audio.pause()
       setIsPlaying(false)
       setUserHasPaused(true)
-      localStorage.setItem('aithon_music_paused', 'true')
     } else {
+      audio.muted = isMuted
+      audio.volume = isMuted ? 0 : volume
       audio.play()
         .then(() => {
           setIsPlaying(true)
           setUserHasPaused(false)
-          localStorage.removeItem('aithon_music_paused')
         })
         .catch(console.error)
     }
@@ -120,56 +257,64 @@ export default function BackgroundMusic() {
     e.stopPropagation()
     const nextMuted = !isMuted
     setIsMuted(nextMuted)
-    if (nextMuted && !isPlaying) {
-      // remain paused
-    } else if (!nextMuted && !isPlaying && !userHasPaused) {
-      audioRef.current?.play().then(() => setIsPlaying(true)).catch(console.error)
+    const audio = audioRef.current
+    if (audio) {
+      audio.muted = nextMuted
+      audio.volume = nextMuted ? 0 : volume
+      if (!nextMuted && !isPlaying && !userHasPaused) {
+        audio.play().then(() => setIsPlaying(true)).catch(console.error)
+      }
     }
   }
 
   const handleVolumeChange = (e) => {
     const newVol = parseFloat(e.target.value)
     setVolume(newVol)
-    if (newVol > 0 && isMuted) {
-      setIsMuted(false)
+    const audio = audioRef.current
+    if (audio) {
+      audio.volume = newVol
+      if (newVol > 0 && isMuted) {
+        setIsMuted(false)
+        audio.muted = false
+      }
     }
-  }
-
-  // Do not render UI on admin routes
-  if (isAdminRoute) {
-    return (
-      <audio
-        ref={audioRef}
-        loop
-        preload="auto"
-        playsInline
-      >
-        <source src="/journey.mp3" type="audio/mpeg" />
-        <source src="/Tim%20Schaufert%20-%20Journey.mp3" type="audio/mpeg" />
-      </audio>
-    )
   }
 
   return (
     <>
-      {/* Hidden HTML5 Audio Element in infinite loop */}
+      {/* Persistent HTML5 Audio Element in infinite loop */}
       <audio
         ref={audioRef}
+        src="/journey.mp3"
         loop
+        autoPlay
         preload="auto"
         playsInline
+        webkit-playsinline="true"
         onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPause={() => {
+          if (audioRef.current?.paused) {
+            setIsPlaying(false)
+          }
+        }}
+        onEnded={() => {
+          const audio = audioRef.current
+          if (audio && !isAdminRoute && !userHasPaused) {
+            audio.currentTime = 0
+            audio.play().catch(() => {})
+          }
+        }}
       >
         <source src="/journey.mp3" type="audio/mpeg" />
         <source src="/Tim%20Schaufert%20-%20Journey.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* Floating Very Small Ambient Music Tag - Right Hand Side */}
-      <aside
-        aria-label="Background audio player"
-        className="no-print fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-40 transition-all duration-300 select-none flex flex-col items-end"
-      >
+      {/* Floating Very Small Ambient Music Tag - Right Hand Side (public routes only) */}
+      {!isAdminRoute && (
+        <aside
+          aria-label="Background audio player"
+          className="no-print fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 transition-all duration-300 select-none flex flex-col items-end"
+        >
         {/* Optional Micro Popover for Volume Adjustment */}
         {isExpanded && (
           <div className="mb-2 p-2.5 w-48 bg-white/95 hover:bg-white backdrop-blur-md border border-[#edebe6] shadow-[0_8px_25px_rgba(6,43,89,0.12)] rounded-xl animate-fadeIn flex flex-col gap-2">
@@ -295,6 +440,7 @@ export default function BackgroundMusic() {
           </button>
         </div>
       </aside>
+      )}
     </>
   )
 }
