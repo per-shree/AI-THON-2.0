@@ -19,6 +19,31 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const handleNavClick = (e, href) => {
+    if (href === '#home') {
+      if (location.pathname === '/') {
+        e.preventDefault()
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        if (window.location.hash) {
+          window.history.pushState(null, '', window.location.pathname)
+        }
+      }
+    }
+  }
+
+  const handleMobileNavClick = (e, href) => {
+    setMobileMenuOpen(false)
+    if (href === '#home') {
+      if (location.pathname === '/') {
+        e.preventDefault()
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        if (window.location.hash) {
+          window.history.pushState(null, '', window.location.pathname)
+        }
+      }
+    }
+  }
+
   const navLinks = [
     { label: 'Home', href: '#home' },
     { label: 'Sponsors', href: '#our-sponsors' },
@@ -81,6 +106,7 @@ export default function Navbar() {
                 <a 
                   key={link.label}
                   href={getHref(link.href)}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="text-[11px] xl:text-[13px] font-bold text-slate-700 hover:text-[#2563eb] transition-colors uppercase tracking-wider whitespace-nowrap py-1"
                 >
                   {link.label}
@@ -117,7 +143,7 @@ export default function Navbar() {
               key={link.label}
               href={getHref(link.href)}
               className="text-sm font-bold text-slate-700 uppercase tracking-wider py-2 border-b border-slate-50"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => handleMobileNavClick(e, link.href)}
             >
               {link.label}
             </a>

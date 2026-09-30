@@ -14,6 +14,10 @@ export default function ScrollToHash() {
     const targetId = hash.replace('#', '')
 
     const performScroll = () => {
+      if (targetId === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return true
+      }
       const element = document.getElementById(targetId)
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' })

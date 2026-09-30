@@ -41,7 +41,7 @@ export default function AnnouncementTicker() {
         <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[#062b59] to-transparent z-10 pointer-events-none" />
 
         {/* Dual-block seamless continuous ticker with mathematically uniform spacing */}
-        <div className="flex w-max will-change-transform animate-[marquee_25s_linear_infinite] hover:[animation-play-state:paused] cursor-default">
+        <div className="announcement-marquee cursor-default">
           {renderItemBlock('primary', false)}
           {renderItemBlock('duplicate', true)}
         </div>
