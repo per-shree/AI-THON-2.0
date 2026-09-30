@@ -33,6 +33,16 @@ export default function SponsorsSection() {
       isWideLogo: true
     },
     {
+      name: 'Invofix Solutions Pvt. Ltd.',
+      logo: '/invofix_logo.png',
+      url: 'https://invofix.in/',
+      tier: 'SILVER SPONSOR',
+      desc: 'Solar Energy & Smart Solutions',
+      isActive: true,
+      isLargeLogo: true,
+      isWideLogo: true
+    },
+    {
       name: 'NEXA (Mahalaxmi Automotives, Sangamner)',
       logo: '/nexa_logo.png',
       url: 'https://www.nexaexperience.com/',
@@ -60,6 +70,16 @@ export default function SponsorsSection() {
       isLargeLogo: true,
       isWideLogo: true,
       scaleClass: 'scale-115'
+    },
+    {
+      name: 'Aimers Infotech & Automation',
+      logo: '/aimers_logo.png',
+      url: 'https://aimersinfotech.in/',
+      tier: 'ASSOCIATE SPONSOR',
+      desc: 'Software Development & Automation',
+      isActive: true,
+      isLargeLogo: true,
+      isWhiteBg: true
     },
     {
       name: 'Vajra Infra',
@@ -138,6 +158,7 @@ export default function SponsorsSection() {
         const isTitleSponsor = item.tier === 'TITLE SPONSOR'
         const isPlatinumSponsor = item.tier === 'PLATINUM SPONSOR'
         const isGoldSponsor = item.tier === 'GOLD SPONSOR'
+        const isSilverSponsor = item.tier === 'SILVER SPONSOR'
         const isAssociateSponsor = item.tier === 'ASSOCIATE SPONSOR'
 
         if (item.isActive && hasValidLink) {
@@ -156,6 +177,8 @@ export default function SponsorsSection() {
                   ? 'border-slate-300 bg-gradient-to-b from-slate-50/50 to-white hover:border-blue-400 shadow-xs hover:shadow-md'
                   : isGoldSponsor
                   ? 'border-amber-300 bg-gradient-to-b from-yellow-50/40 to-white hover:border-amber-400 shadow-xs hover:shadow-md'
+                  : isSilverSponsor
+                  ? 'border-slate-300 bg-gradient-to-b from-slate-100/70 to-white hover:border-slate-400 shadow-xs hover:shadow-md'
                   : isAssociateSponsor
                   ? 'border-blue-200 bg-gradient-to-b from-blue-50/30 to-white hover:border-blue-400 shadow-xs hover:shadow-md'
                   : 'border-[#edebe6] hover:border-blue-500 shadow-xs hover:shadow-md'
@@ -180,6 +203,8 @@ export default function SponsorsSection() {
                     ? 'bg-slate-50/70 border border-slate-200 p-2 group-hover:bg-slate-100'
                     : isGoldSponsor
                     ? 'bg-amber-50/40 border border-amber-200/80 p-2 group-hover:bg-amber-100/50'
+                    : isSilverSponsor
+                    ? 'bg-slate-50/80 border border-slate-200 p-2 group-hover:bg-slate-100'
                     : 'bg-slate-50 border border-slate-100 p-2 group-hover:bg-slate-100/80'
                 } flex items-center justify-center shrink-0 transition-colors overflow-hidden`}
               >
@@ -213,12 +238,14 @@ export default function SponsorsSection() {
                       ? 'text-slate-900 bg-gradient-to-r from-slate-100 to-sky-50 border border-slate-300 font-extrabold'
                       : isGoldSponsor
                       ? 'text-amber-950 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 font-extrabold'
+                      : isSilverSponsor
+                      ? 'text-slate-900 bg-gradient-to-r from-slate-100 via-zinc-200 to-slate-100 border border-slate-300 font-extrabold'
                       : 'text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5]'
                   }`}
                 >
-                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : item.tier}
+                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : isSilverSponsor ? '🥈 SILVER SPONSOR' : item.tier}
                 </span>
-                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor || isAssociateSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap`}>
+                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor || isSilverSponsor || isAssociateSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] group-hover:text-blue-600 transition-colors leading-snug mt-1 whitespace-nowrap`}>
                   {item.name}
                 </h3>
                 {item.desc && (
@@ -244,6 +271,8 @@ export default function SponsorsSection() {
                   ? 'border-slate-300 bg-gradient-to-b from-slate-50/50 to-white shadow-xs'
                   : isGoldSponsor
                   ? 'border-amber-300 bg-gradient-to-b from-yellow-50/40 to-white shadow-xs'
+                  : isSilverSponsor
+                  ? 'border-slate-300 bg-gradient-to-b from-slate-100/70 to-white shadow-xs'
                   : isAssociateSponsor
                   ? 'border-blue-200 bg-gradient-to-b from-blue-50/30 to-white shadow-xs'
                   : 'border-[#edebe6] shadow-xs'
@@ -266,6 +295,8 @@ export default function SponsorsSection() {
                     ? 'bg-slate-50/70 border border-slate-200 p-2'
                     : isGoldSponsor
                     ? 'bg-amber-50/40 border border-amber-200/80 p-2'
+                    : isSilverSponsor
+                    ? 'bg-slate-50/80 border border-slate-200 p-2'
                     : 'bg-slate-50 border border-slate-100 p-2'
                 } flex items-center justify-center shrink-0 overflow-hidden`}
               >
@@ -295,12 +326,14 @@ export default function SponsorsSection() {
                       ? 'text-slate-900 bg-gradient-to-r from-slate-100 to-sky-50 border border-slate-300 font-extrabold'
                       : isGoldSponsor
                       ? 'text-amber-950 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 font-extrabold'
+                      : isSilverSponsor
+                      ? 'text-slate-900 bg-gradient-to-r from-slate-100 via-zinc-200 to-slate-100 border border-slate-300 font-extrabold'
                       : 'text-[#062b59] bg-[#f5ede4] border border-[#e2d5c5]'
                   }`}
                 >
-                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : item.tier}
+                  {isTitleSponsor ? '⭐ TITLE SPONSOR' : isPlatinumSponsor ? '💎 PLATINUM SPONSOR' : isGoldSponsor ? '🥇 GOLD SPONSOR' : isSilverSponsor ? '🥈 SILVER SPONSOR' : item.tier}
                 </span>
-                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor || isAssociateSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] leading-snug mt-1 whitespace-nowrap`}>
+                <h3 className={`${(isTitleSponsor || isPlatinumSponsor || isGoldSponsor || isSilverSponsor || isAssociateSponsor) ? 'text-sm sm:text-base font-extrabold' : 'text-xs sm:text-sm font-bold'} text-[#062b59] leading-snug mt-1 whitespace-nowrap`}>
                   {item.name}
                 </h3>
                 {item.desc && (

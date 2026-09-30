@@ -21,7 +21,7 @@ AI-THON 2.0 convenes India's brightest student innovators, developers, and resea
 - [Event Timeline](https://aithon2-0.xyz/#timeline): Key milestones from registrations to Grand Finale day-of-event schedule.
 - [Prizes & Awards](https://aithon2-0.xyz/#prizes): Cash prizes, track winners, runner-up awards, and special partner recognitions.
 - [Chief Guest](https://aithon2-0.xyz/#chief-guest): Dr. L. K. Gite, Scientist 'F', ARDE DRDO, presiding over the inaugural keynote.
-- [Sponsors & Partners](https://aithon2-0.xyz/#our-sponsors): Title Sponsor Sumago Infotech, Platinum Sponsor DASS Chemtech, Gold Sponsor Oakya IT Services, Automotive Partner NEXA, Domain Partner .XYZ, and regional partners.
+- [Sponsors & Partners](https://aithon2-0.xyz/#our-sponsors): Title Sponsor Sumago Infotech, Platinum Sponsor DASS Chemtech, Gold Sponsor Oakya IT Services, Silver Sponsor Invofix Solutions, Automotive Partner NEXA, Domain Partner .XYZ, and regional partners.
 - [FAQ](https://aithon2-0.xyz/#faq): Answers to questions regarding team formation, payments, PPT template, travel, and accommodation.
 - [Contact Support](https://aithon2-0.xyz/#contact): Student coordinators, faculty conveners, and official helpdesk channels.
 
