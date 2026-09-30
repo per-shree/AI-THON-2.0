@@ -233,7 +233,7 @@ export default function ContactSection() {
                   </div>
                   <div>
                     <span className="font-bold text-[#062b59]">₹1,00,000 Prize Pool</span>
-                    <span className="text-slate-500 block text-xs">Awards, Trophies & Recognition</span>
+                    <span className="text-slate-500 block text-xs">Cash, ₹1.20L Internship & Trophies</span>
                   </div>
                 </div>
 
