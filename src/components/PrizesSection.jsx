@@ -83,29 +83,29 @@ export default function PrizesSection() {
 
   const prizes = [
     {
-      title: '1st Prize',
+      title: 'Winner',
       amount: 160000,
       note: '40,000 Cash + 1.20 Lakh Internship + Trophy + T-Shirts',
     },
     {
-      title: '2nd Prize',
+      title: '1st Runner Up',
       amount: 30000,
-      note: 'Runner Up Award',
+      note: '1st Runner Up Award',
     },
     {
-      title: '3rd Prize',
+      title: '2nd Runner Up',
       amount: 20000,
-      note: 'Second Runner Up Award',
+      note: '2nd Runner Up Award',
     },
     {
-      title: '4th Prize',
+      title: '3rd Runner Up',
       amount: 6000,
-      note: 'Consolation Award',
+      note: '3rd Runner Up Award',
     },
     {
-      title: '5th Prize',
+      title: '4th Runner Up',
       amount: 4000,
-      note: 'Consolation Award',
+      note: '4th Runner Up Award',
     },
     {
       title: 'Top 20',

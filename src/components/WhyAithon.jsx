@@ -23,7 +23,7 @@ export default function WhyAithon() {
     {
       num: '05',
       title: 'Recognition & Rewards',
-      desc: 'Compete for 1st Prize worth ₹1,60,000 (40,000 cash + 1.20 Lakh internship + trophy + T-shirts), cash prizes across top 5, and surprise gifts for top 20 teams worth ₹30,000.',
+      desc: 'Compete for Winner Prize worth ₹1,60,000 (40,000 cash + 1.20 Lakh internship + trophy + T-shirts), cash prizes across top 5, and surprise gifts for top 20 teams worth ₹30,000.',
     },
   ]
 
