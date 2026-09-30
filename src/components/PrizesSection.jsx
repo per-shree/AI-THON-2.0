@@ -27,11 +27,11 @@ export default function PrizesSection() {
     const cutTimer = setTimeout(() => {
       setIsCutVisible(true)
 
-      // Phase 3: Slashed line dissolves and numbers roll into 2,40,000 on the same place
+      // Phase 3: Slashed line dissolves and numbers roll into 2,50,000 on the same place
       const upgradeTimer = setTimeout(() => {
         setIsCutVisible(false)
         setIsUpgraded(true)
-        setMainPrizeValue(240000)
+        setMainPrizeValue(250000)
       }, 900)
 
       timerRefs.current.push(upgradeTimer)
@@ -84,8 +84,8 @@ export default function PrizesSection() {
   const prizes = [
     {
       title: '1st Prize',
-      amount: 40000,
-      note: '+ 3-Month Internship for Winners worth ₹1.20L + Trophies',
+      amount: 160000,
+      note: '40,000 Cash + 1.20 Lakh Internship + Trophy + T-Shirts',
     },
     {
       title: '2nd Prize',
@@ -111,7 +111,7 @@ export default function PrizesSection() {
       title: 'Top 20',
       isText: true,
       text: 'Surprise Gifts',
-      note: 'Surprise Gifts for Top 20 Teams',
+      note: 'Surprise Gifts for Top 20 Teams worth ₹30,000',
     },
   ]
 

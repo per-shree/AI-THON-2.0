@@ -11,8 +11,8 @@ export default function AnnouncementTicker() {
     'GRAND FINALE: 23 OCTOBER 2026',
     '12 HOURS NON-STOP HACKATHON',
     'TOTAL PRIZE POOL ₹1,00,000 (1ST ₹40K • 2ND ₹30K • 3RD ₹20K • 4TH ₹6K • 5TH ₹4K)',
-    '1ST PRIZE: ₹40,000 + 3-MONTH INTERNSHIP WORTH ₹1.20L + TROPHIES',
-    'SURPRISE GIFTS FOR ALL TOP 20 FINALISTS',
+    '1ST PRIZE WORTH ₹1,60,000 (40,000 CASH + 1.20 LAKH INTERNSHIP + TROPHY + T-SHIRTS)',
+    'SURPRISE GIFTS FOR ALL TOP 20 FINALISTS WORTH ₹30,000',
   ]
 
   const renderItemBlock = (keyPrefix = 'b1', isAriaHidden = false) => (
