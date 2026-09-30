@@ -23,7 +23,7 @@ export default function WhyAithon() {
     {
       num: '05',
       title: 'Recognition & Rewards',
-      desc: 'Compete for ₹1,00,000* in total prizes and institutional recognition for your technical excellence.',
+      desc: 'Compete for ₹1,00,000 in cash prizes, 3-month internships worth ₹1.20L + trophies for winners, and surprise gifts for top 20 teams.',
     },
   ]
 
