@@ -285,7 +285,7 @@ export default function BackgroundMusic() {
       {/* Persistent HTML5 Audio Element in infinite loop */}
       <audio
         ref={audioRef}
-        src="/journey.mp3"
+        src="/alex-warren.mp3"
         loop
         autoPlay
         preload="auto"
@@ -305,8 +305,8 @@ export default function BackgroundMusic() {
           }
         }}
       >
-        <source src="/journey.mp3" type="audio/mpeg" />
-        <source src="/Tim%20Schaufert%20-%20Journey.mp3" type="audio/mpeg" />
+        <source src="/alex-warren.mp3" type="audio/mpeg" />
+        <source src="/Alex%20Warren%20-%20Ordinary%20(Karaoke%20Version).mp3" type="audio/mpeg" />
       </audio>
 
       {/* Floating Very Small Ambient Music Tag - Right Hand Side (public routes only) */}
@@ -365,7 +365,7 @@ export default function BackgroundMusic() {
           <button
             type="button"
             onClick={togglePlay}
-            aria-label={isPlaying ? 'Pause Journey background music' : 'Play Journey background music'}
+            aria-label={isPlaying ? 'Pause Alex Warren background music' : 'Play Alex Warren background music'}
             title={isPlaying ? 'Click to Pause' : 'Click to Play'}
             className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden shrink-0 cursor-pointer shadow-2xs group focus:outline-none"
           >
@@ -403,10 +403,10 @@ export default function BackgroundMusic() {
             type="button"
             onClick={togglePlay}
             className="flex items-center gap-1 cursor-pointer text-left focus:outline-none"
-            title={isPlaying ? 'Journey (Playing at 9%)' : 'Journey (Paused)'}
+            title={isPlaying ? 'Alex Warren - Ordinary (Playing at 9%)' : 'Alex Warren - Ordinary (Paused)'}
           >
             <span className="text-[11px] font-bold text-[#062b59] tracking-tight whitespace-nowrap">
-              Journey
+              Alex Warren
             </span>
             <span className="text-[8.5px] font-extrabold text-[#2563eb] bg-blue-50 px-1 py-0.2 rounded-full border border-blue-200/60 leading-none">
               {isMuted ? 'Mute' : `${Math.round(volume * 100)}%`}
