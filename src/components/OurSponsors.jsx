@@ -53,6 +53,14 @@ const partnersList = [
     scaleClass: 'scale-125',
   },
   {
+    name: 'Aimers Infotech & Automation',
+    logo: '/aimers_logo.png',
+    url: 'https://aimersinfotech.in/',
+    role: 'ASSOCIATE SPONSOR',
+    desc: 'Empowering innovation through software development, IoT solutions, and industrial automation.',
+    isWhiteBg: true,
+  },
+  {
     name: 'Vajra Infra',
     logo: '/vajra_logo.png',
     url: '',

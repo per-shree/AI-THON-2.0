@@ -72,6 +72,16 @@ export default function SponsorsSection() {
       scaleClass: 'scale-115'
     },
     {
+      name: 'Aimers Infotech & Automation',
+      logo: '/aimers_logo.png',
+      url: 'https://aimersinfotech.in/',
+      tier: 'ASSOCIATE SPONSOR',
+      desc: 'Software Development & Automation',
+      isActive: true,
+      isLargeLogo: true,
+      isWhiteBg: true
+    },
+    {
       name: 'Vajra Infra',
       logo: '/vajra_logo.png',
       url: '#',
