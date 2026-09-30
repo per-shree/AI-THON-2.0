@@ -1571,11 +1571,16 @@ function sendPptAcceptanceEmail(data) {
     "• Project Domain   : " + (data.selectedDomain || "Software") + "\n" +
     "• Competition Track : " + (data.selectedTrack || "General AI Track") + "\n" +
     "• Team Size         : " + teamSize + " Members\n" +
-    "• Status            : SHORTLISTED FOR FINALE (ROUND 2)\n\n" +
+    "• Status            : SHORTLISTED FOR FINALE (ROUND 2)\n" +
+    "• Submission Cutoff : 15 October, 12:00 AM (Midnight) [STRICT DEADLINE]\n\n" +
     "----------------------------------------------------------\n" +
     "MANDATORY STEP: FINAL PAYMENT & SEAT CONFIRMATION\n" +
     "----------------------------------------------------------\n" +
-    "To officially reserve and lock your team's physical seat & workstation at AVCOE Sangamner, your team must complete the Round 2 registration fee and submit the payment proof on our official Google Form.\n\n" +
+    "To officially reserve and lock your team's physical seat & workstation at AVCOE Sangamner, your team must complete the Round 2 registration fee and submit the payment proof & team data on our official Google Form.\n\n" +
+    "⚠️ STRICT DEADLINE & REGISTRATION CUTOFF:\n" +
+    "• Deadline: 15 October, 12:00 AM (Midnight)\n" +
+    "• Final payment and data submission on the Google Form must be completed on or before 15 October, 12:00 AM.\n" +
+    "• After 15 October, the form will close and STRICTLY NO TEAMS will be allowed for second round registration under any circumstances. Unconfirmed seats will be forfeited.\n\n" +
     "• Fee Calculation   : " + teamSize + " Members × ₹200/member\n" +
     "• Total Team Fee    : ₹" + feeAmount + " (Fixed for entire team)\n" +
     "• Payment Mode      : UPI (Google Pay, PhonePe, Paytm, BHIM, etc.)\n" +
@@ -1592,105 +1597,129 @@ function sendPptAcceptanceEmail(data) {
     "3. Open the Official Final Payment Google Form:\n" +
     "   " + paymentFormUrl + "\n" +
     "4. Fill in your Team ID (" + teamId + "), Registration ID (" + regId + "), Leader details, UTR Number, and upload payment screenshot.\n" +
-    "5. Submit the form. Our organizing team will verify your payment and confirm your team's physical workstation and entry passes.\n\n" +
+    "5. Submit the form on or before 15 October, 12:00 AM. After 15 October, no submissions will be accepted!\n" +
+    "6. Our organizing team will verify your payment and confirm your team's physical workstation and entry passes.\n\n" +
     "----------------------------------------------------------\n" +
     "OFFICIAL WHATSAPP COMMUNITY FOR FINALISTS:\n" +
     "----------------------------------------------------------\n" +
     WHATSAPP_COMMUNITY_URL + "\n\n" +
     "Best regards,\n" +
     "Organizing Committee — AITHON 2.0\n" +
+    "Department of Artificial Intelligence & Data Science\n" +
     "Amrutvahini College of Engineering, Sangamner";
 
-  // Modern HTML Email Template with Official Google Form Payment Call-To-Action
+  // Highly Professional Institutional HTML Email in Times New Roman
   var htmlBody =
     '<!DOCTYPE html>' +
     '<html>' +
     '<head>' +
     '  <meta charset="utf-8">' +
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
-    '  <title>AITHON 2.0 PPT Accepted - Final Payment Form</title>' +
+    '  <title>AITHON 2.0 - Official Selection &amp; Grand Finale Notification</title>' +
     '</head>' +
-    '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
-    '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">' +
+    '<body style="margin: 0; padding: 28px 12px; background-color: #f4f6f9; font-family: \'Times New Roman\', Times, Georgia, serif; color: #1e293b; line-height: 1.65;">' +
+    '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 660px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #cbd5e1; font-family: \'Times New Roman\', Times, Georgia, serif;">' +
     '    <!-- Brand Logo Header -->' +
     '    <tr>' +
-    '      <td style="background-color: #ffffff; padding: 26px 20px 20px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">' +
+    '      <td style="background-color: #ffffff; padding: 24px 20px 18px 20px; text-align: center; border-bottom: 2px solid #062b59;">' +
     '        <a href="' + WEBSITE_URL + '" target="_blank" style="text-decoration: none; display: inline-block;">' +
     '          <img src="' + LOGO_IMAGE_URL + '" alt="AITHON 2.0 - National Level AI Hackathon" width="280" style="width: 280px; max-width: 85%; height: auto; border: 0; display: block; margin: 0 auto;" />' +
     '        </a>' +
     '      </td>' +
     '    </tr>' +
-    '    <!-- Brand Header -->' +
+    '    <!-- Institutional Header -->' +
     '    <tr>' +
-    '      <td style="background: linear-gradient(135deg, #062b59 0%, #1e3a8a 100%); padding: 26px 24px; text-align: center; color: #ffffff;">' +
-    '        <div style="display: inline-block; background-color: rgba(34,197,94,0.25); border: 1px solid #4ade80; color: #bbf7d0; padding: 5px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
-    '          PPT Shortlisted • Grand Finale' +
+    '      <td style="background-color: #062b59; padding: 26px 24px; text-align: center; color: #ffffff;">' +
+    '        <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #93c5fd; margin-bottom: 6px;">' +
+    '          National Level AI Hackathon' +
     '        </div>' +
-    '        <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 4px; font-weight: 500;">Dept. of Artificial Intelligence &amp; Data Science • AVCOE Sangamner</div>' +
+    '        <div style="font-size: 22px; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 6px; color: #ffffff;">' +
+    '          ROUND 1 EVALUATION: SELECTED FOR GRAND FINALE' +
+    '        </div>' +
+    '        <div style="font-size: 14px; color: #e2e8f0; font-style: italic;">' +
+    '          Department of Artificial Intelligence &amp; Data Science<br>Amrutvahini College of Engineering (AVCOE), Sangamner' +
+    '        </div>' +
     '      </td>' +
     '    </tr>' +
-    '    <!-- Main Content -->' +
+    '    <!-- Main Body Content -->' +
     '    <tr>' +
-    '      <td style="padding: 32px 28px;">' +
-    '        <div style="display: inline-block; background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 5px 14px; border-radius: 20px; margin-bottom: 14px;">' +
-    '          Idea Presentation Approved' +
+    '      <td style="padding: 34px 30px;">' +
+    '        <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 22px;">' +
+    '          <div style="display: inline-block; background-color: #ecfdf5; border: 1px solid #059669; color: #065f46; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; border-radius: 4px; margin-bottom: 12px;">' +
+    '            Official Notification of Selection' +
+    '          </div>' +
+    '          <p style="font-size: 16px; margin: 0; color: #0f172a;">' +
+    '            Dear <strong>' + leadName + '</strong> and Respected Members of <strong>' + teamName + '</strong>,' +
+    '          </p>' +
     '        </div>' +
-    '        <h2 style="margin: 0 0 14px 0; color: #062b59; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">' +
-    '          Congratulations! Your Team is Selected for the Finale' +
-    '        </h2>' +
-    '        <p style="font-size: 15px; margin: 0 0 14px 0; color: #0f172a;">' +
-    '          Dear <strong>' + leadName + '</strong> and Members of <strong>' + teamName + '</strong>,' +
+    '        <p style="font-size: 15px; color: #1e293b; margin: 0 0 20px 0; text-align: justify; line-height: 1.7;">' +
+    '          We are pleased to inform you that following a comprehensive review of problem innovation, practical feasibility, technical architecture, and impact by our Expert Evaluation Committee, your team has been <strong>OFFICIALLY SHORTLISTED</strong> to compete in the offline Grand Finale of <strong>AITHON 2.0</strong> at Amrutvahini College of Engineering, Sangamner.' +
     '        </p>' +
-    '        <p style="font-size: 13.5px; color: #334155; margin: 0 0 22px 0; line-height: 1.6;">' +
-    '          We are pleased to inform you that your idea presentation for <strong>AITHON 2.0</strong> has been evaluated and <strong>SHORTLISTED</strong> by our jury panel! Your team has officially qualified to compete in the offline Grand Finale at Amrutvahini College of Engineering, Sangamner.' +
-    '        </p>' +
-    '        <!-- Summary Card -->' +
-    '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 24px;">' +
+
+    '        <!-- STRICT DEADLINE WARNING BOX -->' +
+    '        <div style="background-color: #fef2f2; border: 2px solid #b91c1c; border-left: 6px solid #991b1b; border-radius: 8px; padding: 18px 20px; margin-bottom: 26px;">' +
+    '          <div style="font-size: 13.5px; font-weight: bold; color: #991b1b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">' +
+    '            ⚠️ CRITICAL DEADLINE: 15 OCTOBER, 12:00 AM (MIDNIGHT)' +
+    '          </div>' +
+    '          <div style="font-size: 17px; font-weight: bold; color: #7f1d1d; margin-bottom: 8px;">' +
+    '            Final Payment &amp; Form Submission Cutoff' +
+    '          </div>' +
+    '          <p style="margin: 0; font-size: 14.5px; color: #7f1d1d; line-height: 1.6; text-align: justify;">' +
+    '            Final payment and submission of team details on the official Google Form must be completed on or before <strong>15 October, 12:00 AM</strong>. After 15 October, the registration portal will close permanently and <u>strictly no teams will be allowed for second round registration</u> under any circumstances. Unconfirmed seats will be allocated to waitlisted candidates.' +
+    '          </p>' +
+    '        </div>' +
+
+    '        <!-- Summary Table -->' +
+    '        <div style="font-size: 15px; font-weight: bold; color: #062b59; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #062b59; padding-bottom: 4px;">' +
+    '          I. Qualified Team Credentials' +
+    '        </div>' +
+    '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fafbfc; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 28px; font-family: \'Times New Roman\', Times, Georgia, serif;">' +
     '          <tr>' +
-    '            <td style="padding: 18px 20px;">' +
-    '              <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">' +
-    '                Selection Overview' +
-    '              </div>' +
-    '              <table role="presentation" width="100%" cellspacing="0" cellpadding="5" style="font-size: 13px;">' +
-    '                <tr>' +
-    '                  <td style="color: #64748b; width: 38%;">Team ID:</td>' +
-    '                  <td><span style="font-family: monospace; font-weight: 800; color: #ea580c; background-color: #fff7ed; border: 1px solid #fed7aa; padding: 3px 10px; border-radius: 6px;">' + teamId + '</span></td>' +
+    '            <td style="padding: 16px 20px;">' +
+    '              <table role="presentation" width="100%" cellspacing="0" cellpadding="6" style="font-size: 14px; border-collapse: collapse;">' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; width: 36%; font-weight: bold;">Team Identifier:</td>' +
+    '                  <td><strong style="color: #c2410c; font-size: 15px;">' + teamId + '</strong></td>' +
     '                </tr>' +
-    '                <tr>' +
-    '                  <td style="color: #64748b;">Registration ID:</td>' +
-    '                  <td><span style="font-family: monospace; font-weight: 800; color: #062b59; background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 3px 10px; border-radius: 6px;">' + regId + '</span></td>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Registration ID:</td>' +
+    '                  <td><strong style="color: #062b59; font-size: 15px;">' + regId + '</strong></td>' +
     '                </tr>' +
-    '                <tr>' +
-    '                  <td style="color: #64748b;">Team Name:</td>' +
-    '                  <td style="font-weight: 700; color: #0f172a;">' + teamName + '</td>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Team Name:</td>' +
+    '                  <td style="font-weight: bold; color: #0f172a; font-size: 15px;">' + teamName + '</td>' +
     '                </tr>' +
-    '                <tr>' +
-    '                  <td style="color: #64748b;">Team Leader:</td>' +
-    '                  <td style="font-weight: 700; color: #0f172a;">' + leadName + (data.leadCollege ? (' <span style="font-weight: normal; color: #64748b;">(' + data.leadCollege + ')</span>') : '') + '</td>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Team Leader:</td>' +
+    '                  <td style="color: #0f172a;"><strong>' + leadName + '</strong>' + (data.leadCollege ? (' (' + data.leadCollege + ')') : '') + '</td>' +
     '                </tr>' +
-    '                <tr>' +
-    '                  <td style="color: #64748b;">Leader Email:</td>' +
-    '                  <td style="font-family: monospace; color: #334155;">' + recipient + '</td>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Leader Email:</td>' +
+    '                  <td style="color: #334155;">' + recipient + '</td>' +
     '                </tr>' +
-    (data.members && data.members.length > 0 ? ('                <tr>' +
-    '                  <td style="color: #64748b;">Team Members:</td>' +
-    '                  <td style="color: #334155; font-weight: 600;">' + data.members.join(', ') + '</td>' +
+    (data.members && data.members.length > 0 ? ('                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Registered Members:</td>' +
+    '                  <td style="color: #1e293b;">' + data.members.join(', ') + '</td>' +
     '                </tr>') : '') +
-    '                <tr>' +
-    '                  <td style="color: #64748b;">Project Domain:</td>' +
-    '                  <td style="font-weight: 700; color: #0f172a;"><span style="display: inline-block; background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-weight: 700;">' + (data.selectedDomain || 'Software') + '</span></td>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Domain:</td>' +
+    '                  <td style="font-weight: bold; color: #0f172a;">' + (data.selectedDomain || 'Software') + '</td>' +
+    '                </tr>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Competition Track:</td>' +
+    '                  <td style="font-weight: bold; color: #1d4ed8;">' + (data.selectedTrack || 'General AI Track') + '</td>' +
+    '                </tr>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Team Size:</td>' +
+    '                  <td style="color: #0f172a;">' + teamSize + ' Members</td>' +
+    '                </tr>' +
+    '                <tr style="border-bottom: 1px solid #e2e8f0;">' +
+    '                  <td style="color: #475569; font-weight: bold;">Current Status:</td>' +
+    '                  <td><strong style="color: #047857;">Qualified for Offline Grand Finale (Round 2)</strong></td>' +
     '                </tr>' +
     '                <tr>' +
-    '                  <td style="color: #64748b;">Competition Track:</td>' +
-    '                  <td style="font-weight: 700; color: #2563eb;">' + (data.selectedTrack || 'General AI Track') + '</td>' +
-    '                </tr>' +
-    '                <tr>' +
-    '                  <td style="color: #64748b;">Team Size:</td>' +
-    '                  <td style="color: #0f172a; font-weight: 600;">' + teamSize + ' Members</td>' +
-    '                </tr>' +
-    '                <tr>' +
-    '                  <td style="color: #64748b;">Status:</td>' +
-    '                  <td><span style="color: #047857; font-weight: 700;">Qualified for Finale (Round 2)</span></td>' +
+    '                  <td style="color: #475569; font-weight: bold;">Submission Deadline:</td>' +
+    '                  <td><strong style="color: #b91c1c;">15 October, 12:00 AM (Midnight) [Strict Cutoff]</strong></td>' +
     '                </tr>' +
     '              </table>' +
     '            </td>' +
@@ -1698,61 +1727,81 @@ function sendPptAcceptanceEmail(data) {
     '        </table>' +
 
     '        <!-- OFFICIAL FINAL PAYMENT FORM CARD -->' +
-    '        <div style="background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px solid #22c55e; border-radius: 14px; padding: 24px 20px; text-align: center; margin-bottom: 26px;">' +
-    '          <div style="display: inline-block; background-color: #15803d; color: #ffffff; padding: 5px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">' +
-    '            Mandatory Step • Finale Seat Confirmation' +
-    '          </div>' +
-    '          <div style="font-size: 13px; color: #166534; font-weight: 600; margin-bottom: 4px;">' +
-    '            ' + teamSize + ' Team Members × ₹200 per member' +
-    '          </div>' +
-    '          <div style="font-size: 36px; font-weight: 900; color: #064e3b; margin: 4px 0 16px 0; letter-spacing: -1px;">' +
-    '            ₹' + feeAmount +
+    '        <div style="font-size: 15px; font-weight: bold; color: #062b59; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #062b59; padding-bottom: 4px;">' +
+    '          II. Final Payment &amp; Workstation Confirmation Procedure' +
+    '        </div>' +
+    '        <div style="background-color: #fafbfc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px 22px; margin-bottom: 28px;">' +
+    '          <div style="text-align: center; margin-bottom: 18px;">' +
+    '            <div style="font-size: 13px; font-weight: bold; color: #065f46; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">' +
+    '              Mandatory Round 2 Team Registration Fee' +
+    '            </div>' +
+    '            <div style="font-size: 14px; color: #475569; margin-bottom: 4px;">' +
+    '              ' + teamSize + ' Team Members &times; ₹200 per member' +
+    '            </div>' +
+    '            <div style="font-size: 38px; font-weight: bold; color: #064e3b; margin: 4px 0 10px 0;">' +
+    '              ₹' + feeAmount +
+    '            </div>' +
+    '            <div style="display: inline-block; background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 5px 14px; border-radius: 4px; font-size: 13px; font-weight: bold;">' +
+    '              Cutoff Date: 15 October, 12:00 AM (Midnight)' +
+    '            </div>' +
     '          </div>' +
 
     '          <!-- UPI Details Box -->' +
-    '          <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; text-align: left; font-size: 13px;">' +
-    '            <div style="font-weight: 700; color: #065f46; margin-bottom: 6px; font-size: 13.5px;">UPI Payment Details:</div>' +
-    '            <div style="margin-bottom: 4px; color: #334155;"><strong>UPI ID:</strong> <span style="font-family: monospace; font-size: 14px; font-weight: 800; color: #047857; background-color: #ecfdf5; padding: 2px 8px; border-radius: 4px; border: 1px dashed #059669;">' + upiVpa + '</span></div>' +
-    '            <div style="margin-bottom: 4px; color: #334155;"><strong>Beneficiary:</strong> Mr Shri Avinash Ugale</div>' +
-    '            <div style="color: #334155;"><strong>Payment Remark:</strong> <span style="font-family: monospace; font-weight: 700;">' + teamId + ' Finale Fee</span></div>' +
+    '          <div style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px; font-size: 14px;">' +
+    '            <div style="font-weight: bold; color: #062b59; margin-bottom: 8px; font-size: 14.5px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">' +
+    '              Official UPI Payment Coordinates:' +
+    '            </div>' +
+    '            <div style="margin-bottom: 5px; color: #1e293b;"><strong>UPI ID:</strong> <span style="font-weight: bold; color: #065f46; background-color: #ecfdf5; padding: 2px 8px; border: 1px solid #a7f3d0; border-radius: 3px;">' + upiVpa + '</span></div>' +
+    '            <div style="margin-bottom: 5px; color: #1e293b;"><strong>Beneficiary Name:</strong> Mr Shri Avinash Ugale</div>' +
+    '            <div style="color: #1e293b;"><strong>Mandatory Payment Remark:</strong> <strong style="color: #062b59;">' + teamId + ' Finale Fee</strong></div>' +
     '          </div>' +
 
     '          <!-- Step by Step Instructions -->' +
-    '          <div style="background-color: #ffffff; border: 1px solid #d1fae5; border-radius: 10px; padding: 16px 18px; margin-bottom: 22px; text-align: left; font-size: 12.5px; line-height: 1.6; color: #334155;">' +
-    '            <div style="font-weight: 700; color: #065f46; margin-bottom: 8px; font-size: 13px;">Steps to Submit Final Payment & Confirm Workstation:</div>' +
-    '            <ol style="margin: 0; padding-left: 20px;">' +
-    '              <li style="margin-bottom: 6px;">Pay <strong>₹' + feeAmount + '</strong> to UPI ID <strong style="color: #047857;">' + upiVpa + '</strong> via Google Pay, PhonePe, Paytm, or BHIM.</li>' +
-    '              <li style="margin-bottom: 6px;">Note down the <strong>12-digit UPI Reference / UTR Number</strong> and capture a clear screenshot of the completed payment.</li>' +
-    '              <li style="margin-bottom: 6px;">Click the button below to open the <strong>Official Final Payment Google Form</strong>.</li>' +
-    '              <li>Fill in your <strong>Team ID (' + teamId + ')</strong>, <strong>Registration ID (' + regId + ')</strong>, enter the UTR Number, upload the screenshot, and submit.</li>' +
+    '          <div style="font-size: 14px; line-height: 1.7; color: #1e293b; margin-bottom: 22px;">' +
+    '            <div style="font-weight: bold; color: #062b59; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">' +
+    '              Instructions to Complete Final Verification:' +
+    '            </div>' +
+    '            <ol style="margin: 0; padding-left: 22px;">' +
+    '              <li style="margin-bottom: 6px;">Remit the exact amount of <strong>₹' + feeAmount + '</strong> via any UPI application (Google Pay, PhonePe, Paytm, BHIM) to UPI ID <strong>' + upiVpa + '</strong>.</li>' +
+    '              <li style="margin-bottom: 6px;">Record the <strong>12-digit UPI Reference / UTR Number</strong> and obtain a clear screenshot of the transaction confirmation.</li>' +
+    '              <li style="margin-bottom: 6px;">Access the <strong>Official Final Payment Google Form</strong> via the button below.</li>' +
+    '              <li style="margin-bottom: 6px;">Provide your <strong>Team ID (' + teamId + ')</strong>, <strong>Registration ID (' + regId + ')</strong>, participant details, transaction UTR, and upload the payment proof.</li>' +
+    '              <li style="color: #991b1b; font-weight: bold;">Ensure submission is completed prior to 15 October, 12:00 AM (Midnight). Submissions will not be accepted after this cutoff.</li>' +
     '            </ol>' +
     '          </div>' +
 
     '          <!-- Primary CTA Button -->' +
-    '          <div style="margin-bottom: 14px;">' +
-    '            <a href="' + paymentFormUrl + '" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #047857 0%, #059669 100%); color: #ffffff; text-decoration: none; font-weight: 800; font-size: 15px; padding: 15px 32px; border-radius: 10px; box-shadow: 0 4px 16px rgba(5,150,105,0.35); text-transform: uppercase; letter-spacing: 0.5px;">' +
-    '              Submit Final Payment Form (Google Form) &rarr;' +
+    '          <div style="text-align: center; margin-bottom: 14px;">' +
+    '            <a href="' + paymentFormUrl + '" target="_blank" style="display: inline-block; background-color: #062b59; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 15px; padding: 14px 28px; border-radius: 6px; border: 1px solid #062b59; text-transform: uppercase; letter-spacing: 0.5px; font-family: \'Times New Roman\', Times, Georgia, serif;">' +
+    '              Submit Final Payment &amp; Team Details Form &rarr;' +
     '            </a>' +
     '          </div>' +
 
     '          <!-- Direct URL Link fallback -->' +
-    '          <div style="font-size: 11.5px; color: #475569; word-break: break-all; margin-top: 10px;">' +
-    '            Direct Form Link: <a href="' + paymentFormUrl + '" target="_blank" style="color: #047857; font-weight: 700; text-decoration: underline;">' + paymentFormUrl + '</a>' +
+    '          <div style="font-size: 12.5px; color: #475569; text-align: center; word-break: break-all;">' +
+    '            Direct Link: <a href="' + paymentFormUrl + '" target="_blank" style="color: #062b59; font-weight: bold; text-decoration: underline;">' + paymentFormUrl + '</a>' +
     '          </div>' +
     '        </div>' +
 
     '        <!-- WhatsApp Community Link -->' +
-    '        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 24px;">' +
-    '          <div style="font-size: 12px; color: #166534; font-weight: 700; margin-bottom: 8px;">Official WhatsApp Community for Finalists:</div>' +
-    '          <a href="' + WHATSAPP_COMMUNITY_URL + '" target="_blank" style="display: inline-block; background-color: #25D366; color: #ffffff; text-decoration: none; font-weight: 800; font-size: 12px; padding: 10px 22px; border-radius: 8px;">Join WhatsApp Community &rarr;</a>' +
+    '        <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 16px 20px; text-align: center; margin-bottom: 26px;">' +
+    '          <div style="font-size: 14px; color: #166534; font-weight: bold; margin-bottom: 6px;">' +
+    '            Official WhatsApp Community for Shortlisted Finalists:' +
+    '          </div>' +
+    '          <div style="font-size: 13px; color: #14532d; margin-bottom: 10px;">' +
+    '            All competition guidelines, lab workstation schedules, and reporting updates will be communicated here.' +
+    '          </div>' +
+    '          <a href="' + WHATSAPP_COMMUNITY_URL + '" target="_blank" style="display: inline-block; background-color: #16a34a; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 13.5px; padding: 9px 20px; border-radius: 4px; font-family: \'Times New Roman\', Times, Georgia, serif;">Join Official WhatsApp Community &rarr;</a>' +
     '        </div>' +
 
-    '        <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">' +
-    '          Best regards,<br>' +
-    '          <strong style="color: #062b59;">Organizing Committee — AITHON 2.0</strong><br>' +
-    '          Department of Artificial Intelligence & Data Science<br>' +
-    '          Amrutvahini College of Engineering (AVCOE), Sangamner' +
-    '        </p>' +
+    '        <!-- Formal Sign-Off -->' +
+    '        <div style="border-top: 1px solid #cbd5e1; padding-top: 18px; font-size: 14px; color: #334155; line-height: 1.6;">' +
+    '          <p style="margin: 0 0 4px 0;">With warm regards,</p>' +
+    '          <p style="margin: 0; font-weight: bold; color: #062b59; font-size: 15px;">Organizing Committee — AITHON 2.0</p>' +
+    '          <p style="margin: 0; color: #475569;">Department of Artificial Intelligence &amp; Data Science</p>' +
+    '          <p style="margin: 0; color: #475569;">Amrutvahini College of Engineering (AVCOE), Sangamner</p>' +
+    '          <p style="margin: 4px 0 0 0; font-size: 12.5px; color: #64748b; font-style: italic;">Sangamner, District Ahmednagar, Maharashtra - 422608 | <a href="' + WEBSITE_URL + '" target="_blank" style="color: #062b59;">aithon2-0.xyz</a></p>' +
+    '        </div>' +
     '      </td>' +
     '    </tr>' +
     '  </table>' +
