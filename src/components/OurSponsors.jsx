@@ -334,7 +334,7 @@ export default function OurSponsors() {
 
         {/* Proper Static Sponsor Cards Grid (Balanced 3x3 Grid) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {partnersList.map((sponsor) => {
+          {partnersList.map((sponsor, idx) => {
             const hasLink = Boolean(sponsor.url)
             const CardWrapper = hasLink ? 'a' : 'div'
             const wrapperProps = hasLink
@@ -344,12 +344,16 @@ export default function OurSponsors() {
                   rel: 'noopener noreferrer',
                 }
               : {}
+            const isLast = idx === partnersList.length - 1
+            const isSingleOnLastRowLg = partnersList.length % 3 === 1
 
             return (
               <CardWrapper
                 key={sponsor.name}
                 {...wrapperProps}
                 className={`group bg-white border border-[#edebe6] rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden text-center ${
+                  isLast && isSingleOnLastRowLg ? 'lg:col-start-2' : ''
+                } ${
                   hasLink
                     ? 'hover:border-blue-400 hover:-translate-y-1 cursor-pointer'
                     : 'hover:border-slate-300 cursor-default'
