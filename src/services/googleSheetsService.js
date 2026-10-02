@@ -203,6 +203,35 @@ export async function fetchNextSerialId() {
 }
 
 /**
+ * Synchronous local fallback for next sequential Team ID
+ */
+export function getNextSerialTeamId() {
+  if (typeof window === 'undefined') return 'TEAM-101'
+  try {
+    const stored = localStorage.getItem('aithon_next_team_num') || localStorage.getItem('aithon_next_reg_num')
+    if (stored) {
+      const parsed = parseInt(stored, 10)
+      if (!isNaN(parsed) && parsed >= 101 && parsed < 9999) return `TEAM-${parsed}`
+    }
+  } catch (e) {}
+  return 'TEAM-101'
+}
+
+/**
+ * Sync next serial number counter in local storage cache
+ */
+export function syncNextSerialNum(num) {
+  if (typeof window === 'undefined') return
+  const parsed = typeof num === 'string' ? parseInt(num, 10) : num
+  if (!isNaN(parsed) && parsed >= 101) {
+    try {
+      localStorage.setItem('aithon_next_team_num', parsed.toString())
+      localStorage.setItem('aithon_next_reg_num', parsed.toString())
+    } catch (e) {}
+  }
+}
+
+/**
  * Submits the registration payload to Google Sheets via Google Apps Script Web App
  */
 export async function submitRegistrationToGoogleSheet(formData, teamId, registrationId) {

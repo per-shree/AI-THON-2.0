@@ -12,8 +12,13 @@ import {
   loadRegistrationDraft,
   clearRegistrationDraft,
 } from '../utils/formDraftStorage'
-import { useAdmin } from '../context/AdminContext'
-import { submitRegistrationToGoogleSheet, fetchNextSerialId, syncRegistrationStep } from '../services/googleSheetsService'
+import {
+  submitRegistrationToGoogleSheet,
+  fetchNextSerialId,
+  syncRegistrationStep,
+  getNextSerialTeamId,
+  syncNextSerialNum,
+} from '../services/googleSheetsService'
 import {
   Download,
   FileText,
@@ -192,8 +197,6 @@ function getInitialDraft() {
 }
 
 export default function Registration() {
-  const { registerTeam, getNextSerialTeamId, syncNextSerialNum } = useAdmin()
-
   const savedDraft = getInitialDraft()
 
   // Stepper State (0: Instructions, 1: Lead, 2: Members, 3: PPT, 4: Payment (with Review), 5: Completed)
@@ -904,17 +907,6 @@ export default function Registration() {
 
       if (result && result.pptUrl) {
         setDrivePptUrl(result.pptUrl)
-      }
-
-      // 3. Sync to local AdminContext for instant admin roster view
-      if (registerTeam) {
-        registerTeam({
-          ...payloadData,
-          registrationId: confirmedRegId,
-          teamId: confirmedTeamId,
-          paymentStatus: 'Pending Verification',
-          pptDriveUrl: result?.pptUrl || '',
-        })
       }
 
       const confirmedMatch = confirmedTeamId.match(/\d+/)
