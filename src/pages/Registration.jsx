@@ -141,8 +141,8 @@ export const isOtherCourse = (course) =>
   (typeof course === 'string' && course.startsWith('Other'))
 
 // Official UPI Payment Configuration for ₹50 Evaluation Fee
-export const OFFICIAL_UPI_ID = 'shreeugale123-1@oksbi'
-export const OFFICIAL_UPI_URI = 'upi://pay?pa=shreeugale123-1@oksbi&pn=Shree%20A.%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
+export const OFFICIAL_UPI_ID = '9404665180@centralbank'
+export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
 
 // Default blank form state
 const INITIAL_FORM_DATA = {
@@ -226,6 +226,7 @@ export default function Registration() {
     }
   })
   const [copiedUpi, setCopiedUpi] = useState(false)
+  const [copiedField, setCopiedField] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [paymentModal, setPaymentModal] = useState(null)
   const [paymentConfirmed, setPaymentConfirmed] = useState(() => (savedDraft ? Boolean(savedDraft.paymentConfirmed) : false))
@@ -959,6 +960,12 @@ export default function Registration() {
     navigator.clipboard.writeText(OFFICIAL_UPI_ID)
     setCopiedUpi(true)
     setTimeout(() => setCopiedUpi(false), 2500)
+  }
+
+  const handleCopyText = (text, field) => {
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    setTimeout(() => setCopiedField(''), 2500)
   }
 
   const teamSizeNum = parseInt(formData.teamSize, 10) || 4
@@ -1829,7 +1836,7 @@ export default function Registration() {
                     <div className="p-3 sm:p-3.5 bg-white rounded-2xl border-2 border-blue-300 shadow-md inline-block">
                       <img
                         src="/qr-50.jpg"
-                        alt="Scan to Pay ₹50 via UPI - Shree A. Ugale (shreeugale123-1@oksbi)"
+                        alt="Scan to Pay ₹50 via UPI - Central Bank of India (9404665180@centralbank)"
                         className="w-52 h-auto sm:w-60 md:w-64 max-w-full rounded-xl object-contain shadow-xs"
                         loading="eager"
                       />
@@ -1867,6 +1874,105 @@ export default function Registration() {
                       <span>Tap to Open Installed UPI App</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
+                  </div>
+                </div>
+
+                {/* Alternate Payment & Direct Bank Transfer Notice */}
+                <div className="pt-2 border-t border-blue-100/90 space-y-3">
+                  {/* Note: Mobile number fallback if transaction not done */}
+                  <div className="p-3 sm:p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="flex-1 leading-relaxed">
+                      <span className="font-bold">Note:</span> If the transaction is not done / fails via QR code, you can use mobile number:{' '}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyText('7841895180', 'phone')}
+                        className="inline-flex items-center gap-1 font-mono font-bold text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                        title="Click to copy mobile number"
+                      >
+                        <span>7841895180</span>
+                        {copiedField === 'phone' ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-amber-700" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Direct Bank Transfer Option */}
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-blue-200/90 shadow-2xs space-y-2.5">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-[#062b59]" />
+                        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#062b59]">
+                          Or Pay via Direct Bank Transfer (IMPS / NEFT)
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        All Banks Accepted
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                      {/* Bank Name */}
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                          Bank Name
+                        </span>
+                        <span className="font-bold text-[#062b59] text-xs">
+                          Central Bank of India
+                        </span>
+                      </div>
+
+                      {/* Account Number */}
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-1">
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                            Account Number
+                          </span>
+                          <span className="font-mono font-black text-[#062b59] text-xs tracking-wide">
+                            4113667626
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText('4113667626', 'acc')}
+                          className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer shrink-0"
+                          title="Copy Account Number"
+                        >
+                          {copiedField === 'acc' ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* IFSC Code */}
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-1">
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                            IFSC Code
+                          </span>
+                          <span className="font-mono font-black text-[#062b59] text-xs tracking-wide">
+                            CBIN0282495
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText('CBIN0282495', 'ifsc')}
+                          className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer shrink-0"
+                          title="Copy IFSC Code"
+                        >
+                          {copiedField === 'ifsc' ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
