@@ -20,13 +20,12 @@ export default function Home() {
       {/* 1. Main Sticky Navigation Header */}
       <Navbar />
 
-      {/* 3. Announcement Marquee Ticker */}
-      <AnnouncementTicker />
-
       {/* Main Landmark Container for Accessibility & Screen Readers */}
       <main id="main-content" className="flex-1">
-        {/* 01 HOME (Warm White with Soft Skyline Silhouette) */}
-        <div id="home">
+        {/* 01 HOME (Announcement Ticker + HeroSection) */}
+        <div id="home" className="scroll-mt-20">
+          {/* 3. Announcement Marquee Ticker */}
+          <AnnouncementTicker />
           <HeroSection />
         </div>
 

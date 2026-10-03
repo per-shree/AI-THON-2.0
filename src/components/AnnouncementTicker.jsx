@@ -10,9 +10,9 @@ export default function AnnouncementTicker() {
     'ROUND 1 IDEA PPT SUBMISSION OPEN',
     'GRAND FINALE: 23 OCTOBER 2026',
     '12 HOURS NON-STOP HACKATHON',
-    'TOTAL PRIZE POOL ₹1,00,000 (1ST ₹40K • 2ND ₹30K • 3RD ₹20K • 4TH ₹6K • 5TH ₹4K)',
-    '1ST PRIZE: ₹40,000 + 3-MONTH INTERNSHIP WORTH ₹1.20L + TROPHIES',
-    'SURPRISE GIFTS FOR ALL TOP 20 FINALISTS',
+    'TOTAL PRIZE POOL ₹1,00,000 (WINNER ₹40K • 1ST RUNNER UP ₹30K • 2ND RUNNER UP ₹20K • 3RD RUNNER UP ₹6K • 4TH RUNNER UP ₹4K)',
+    'WINNER PRIZE WORTH ₹1,60,000 (40,000 CASH + 1.20 LAKH INTERNSHIP + TROPHY + T-SHIRTS)',
+    'SURPRISE GIFTS FOR ALL TOP 20 FINALISTS WORTH ₹30,000',
   ]
 
   const renderItemBlock = (keyPrefix = 'b1', isAriaHidden = false) => (
@@ -42,7 +42,7 @@ export default function AnnouncementTicker() {
         <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[#062b59] to-transparent z-10 pointer-events-none" />
 
         {/* Dual-block seamless continuous ticker with mathematically uniform spacing */}
-        <div className="flex w-max will-change-transform animate-[marquee_25s_linear_infinite] hover:[animation-play-state:paused] cursor-default">
+        <div className="announcement-marquee cursor-default">
           {renderItemBlock('primary', false)}
           {renderItemBlock('duplicate', true)}
         </div>

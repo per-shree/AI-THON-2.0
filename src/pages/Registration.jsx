@@ -12,8 +12,13 @@ import {
   loadRegistrationDraft,
   clearRegistrationDraft,
 } from '../utils/formDraftStorage'
-import { useAdmin } from '../context/AdminContext'
-import { submitRegistrationToGoogleSheet, fetchNextSerialId, syncRegistrationStep } from '../services/googleSheetsService'
+import {
+  submitRegistrationToGoogleSheet,
+  fetchNextSerialId,
+  syncRegistrationStep,
+  getNextSerialTeamId,
+  syncNextSerialNum,
+} from '../services/googleSheetsService'
 import {
   Download,
   FileText,
@@ -46,6 +51,17 @@ import {
   Printer,
 } from 'lucide-react'
 import { RegistrationSlip, RegistrationSlipModal } from '../components/RegistrationSlip'
+import {
+  validateFullName,
+  validateTeamName,
+  validateEmailAddress,
+  validateIndianMobile,
+  validateCollegeName,
+  validateCityName,
+  validateUtrNumber,
+  validatePresentationFile,
+  checkEmailDuplicates,
+} from '../utils/antiDummyValidation'
 import {
   UserIcon,
   MailIcon,
@@ -140,6 +156,7 @@ const INITIAL_FORM_DATA = {
   leadCourseOther: '',
   leadYear: '',
   leadCity: '',
+  website_trap: '',
 
   // Step 2: Team Members Details (Min 4, Max 6 total = Lead + 3 to 5 teammates)
   teamSize: '4', // default 4 members
@@ -180,8 +197,6 @@ function getInitialDraft() {
 }
 
 export default function Registration() {
-  const { registerTeam, getNextSerialTeamId, syncNextSerialNum } = useAdmin()
-
   const savedDraft = getInitialDraft()
 
   // Stepper State (0: Instructions, 1: Lead, 2: Members, 3: PPT, 4: Payment (with Review), 5: Completed)
@@ -499,45 +514,51 @@ export default function Registration() {
   }
 
   // Validation Helpers
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  const validatePhone = (phone) => /^[6-9]\d{9}$/.test(phone.replace(/[\s-]/g, ''))
+  const validateEmail = (email) => validateEmailAddress(email).valid
+  const validatePhone = (phone) => validateIndianMobile(phone).valid
 
-  // Validate Step 1: Team Lead Details
+  // Validate Step 1: Team Lead Details (Anti-Dummy Verification)
   const validateStep1 = () => {
     const errs = {}
-    if (!formData.teamName.trim()) {
-      errs.teamName = 'Team name is required'
-    } else if (formData.teamName.trim().length < 3) {
-      errs.teamName = 'Team name must be at least 3 characters'
+
+    // Honeypot anti-bot verification
+    if (formData.website_trap) {
+      errs.teamName = 'Automated bot activity detected.'
+      setErrors(errs)
+      return false
     }
 
-    if (!formData.leadFullName.trim()) errs.leadFullName = 'Full name is required'
-    if (!formData.leadEmail.trim()) {
-      errs.leadEmail = 'Email address is required'
-    } else if (!validateEmail(formData.leadEmail)) {
-      errs.leadEmail = 'Enter a valid email address'
-    }
+    const teamCheck = validateTeamName(formData.teamName)
+    if (!teamCheck.valid) errs.teamName = teamCheck.error
 
-    if (!formData.leadPhone.trim()) {
-      errs.leadPhone = 'Mobile number is required'
-    } else if (!validatePhone(formData.leadPhone)) {
-      errs.leadPhone = 'Enter a valid 10-digit mobile number'
-    }
+    const nameCheck = validateFullName(formData.leadFullName)
+    if (!nameCheck.valid) errs.leadFullName = nameCheck.error
 
-    if (!formData.leadCollege.trim()) errs.leadCollege = 'College / University name is required'
-    if (!formData.leadCourse.trim()) {
+    const emailCheck = validateEmailAddress(formData.leadEmail)
+    if (!emailCheck.valid) errs.leadEmail = emailCheck.error
+
+    const phoneCheck = validateIndianMobile(formData.leadPhone)
+    if (!phoneCheck.valid) errs.leadPhone = phoneCheck.error
+
+    const collegeCheck = validateCollegeName(formData.leadCollege)
+    if (!collegeCheck.valid) errs.leadCollege = collegeCheck.error
+
+    if (!formData.leadCourse?.trim()) {
       errs.leadCourse = 'Course or branch is required'
-    } else if (isOtherCourse(formData.leadCourse) && !formData.leadCourseOther?.trim()) {
-      errs.leadCourseOther = 'Please specify your course or branch'
+    } else if (isOtherCourse(formData.leadCourse) && (!formData.leadCourseOther?.trim() || formData.leadCourseOther.trim().length < 3)) {
+      errs.leadCourseOther = 'Please specify your actual course or branch'
     }
+
     if (!formData.leadYear) errs.leadYear = 'Select your year of study'
-    if (!formData.leadCity.trim()) errs.leadCity = 'City is required'
+
+    const cityCheck = validateCityName(formData.leadCity)
+    if (!cityCheck.valid) errs.leadCity = cityCheck.error
 
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
-  // Validate Step 2: Team Member Details
+  // Validate Step 2: Team Member Details (Anti-Dummy + Unique Emails)
   const validateStep2 = () => {
     const errs = {}
     const teamSizeNum = parseInt(formData.teamSize, 10) || 4
@@ -545,26 +566,36 @@ export default function Registration() {
 
     for (let i = 0; i < membersNeeded; i++) {
       const member = formData.members[i] || {}
-      if (!member.fullName?.trim()) {
-        errs[`member_${i}_fullName`] = `Teammate ${i + 1} full name is required`
+
+      const nameCheck = validateFullName(member.fullName)
+      if (!nameCheck.valid) {
+        errs[`member_${i}_fullName`] = `Teammate ${i + 1}: ${nameCheck.error}`
       }
-      if (!member.email?.trim()) {
-        errs[`member_${i}_email`] = `Teammate ${i + 1} email is required`
-      } else if (!validateEmail(member.email)) {
-        errs[`member_${i}_email`] = `Enter a valid email address`
+
+      const emailCheck = validateEmailAddress(member.email)
+      if (!emailCheck.valid) {
+        errs[`member_${i}_email`] = `Teammate ${i + 1}: ${emailCheck.error}`
       }
-      if (!member.college?.trim()) {
-        errs[`member_${i}_college`] = `College name is required`
+
+      const collegeCheck = validateCollegeName(member.college)
+      if (!collegeCheck.valid) {
+        errs[`member_${i}_college`] = `Teammate ${i + 1}: ${collegeCheck.error}`
       }
+
       if (!member.course?.trim()) {
-        errs[`member_${i}_course`] = `Course / Branch is required`
-      } else if (isOtherCourse(member.course) && !member.courseOther?.trim()) {
+        errs[`member_${i}_course`] = `Teammate ${i + 1}: Course / Branch is required`
+      } else if (isOtherCourse(member.course) && (!member.courseOther?.trim() || member.courseOther.trim().length < 3)) {
         errs[`member_${i}_courseOther`] = `Please specify Teammate ${i + 1}'s course or branch`
       }
+
       if (!member.year?.trim()) {
-        errs[`member_${i}_year`] = `Year of study is required`
+        errs[`member_${i}_year`] = `Teammate ${i + 1}: Year of study is required`
       }
     }
+
+    // 🛡️ Ensure no duplicate emails between teammates or leader
+    const duplicateEmailErrs = checkEmailDuplicates(formData.leadEmail, formData.members, formData.teamSize)
+    Object.assign(errs, duplicateEmailErrs)
 
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -579,11 +610,13 @@ export default function Registration() {
     if (!formData.selectedTrack || !formData.selectedTrack.trim()) {
       errs.selectedTrack = 'Please select your competition track out of the 23 tracks before proceeding'
     }
-    const rawUtr = (formData.paymentUtr || '').trim()
-    if (!rawUtr || rawUtr.length < 6) {
-      errs.paymentUtr = 'Payment reference or 12-digit UPI UTR is strictly required to proceed'
-      setUtrError('Payment reference or 12-digit UPI UTR is strictly required to confirm registration.')
+
+    const utrCheck = validateUtrNumber(formData.paymentUtr)
+    if (!utrCheck.valid) {
+      errs.paymentUtr = utrCheck.error
+      setUtrError(utrCheck.error)
     }
+
     if (!paymentConfirmed) {
       errs.paymentConfirmed = 'Please tick the confirmation checkbox certifying that your team has completed the ₹50 evaluation fee'
       if (!errs.paymentUtr) {
@@ -603,10 +636,10 @@ export default function Registration() {
     if (!formData.confirmedReview) {
       errs.confirmedReview = 'Please confirm that your team details and uploaded presentation are final.'
     }
-    const rawUtr = (formData.paymentUtr || '').trim()
-    if (!rawUtr || rawUtr.length < 6) {
-      errs.paymentUtr = 'Payment reference or 12-digit UTR is missing. Please return to Step 3 to complete payment.'
-      setUtrError('Payment reference or 12-digit UTR is missing.')
+    const utrCheck = validateUtrNumber(formData.paymentUtr)
+    if (!utrCheck.valid) {
+      errs.paymentUtr = utrCheck.error
+      setUtrError(utrCheck.error)
     }
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -615,25 +648,17 @@ export default function Registration() {
   // Handle Presentation File Drop & Selection (.ppt, .pptx, .pdf)
   const handleFileProcess = (file) => {
     if (!file) return
-    const validExts = ['.ppt', '.pptx', '.pdf']
+
+    const fileCheck = validatePresentationFile(file)
+    if (!fileCheck.valid) {
+      setErrors((prev) => ({
+        ...prev,
+        ppt: fileCheck.error,
+      }))
+      return
+    }
+
     const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
-
-    if (!validExts.includes(ext)) {
-      setErrors((prev) => ({
-        ...prev,
-        ppt: 'Invalid file format. Please upload a PowerPoint presentation (.ppt, .pptx) or PDF document (.pdf).',
-      }))
-      return
-    }
-
-    // 25MB file size limit
-    if (file.size > 25 * 1024 * 1024) {
-      setErrors((prev) => ({
-        ...prev,
-        ppt: 'File size exceeds 25MB limit. Please compress images or media in your presentation document.',
-      }))
-      return
-    }
 
     const formattedSize =
       file.size > 1024 * 1024
@@ -798,13 +823,14 @@ export default function Registration() {
 
     // 🛡️ STRICT VALIDATION: Form cannot be submitted without actual verified payment
     const rawUtr = (overrideUtr || formData.paymentUtr || '').trim()
-    if (!rawUtr || rawUtr.length < 6) {
-      setUtrError('Payment reference or 12-digit UTR is strictly required to confirm registration.')
+    const utrCheck = validateUtrNumber(rawUtr)
+    if (!utrCheck.valid) {
+      setUtrError(utrCheck.error)
       setPaymentModal({
         isOpen: true,
         type: 'missing_utr',
         title: '₹50 Payment Verification Required',
-        message: 'Without actual payment confirmation, your registration cannot be submitted. Please complete the ₹50 evaluation fee via UPI and enter your 12-digit UPI UTR number.',
+        message: utrCheck.error,
       })
       return
     }
@@ -881,17 +907,6 @@ export default function Registration() {
 
       if (result && result.pptUrl) {
         setDrivePptUrl(result.pptUrl)
-      }
-
-      // 3. Sync to local AdminContext for instant admin roster view
-      if (registerTeam) {
-        registerTeam({
-          ...payloadData,
-          registrationId: confirmedRegId,
-          teamId: confirmedTeamId,
-          paymentStatus: 'Pending Verification',
-          pptDriveUrl: result?.pptUrl || '',
-        })
       }
 
       const confirmedMatch = confirmedTeamId.match(/\d+/)
@@ -1167,6 +1182,20 @@ export default function Registration() {
 
               {/* Form Fields */}
               <div className="space-y-5">
+                {/* Honeypot Trap Field (Inaccessible to real users, catches bots) */}
+                <div style={{ display: 'none', position: 'absolute', left: '-9999px', opacity: 0 }} aria-hidden="true">
+                  <label htmlFor="website_trap">Leave this blank</label>
+                  <input
+                    id="website_trap"
+                    type="text"
+                    name="website_trap"
+                    value={formData.website_trap || ''}
+                    onChange={handleChange}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
                 {/* Team Name */}
                 <div className="p-4 rounded-xl bg-[#fef6eb]/70 border border-[#f5ede4]">
                   <FormInput
@@ -1178,7 +1207,7 @@ export default function Registration() {
                   required
                   error={errors.teamName}
                   icon={UsersIcon}
-                  helperText="Choose a unique, memorable team name"
+                  helperText="Choose a unique, authentic team name (min. 3 characters)"
                 />
               </div>
 
@@ -1193,6 +1222,7 @@ export default function Registration() {
                   required
                   error={errors.leadFullName}
                   icon={UserIcon}
+                  helperText="Enter First & Last Name as per Student ID card"
                 />
 
                 <FormInput
@@ -1205,7 +1235,7 @@ export default function Registration() {
                   required
                   error={errors.leadEmail}
                   icon={MailIcon}
-                  helperText="Official communication will be sent here"
+                  helperText="Personal email (each member must have their own unique email)"
                 />
               </div>
 
@@ -1220,7 +1250,7 @@ export default function Registration() {
                   required
                   error={errors.leadPhone}
                   icon={PhoneIcon}
-                  helperText="WhatsApp active contact number"
+                  helperText="Active 10-digit WhatsApp number (no dummy numbers)"
                 />
 
                 <FormInput
@@ -1421,6 +1451,7 @@ export default function Registration() {
                         required
                         error={errors[`member_${idx}_fullName`]}
                         icon={UserIcon}
+                        helperText="First & Last Name as per Student ID"
                       />
 
                       <FormInput
@@ -1432,6 +1463,7 @@ export default function Registration() {
                         required
                         error={errors[`member_${idx}_email`]}
                         icon={MailIcon}
+                        helperText="Must be teammate's personal email (unique)"
                       />
                     </div>
 
@@ -1855,6 +1887,8 @@ export default function Registration() {
                   type="text"
                   name="paymentUtr"
                   value={formData.paymentUtr}
+                  maxLength={20}
+                  autoComplete="off"
                   onChange={(e) => {
                     handleChange(e)
                     if (utrError) setUtrError('')
@@ -1866,7 +1900,7 @@ export default function Registration() {
                       })
                     }
                   }}
-                  placeholder="e.g. 12-digit UTR from GPay / PhonePe / Paytm"
+                  placeholder="e.g. 12-digit UPI UTR from GPay / PhonePe / Paytm / BHIM"
                   className={`w-full px-4 py-3 rounded-xl bg-white border text-sm font-sans focus:outline-none transition-all ${
                     utrError || errors.paymentUtr
                       ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20'
@@ -1880,7 +1914,7 @@ export default function Registration() {
                   </p>
                 )}
                 <span className="text-[11px] text-slate-500 block">
-                  Enter the 12-digit UPI UTR number or transaction reference from your payment receipt.
+                  Enter the genuine 12-digit UPI UTR number from your payment receipt. Placeholder or sample numbers are automatically flagged.
                 </span>
               </div>
 
