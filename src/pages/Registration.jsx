@@ -236,13 +236,10 @@ export default function Registration() {
     }
   })
   const [copiedUpi, setCopiedUpi] = useState(false)
-<<<<<<< HEAD
   const [copiedUpi1, setCopiedUpi1] = useState(false)
   const [copiedUpi2, setCopiedUpi2] = useState(false)
   const [activeQr, setActiveQr] = useState('qr1') // 'qr1' | 'qr2'
-=======
   const [copiedField, setCopiedField] = useState('')
->>>>>>> b89359306ca424c4d1463eb678a47c3ba471cc3e
   const [isDragging, setIsDragging] = useState(false)
   const [paymentModal, setPaymentModal] = useState(null)
   const [paymentConfirmed, setPaymentConfirmed] = useState(() => (savedDraft ? Boolean(savedDraft.paymentConfirmed) : false))
@@ -1847,7 +1844,6 @@ export default function Registration() {
                   </div>
                 </div>
 
-<<<<<<< HEAD
                 {/* Upper QR Selector Tags (Fully Responsive on Mobile & Desktop) */}
                 <div className="space-y-2 pb-3 border-b border-blue-100">
                   <div className="flex items-center justify-between gap-2">
@@ -1856,23 +1852,6 @@ export default function Registration() {
                     </span>
                     <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
                       Tap tag to toggle QR code
-=======
-                {/* QR Code and Quick Instructions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
-                  {/* Interactive QR Code (Enlarged & Centered) */}
-                  <div className="flex flex-col items-center text-center space-y-2.5">
-                    <div className="p-3 sm:p-3.5 bg-white rounded-2xl border-2 border-blue-300 shadow-md inline-block">
-                      <img
-                        src="/qr-50.jpg"
-                        alt="Scan to Pay ₹50 via UPI - Central Bank of India (9404665180@centralbank)"
-                        className="w-52 h-auto sm:w-60 md:w-64 max-w-full rounded-xl object-contain shadow-xs"
-                        loading="eager"
-                      />
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-extrabold text-[#062b59] uppercase tracking-wider flex items-center gap-1.5 bg-white px-3.5 py-1 rounded-full border border-blue-200 shadow-2xs">
-                      <QrCode className="w-3.5 h-3.5 text-[#2563eb]" />
-                      <span>Scan to Pay ₹50 with Any UPI App</span>
->>>>>>> b89359306ca424c4d1463eb678a47c3ba471cc3e
                     </span>
                   </div>
 
@@ -1934,7 +1913,6 @@ export default function Registration() {
                   </div>
                 </div>
 
-<<<<<<< HEAD
                 {/* Only One QR Code Visible at Once (Centered, Responsive) */}
                 <div className="max-w-md mx-auto w-full pt-1">
                   {activeQr === 'qr1' ? (
@@ -2109,32 +2087,6 @@ export default function Registration() {
                     </li>
                   </ol>
                 </div>
-              </div>
-
-              {/* Payment Support Help Desk */}
-              <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-[#062b59] text-white flex items-center justify-center shrink-0">
-                    <Headphones className="w-4 h-4 text-blue-200" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-black text-[#062b59] tracking-tight">
-                      Payment Verification Support
-                    </div>
-                    <div className="text-[11px] text-slate-600 font-medium">
-                      Need help with UPI payment or UTR? Contact Umesh or Shree
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsSupportModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-lg bg-white hover:bg-blue-50 text-[#062b59] border border-blue-200 text-xs font-bold shrink-0 transition-colors shadow-2xs hover:border-blue-400 cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto"
-                >
-                  <Phone className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Contact Coordinators</span>
-                </button>
-=======
                 {/* Alternate Payment & Direct Bank Transfer Notice */}
                 <div className="pt-2 border-t border-blue-100/90 space-y-3">
                   {/* Note: Mobile number fallback if transaction not done */}
@@ -2233,7 +2185,31 @@ export default function Registration() {
                     </div>
                   </div>
                 </div>
->>>>>>> b89359306ca424c4d1463eb678a47c3ba471cc3e
+              </div>
+
+              {/* Payment Support Help Desk */}
+              <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#062b59] text-white flex items-center justify-center shrink-0">
+                    <Headphones className="w-4 h-4 text-blue-200" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black text-[#062b59] tracking-tight">
+                      Payment Verification Support
+                    </div>
+                    <div className="text-[11px] text-slate-600 font-medium">
+                      Need help with UPI payment or UTR? Contact Umesh or Shree
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSupportModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-white hover:bg-blue-50 text-[#062b59] border border-blue-200 text-xs font-bold shrink-0 transition-colors shadow-2xs hover:border-blue-400 cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto"
+                >
+                  <Phone className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Contact Coordinators</span>
+                </button>
               </div>
 
               {/* UTR Input Section */}
