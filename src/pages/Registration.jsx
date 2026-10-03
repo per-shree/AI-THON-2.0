@@ -141,8 +141,8 @@ export const isOtherCourse = (course) =>
   (typeof course === 'string' && course.startsWith('Other'))
 
 // Official UPI Payment Configuration for ₹50 Evaluation Fee
-export const OFFICIAL_UPI_ID = '9404665180@centralbank'
-export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
+export const OFFICIAL_UPI_ID = 'shreeugale123-1@oksbi'
+export const OFFICIAL_UPI_URI = 'upi://pay?pa=shreeugale123-1@oksbi&pn=Shree%20A.%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
 
 // Default blank form state
 const INITIAL_FORM_DATA = {
@@ -1829,7 +1829,7 @@ export default function Registration() {
                     <div className="p-3 sm:p-3.5 bg-white rounded-2xl border-2 border-blue-300 shadow-md inline-block">
                       <img
                         src="/qr-50.jpg"
-                        alt="Scan to Pay ₹50 via UPI - Shree A. Ugale (9404665180@centralbank)"
+                        alt="Scan to Pay ₹50 via UPI - Shree A. Ugale (shreeugale123-1@oksbi)"
                         className="w-52 h-auto sm:w-60 md:w-64 max-w-full rounded-xl object-contain shadow-xs"
                         loading="eager"
                       />
