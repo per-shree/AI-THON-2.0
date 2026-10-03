@@ -49,7 +49,10 @@ import {
   Laptop,
   Cpu,
   Printer,
+  Headphones,
+  Phone,
 } from 'lucide-react'
+import PaymentSupportWidget from '../components/PaymentSupportWidget'
 import { RegistrationSlip, RegistrationSlipModal } from '../components/RegistrationSlip'
 import {
   validateFullName,
@@ -140,9 +143,16 @@ export const isOtherCourse = (course) =>
   course === 'Other (Please specify)' ||
   (typeof course === 'string' && course.startsWith('Other'))
 
-// Official UPI Payment Configuration for ₹50 Evaluation Fee
-export const OFFICIAL_UPI_ID = '9404665180@centralbank'
-export const OFFICIAL_UPI_URI = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
+// Official UPI Payment Configuration for ₹50 Evaluation Fee (Primary & Alternative/Kotak 811)
+export const OFFICIAL_UPI_ID_1 = '9404665180@centralbank'
+export const OFFICIAL_UPI_URI_1 = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
+
+export const OFFICIAL_UPI_ID_2 = '7841895180@kotakbank'
+export const OFFICIAL_UPI_URI_2 = 'upi://pay?pa=7841895180@kotakbank&pn=Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
+
+// Backward-compatible aliases
+export const OFFICIAL_UPI_ID = OFFICIAL_UPI_ID_1
+export const OFFICIAL_UPI_URI = OFFICIAL_UPI_URI_1
 
 // Default blank form state
 const INITIAL_FORM_DATA = {
@@ -226,6 +236,9 @@ export default function Registration() {
     }
   })
   const [copiedUpi, setCopiedUpi] = useState(false)
+  const [copiedUpi1, setCopiedUpi1] = useState(false)
+  const [copiedUpi2, setCopiedUpi2] = useState(false)
+  const [activeQr, setActiveQr] = useState('qr1') // 'qr1' | 'qr2'
   const [isDragging, setIsDragging] = useState(false)
   const [paymentModal, setPaymentModal] = useState(null)
   const [paymentConfirmed, setPaymentConfirmed] = useState(() => (savedDraft ? Boolean(savedDraft.paymentConfirmed) : false))
@@ -233,6 +246,7 @@ export default function Registration() {
   const [isSendingReport, setIsSendingReport] = useState(false)
   const [reportSentMessage, setReportSentMessage] = useState('')
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false)
   const [slipSubmissionDate, setSlipSubmissionDate] = useState(() =>
     new Date().toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -954,11 +968,31 @@ export default function Registration() {
     }
   }
 
-  // Copy UPI ID helper
-  const handleCopyUpi = () => {
-    navigator.clipboard.writeText(OFFICIAL_UPI_ID)
+  // Copy UPI ID helpers (supports both Primary Central Bank and Alternative Kotak 811)
+  const handleCopyUpi1 = () => {
+    navigator.clipboard.writeText(OFFICIAL_UPI_ID_1)
+    setCopiedUpi1(true)
     setCopiedUpi(true)
-    setTimeout(() => setCopiedUpi(false), 2500)
+    setTimeout(() => {
+      setCopiedUpi1(false)
+      setCopiedUpi(false)
+    }, 2500)
+  }
+
+  const handleCopyUpi2 = () => {
+    navigator.clipboard.writeText(OFFICIAL_UPI_ID_2)
+    setCopiedUpi2(true)
+    setTimeout(() => {
+      setCopiedUpi2(false)
+    }, 2500)
+  }
+
+  const handleCopyUpi = (customId = OFFICIAL_UPI_ID_1) => {
+    if (customId === OFFICIAL_UPI_ID_2) {
+      handleCopyUpi2()
+    } else {
+      handleCopyUpi1()
+    }
   }
 
   const teamSizeNum = parseInt(formData.teamSize, 10) || 4
@@ -1780,95 +1814,297 @@ export default function Registration() {
               </div>
 
               {/* Official UPI Payment Box */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/60 border-2 border-blue-200/80 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-blue-100">
+              <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/60 border-2 border-blue-200/80 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-blue-100">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-[#062b59]" />
+                    <CreditCard className="w-4 h-4 text-[#062b59] shrink-0" />
                     <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#062b59]">
                       Official UPI Payment (₹50)
                     </span>
                   </div>
-                  <span className="text-[10px] sm:text-[11px] font-extrabold bg-emerald-600 text-white px-3 py-1 rounded-full uppercase tracking-wider self-start sm:self-auto">
-                    GPay • PhonePe • Paytm • Any UPI
+                  <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-extrabold bg-emerald-600 text-white px-2.5 sm:px-3 py-1 rounded-full uppercase tracking-wider self-start sm:self-auto shrink-0 shadow-2xs whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 shrink-0 animate-pulse" />
+                    <span className="sm:hidden">GPay • PhonePe • Paytm • UPI</span>
+                    <span className="hidden sm:inline">GPay • PhonePe • Paytm • BHIM • Any UPI</span>
                   </span>
                 </div>
 
-                {/* Dedicated Full-Width UPI ID Box with One-Click Copy */}
-                <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-blue-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-0.5 min-w-0">
-                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                      Official Recipient UPI ID:
-                    </span>
-                    <div className="font-mono text-sm sm:text-base font-black text-[#062b59] tracking-tight select-all whitespace-nowrap overflow-x-auto">
-                      {OFFICIAL_UPI_ID}
-                    </div>
+                {/* Failover / Backup Alert Banner */}
+                <div className="p-3 sm:p-3.5 rounded-xl bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed">
+                    <strong className="font-bold text-amber-950">Dual Payment Options:</strong> If you face any bank server delay, app timeout, or pending status on <strong>QR 1 (Central Bank)</strong>, please immediately scan <strong>QR 2 (Kotak 811)</strong>. Both are official accounts for AiTHON 2.0 evaluation fee.
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyUpi}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-xs"
-                  >
-                    {copiedUpi ? (
-                      <>
-                        <Check className="w-4 h-4 text-emerald-300" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        <span>Copy UPI ID</span>
-                      </>
-                    )}
-                  </button>
                 </div>
 
-                {/* QR Code and Quick Instructions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
-                  {/* Interactive QR Code (Enlarged & Centered) */}
-                  <div className="flex flex-col items-center text-center space-y-2.5">
-                    <div className="p-3 sm:p-3.5 bg-white rounded-2xl border-2 border-blue-300 shadow-md inline-block">
-                      <img
-                        src="/qr-50.jpg"
-                        alt="Scan to Pay ₹50 via UPI - Shree A. Ugale (9404665180@centralbank)"
-                        className="w-52 h-auto sm:w-60 md:w-64 max-w-full rounded-xl object-contain shadow-xs"
-                        loading="eager"
-                      />
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-extrabold text-[#062b59] uppercase tracking-wider flex items-center gap-1.5 bg-white px-3.5 py-1 rounded-full border border-blue-200 shadow-2xs">
-                      <QrCode className="w-3.5 h-3.5 text-[#2563eb]" />
-                      <span>Scan to Pay ₹50 with Any UPI App</span>
+                {/* Upper QR Selector Tags (Fully Responsive on Mobile & Desktop) */}
+                <div className="space-y-2 pb-3 border-b border-blue-100">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Payment Account Tag:
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
+                      Tap tag to toggle QR code
                     </span>
                   </div>
 
-                  {/* Payment Instructions */}
-                  <div className="space-y-3 text-left">
-                    <div className="p-4 rounded-xl bg-white border border-blue-100 text-xs text-slate-700 space-y-2 shadow-2xs">
-                      <div className="font-extrabold text-[#062b59] uppercase tracking-wider text-[11px]">
-                        Payment Instructions:
-                      </div>
-                      <ol className="list-decimal pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed font-medium">
-                        <li>
-                          Scan the QR code or transfer ₹50 directly to <strong className="font-mono text-[#062b59] whitespace-nowrap">{OFFICIAL_UPI_ID}</strong>.
-                        </li>
-                        <li>
-                          From your UPI payment confirmation receipt, copy the <strong>12-digit UPI UTR / Transaction Reference ID</strong>.
-                        </li>
-                        <li>
-                          Paste the 12-digit UTR number below and confirm your payment to proceed to project presentation upload.
-                        </li>
-                      </ol>
-                    </div>
-
-                    {/* Direct Mobile Intent Link */}
-                    <a
-                      href={OFFICIAL_UPI_URI}
-                      className="sm:hidden inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-xl bg-blue-100 hover:bg-blue-200 text-[#062b59] text-xs font-bold transition-colors"
+                  {/* Responsive 2-Column Grid of Tags (100% width, no overflow on any device) */}
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2 p-1 rounded-xl bg-slate-100/90 border border-slate-200 w-full">
+                    {/* Tag 1: Central Bank (Primary) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveQr('qr1')}
+                      className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-lg text-xs font-bold transition-all cursor-pointer w-full text-center ${
+                        activeQr === 'qr1'
+                          ? 'bg-[#062b59] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-[#062b59] hover:bg-white/70'
+                      }`}
                     >
-                      <span>Tap to Open Installed UPI App</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                      <span
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-2xs ${
+                          activeQr === 'qr1' ? 'bg-[#2563eb] text-white' : 'bg-slate-300 text-slate-700'
+                        }`}
+                      >
+                        1
+                      </span>
+                      <div className="flex flex-col sm:flex-row items-center sm:gap-1 min-w-0 leading-tight">
+                        <span className="font-extrabold truncate text-[11px] sm:text-xs">
+                          Central Bank
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] opacity-80 shrink-0 font-medium">
+                          (Primary)
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Tag 2: Kotak 811 (Backup) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveQr('qr2')}
+                      className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-lg text-xs font-bold transition-all cursor-pointer w-full text-center ${
+                        activeQr === 'qr2'
+                          ? 'bg-[#062b59] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-[#062b59] hover:bg-white/70'
+                      }`}
+                    >
+                      <span
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-2xs ${
+                          activeQr === 'qr2' ? 'bg-[#9333ea] text-white' : 'bg-slate-300 text-slate-700'
+                        }`}
+                      >
+                        2
+                      </span>
+                      <div className="flex flex-col sm:flex-row items-center sm:gap-1 min-w-0 leading-tight">
+                        <span className="font-extrabold truncate text-[11px] sm:text-xs">
+                          Kotak 811
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] opacity-80 shrink-0 font-medium">
+                          (Backup)
+                        </span>
+                      </div>
+                    </button>
                   </div>
                 </div>
+
+                {/* Only One QR Code Visible at Once (Centered, Responsive) */}
+                <div className="max-w-md mx-auto w-full pt-1">
+                  {activeQr === 'qr1' ? (
+                    /* QR 1: Central Bank of India (Primary) */
+                    <div className="bg-white rounded-2xl border-2 border-blue-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-blue-400 transition-colors space-y-3.5 animate-fadeIn">
+                      {/* Card Header */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-full border border-blue-200 shrink-0">
+                            Option 01 • Primary
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase shrink-0">
+                            Central Bank
+                          </span>
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide">
+                          Mr Shri Avinash Ugale
+                        </h4>
+                      </div>
+
+                      {/* QR Image Container */}
+                      <div className="flex flex-col items-center text-center space-y-2">
+                        <div className="p-2 sm:p-2.5 bg-slate-50 rounded-2xl border border-blue-200/80 shadow-xs inline-block">
+                          <img
+                            src="/qr-50.jpg"
+                            alt="Scan to Pay ₹50 via Central Bank - Mr Shri Avinash Ugale (9404665180@centralbank)"
+                            className="w-44 sm:w-56 h-auto max-w-[220px] sm:max-w-full rounded-xl object-contain shadow-2xs"
+                            loading="eager"
+                          />
+                        </div>
+                        <span className="text-[10.5px] font-bold text-slate-600 flex items-center gap-1">
+                          <QrCode className="w-3.5 h-3.5 text-[#2563eb]" />
+                          <span>Scan with GPay / PhonePe / Paytm</span>
+                        </span>
+                      </div>
+
+                      {/* Dedicated UPI ID Box with One-Click Copy */}
+                      <div className="pt-1 border-t border-slate-100 space-y-2">
+                        <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-blue-100 flex items-center justify-between gap-2 w-full">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">
+                              UPI ID:
+                            </span>
+                            <div className="font-mono text-xs sm:text-sm font-black text-[#062b59] tracking-tight truncate select-all">
+                              {OFFICIAL_UPI_ID_1}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleCopyUpi1}
+                            className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#062b59] hover:bg-[#2563eb] text-white text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-2xs"
+                          >
+                            {copiedUpi1 ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Switch to backup QR shortcut */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveQr('qr2')}
+                          className="w-full text-center text-[11px] font-bold text-[#2563eb] hover:text-[#062b59] hover:underline cursor-pointer py-1 block leading-normal"
+                        >
+                          QR 1 not working or server busy? Click to switch to QR 2 (Kotak 811) →
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* QR 2: Kotak 811 (Alternative / Backup) */
+                    <div className="bg-white rounded-2xl border-2 border-indigo-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-indigo-400 transition-colors space-y-3.5 animate-fadeIn">
+                      {/* Card Header */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-purple-100 text-purple-900 px-2.5 py-0.5 rounded-full border border-purple-200 shrink-0">
+                            Option 02 • Backup
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase shrink-0">
+                            Kotak 811
+                          </span>
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide">
+                          Shri Avinash Ugale
+                        </h4>
+                      </div>
+
+                      {/* QR Image Container (Kotak dark card artwork) */}
+                      <div className="flex flex-col items-center text-center space-y-2">
+                        <div className="p-2 sm:p-2.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-xs inline-block">
+                          <img
+                            src="/qr-kotak.jpg"
+                            alt="Scan to Pay ₹50 via Kotak 811 - Shri Avinash Ugale (7841895180@kotakbank)"
+                            className="w-44 sm:w-56 h-auto max-w-[220px] sm:max-w-full rounded-xl object-contain shadow-2xs"
+                            loading="eager"
+                          />
+                        </div>
+                        <span className="text-[10.5px] font-bold text-slate-600 flex items-center gap-1">
+                          <QrCode className="w-3.5 h-3.5 text-purple-600" />
+                          <span>Scan with GPay / PhonePe / Paytm</span>
+                        </span>
+                      </div>
+
+                      {/* Dedicated UPI ID Box with One-Click Copy */}
+                      <div className="pt-1 border-t border-slate-100 space-y-2">
+                        <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-purple-100 flex items-center justify-between gap-2 w-full">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">
+                              UPI ID:
+                            </span>
+                            <div className="font-mono text-xs sm:text-sm font-black text-[#062b59] tracking-tight truncate select-all">
+                              {OFFICIAL_UPI_ID_2}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleCopyUpi2}
+                            className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#062b59] hover:bg-[#2563eb] text-white text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-2xs"
+                          >
+                            {copiedUpi2 ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Switch back to primary QR shortcut */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveQr('qr1')}
+                          className="w-full text-center text-[11px] font-bold text-[#2563eb] hover:text-[#062b59] hover:underline cursor-pointer py-1 block leading-normal"
+                        >
+                          ← Switch back to QR 1 (Central Bank)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Common Payment Instructions Box */}
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-blue-100 text-xs text-slate-700 space-y-2 shadow-2xs">
+                  <div className="font-extrabold text-[#062b59] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#2563eb]" />
+                    <span>Payment Verification Instructions:</span>
+                  </div>
+                  <ol className="list-decimal pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed font-medium">
+                    <li>
+                      Scan either <strong>QR 01 (Central Bank)</strong> or <strong>QR 02 (Kotak 811)</strong> using Google Pay, PhonePe, Paytm, BHIM, or any UPI app.
+                    </li>
+                    <li>
+                      If the 1st QR code is slow or fails in your app, use the 2nd QR code (Kotak 811). Both transfer the exact ₹50 evaluation fee.
+                    </li>
+                    <li>
+                      From your UPI payment confirmation receipt, copy the <strong>12-digit UPI UTR / Transaction Reference ID</strong>.
+                    </li>
+                    <li>
+                      Paste the 12-digit UTR number below and confirm your payment to proceed to presentation upload.
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* Payment Support Help Desk */}
+              <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#062b59] text-white flex items-center justify-center shrink-0">
+                    <Headphones className="w-4 h-4 text-blue-200" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black text-[#062b59] tracking-tight">
+                      Payment Verification Support
+                    </div>
+                    <div className="text-[11px] text-slate-600 font-medium">
+                      Need help with UPI payment or UTR? Contact Umesh or Shree
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSupportModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-white hover:bg-blue-50 text-[#062b59] border border-blue-200 text-xs font-bold shrink-0 transition-colors shadow-2xs hover:border-blue-400 cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto"
+                >
+                  <Phone className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Contact Coordinators</span>
+                </button>
               </div>
 
               {/* UTR Input Section */}
@@ -2674,6 +2910,14 @@ export default function Registration() {
           document.body
         )}
       </main>
+
+      {/* Payment Support Dialog (Umesh & Shree contact details) */}
+      <PaymentSupportWidget
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        showFloatingTrigger={false}
+        teamId={teamId}
+      />
 
       {/* Official Footer */}
       <Footer />
