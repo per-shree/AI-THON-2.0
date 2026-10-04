@@ -667,7 +667,8 @@ function doGet(e) {
 }
 
 /**
- * Finds existing row number (1-indexed) for a team by Team ID or Leader Email
+ * Finds existing row number (1-indexed) for a team by Team ID or Leader Email.
+ * Prioritizes matching BOTH Team ID and Email, then Team ID, then Email.
  */
 function findTeamRow(sheet, teamId, email) {
   if (!sheet) return -1;
@@ -684,17 +685,38 @@ function findTeamRow(sheet, teamId, email) {
   if (!targetTeamId && !targetEmail) return -1;
 
   var values = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
-  for (var i = values.length - 1; i >= 0; i--) {
-    var rTeam = String(values[i][1] || "").trim().toUpperCase();
-    var rEmail = String(values[i][6] || "").trim().toLowerCase();
 
-    if (targetTeamId && rTeam && rTeam === targetTeamId) {
-      return i + 2;
-    }
-    if (targetEmail && rEmail && rEmail === targetEmail) {
-      return i + 2;
+  // 1. Highest priority: Match BOTH Team ID and Leader Email (100% exact match)
+  if (targetTeamId && targetEmail) {
+    for (var i = values.length - 1; i >= 0; i--) {
+      var rTeam = String(values[i][1] || "").trim().toUpperCase();
+      var rEmail = String(values[i][6] || "").trim().toLowerCase();
+      if (rTeam === targetTeamId && rEmail === targetEmail) {
+        return i + 2;
+      }
     }
   }
+
+  // 2. Second priority: Match by Team ID (existing allocated record)
+  if (targetTeamId) {
+    for (var i = values.length - 1; i >= 0; i--) {
+      var rTeam = String(values[i][1] || "").trim().toUpperCase();
+      if (rTeam === targetTeamId) {
+        return i + 2;
+      }
+    }
+  }
+
+  // 3. Third priority: Match by Leader Email (preserves original Team ID allocated to this leader)
+  if (targetEmail) {
+    for (var i = values.length - 1; i >= 0; i--) {
+      var rEmail = String(values[i][6] || "").trim().toLowerCase();
+      if (rEmail === targetEmail) {
+        return i + 2;
+      }
+    }
+  }
+
   return -1;
 }
 
