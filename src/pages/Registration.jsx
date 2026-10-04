@@ -83,76 +83,23 @@ const STEPS = [
   { number: 5, title: 'Completed' },
 ]
 
-const YEAR_OPTIONS = [
-  '1st Year (FE / 1st Year UG / Diploma)',
-  '2nd Year (SE / 2nd Year UG / Diploma)',
-  '3rd Year (TE / 3rd Year UG / Diploma)',
-  '4th Year (BE / Final Year 4-Yr UG)',
-  '5th Year (Final Year MBBS / B.A. LL.B / Pharm.D)',
-]
-
-const COURSE_OPTIONS = [
-  'Engineering & Technology (B.E. / B.Tech / Diploma)',
-  'Medical, Dental & Healthcare (MBBS / BDS / B.Sc Nursing / BPT)',
-  'Pharmacy & Life Sciences (B.Pharm / Pharm.D)',
-  'Legal Studies (LL.B / B.A. LL.B / B.B.A. LL.B)',
-  'Business, Management & Finance (BBA / B.Com / B.A. Econ)',
-  'Arts, Humanities, Social Sciences & Media (B.A. / B.M.M.)',
-  'Design, Animation & Fine Arts (B.Des / B.FA)',
-  'Agricultural Sciences & Forestry (B.Sc. Agriculture)',
-  'Polytechnic & Technical Diploma Streams',
-  'Other',
-]
-
-// Official Competition Domains
-export const DOMAIN_OPTIONS = [
-  'Software',
-  'Hardware',
-]
-
-// 23 Official Hackathon Competition Tracks
-export const TRACK_OPTIONS = [
-  'Track 01: AI in Healthcare & Medicine',
-  'Track 02: AI in Dental Science & Diagnostics',
-  'Track 03: AI in Pharmacy & Drug Discovery',
-  'Track 04: LegalTech, AI Ethics & Law',
-  'Track 05: FinTech & Financial Intelligence',
-  'Track 06: EdTech & Smart Learning',
-  'Track 07: AI in Film, Animation & Storytelling',
-  'Track 08: UI/UX & Accessible Design',
-  'Track 09: Industrial Automation & Robotics',
-  'Track 10: Smart Energy & CleanTech',
-  'Track 11: Aerospace, Telemetry & SpaceTech',
-  'Track 12: AgriTech & Smart Farming',
-  'Track 13: Environmental AI & Sustainability',
-  'Track 14: E-Commerce & Retail Automation',
-  'Track 15: Supply Chain & Logistics Intelligence',
-  'Track 16: Cybersecurity, Forensics & Cyber Law',
-  'Track 17: Smart Cities & Urban Mobility',
-  'Track 18: Disaster Management & Public Safety',
-  'Track 19: Mental Health & Psychology AI',
-  'Track 20: Sports Analytics & Performance Tech',
-  'Track 21: Hospitality, Tourism & Service AI',
-  'Track 22: Social Good & Civic Innovation',
-  'Track 23: Open Innovation (Unrestricted Domain)',
-]
-
-export const isOtherCourse = (course) =>
-  course === 'Other' ||
-  course === 'Other Tech Stream' ||
-  course === 'Other (Please specify)' ||
-  (typeof course === 'string' && course.startsWith('Other'))
-
-// Official UPI Payment Configuration for ₹50 Evaluation Fee (Primary & Alternative/Kotak 811)
-export const OFFICIAL_UPI_ID_1 = '9404665180@centralbank'
-export const OFFICIAL_UPI_URI_1 = 'upi://pay?pa=9404665180@centralbank&pn=Mr%20Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
-
-export const OFFICIAL_UPI_ID_2 = '7841895180@kotakbank'
-export const OFFICIAL_UPI_URI_2 = 'upi://pay?pa=7841895180@kotakbank&pn=Shri%20Avinash%20Ugale&am=50&cu=INR&tn=AITHON%202.0%20Registration'
-
-// Backward-compatible aliases
-export const OFFICIAL_UPI_ID = OFFICIAL_UPI_ID_1
-export const OFFICIAL_UPI_URI = OFFICIAL_UPI_URI_1
+import {
+  YEAR_OPTIONS,
+  COURSE_OPTIONS,
+  DOMAIN_OPTIONS,
+  TRACK_OPTIONS,
+  isOtherCourse,
+  OFFICIAL_UPI_ID_1,
+  OFFICIAL_UPI_URI_1,
+  OFFICIAL_UPI_ID_2,
+  OFFICIAL_UPI_URI_2,
+  OFFICIAL_UPI_ID_3,
+  OFFICIAL_UPI_URI_3,
+  OFFICIAL_UPI_ID_4,
+  OFFICIAL_UPI_URI_4,
+  OFFICIAL_UPI_ID,
+  OFFICIAL_UPI_URI,
+} from '../data/registrationConstants'
 
 // Default blank form state
 const INITIAL_FORM_DATA = {
@@ -238,7 +185,10 @@ export default function Registration() {
   const [copiedUpi, setCopiedUpi] = useState(false)
   const [copiedUpi1, setCopiedUpi1] = useState(false)
   const [copiedUpi2, setCopiedUpi2] = useState(false)
-  const [activeQr, setActiveQr] = useState('qr1') // 'qr1' | 'qr2'
+  const [copiedUpi3, setCopiedUpi3] = useState(false)
+  const [copiedUpi4, setCopiedUpi4] = useState(false)
+  const [activeQr, setActiveQr] = useState('bank') // 'bank' | 'qr1' | 'qr2' | 'qr3' | 'qr4'
+  const [bankMode, setBankMode] = useState('imps') // 'imps' | 'upi' | 'neft'
   const [copiedField, setCopiedField] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [paymentModal, setPaymentModal] = useState(null)
@@ -988,9 +938,29 @@ export default function Registration() {
     }, 2500)
   }
 
+  const handleCopyUpi3 = () => {
+    navigator.clipboard.writeText(OFFICIAL_UPI_ID_3)
+    setCopiedUpi3(true)
+    setTimeout(() => {
+      setCopiedUpi3(false)
+    }, 2500)
+  }
+
+  const handleCopyUpi4 = () => {
+    navigator.clipboard.writeText(OFFICIAL_UPI_ID_4)
+    setCopiedUpi4(true)
+    setTimeout(() => {
+      setCopiedUpi4(false)
+    }, 2500)
+  }
+
   const handleCopyUpi = (customId = OFFICIAL_UPI_ID_1) => {
     if (customId === OFFICIAL_UPI_ID_2) {
       handleCopyUpi2()
+    } else if (customId === OFFICIAL_UPI_ID_3) {
+      handleCopyUpi3()
+    } else if (customId === OFFICIAL_UPI_ID_4) {
+      handleCopyUpi4()
     } else {
       handleCopyUpi1()
     }
@@ -1840,95 +1810,409 @@ export default function Registration() {
                 <div className="p-3 sm:p-3.5 rounded-xl bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <div className="leading-relaxed">
-                    <strong className="font-bold text-amber-950">Dual Payment Options:</strong> If you face any bank server delay, app timeout, or pending status on <strong>QR 1 (Central Bank)</strong>, please immediately scan <strong>QR 2 (Kotak 811)</strong>. Both are official accounts for AiTHON 2.0 evaluation fee.
+                    <strong className="font-bold text-amber-950">5 Official Payment Options:</strong> You can pay via <strong>Option 1: Direct Bank Transfer (Qwicit Technologies Current Account - IMPS / UPI / NEFT)</strong>, or scan any of the 4 official QR codes (Central Bank, Kotak 811, SBI - Sudhanshu, PhonePe - Umesh). All are official accounts for AiTHON 2.0 evaluation fee.
                   </div>
                 </div>
 
                 {/* Upper QR Selector Tags (Fully Responsive on Mobile & Desktop) */}
                 <div className="space-y-2 pb-3 border-b border-blue-100">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       Payment Account Tag:
                     </span>
                     <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
-                      Tap tag to toggle QR code
+                      Tap any tag below to toggle payment option
                     </span>
                   </div>
 
-                  {/* Responsive 2-Column Grid of Tags (100% width, no overflow on any device) */}
-                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2 p-1 rounded-xl bg-slate-100/90 border border-slate-200 w-full">
-                    {/* Tag 1: Central Bank (Primary) */}
+                  {/* Responsive 5-Option Grid of Tags (Zero Overlap on Mobile & Desktop) */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/90 w-full">
+                    {/* Tag 1: Bank Transfer (Qwicit Technologies - Current A/c) - Spans 2 cols on mobile for generous width */}
                     <button
                       type="button"
-                      onClick={() => setActiveQr('qr1')}
-                      className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-lg text-xs font-bold transition-all cursor-pointer w-full text-center ${
-                        activeQr === 'qr1'
-                          ? 'bg-[#062b59] text-white shadow-xs'
-                          : 'text-slate-600 hover:text-[#062b59] hover:bg-white/70'
+                      onClick={() => setActiveQr('bank')}
+                      className={`col-span-2 md:col-span-1 flex items-center md:flex-col justify-center gap-2 py-2 sm:py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
+                        activeQr === 'bank'
+                          ? 'bg-[#062b59] text-white shadow-sm ring-2 ring-blue-400/50'
+                          : 'bg-white md:bg-transparent text-slate-700 hover:text-[#062b59] hover:bg-white border border-slate-200/70 md:border-transparent'
                       }`}
                     >
                       <span
-                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-2xs ${
-                          activeQr === 'qr1' ? 'bg-[#2563eb] text-white' : 'bg-slate-300 text-slate-700'
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 shadow-2xs ${
+                          activeQr === 'bank' ? 'bg-[#0284c7] text-white' : 'bg-slate-200 text-slate-700'
                         }`}
                       >
                         1
                       </span>
-                      <div className="flex flex-col sm:flex-row items-center sm:gap-1 min-w-0 leading-tight">
-                        <span className="font-extrabold truncate text-[11px] sm:text-xs">
-                          Central Bank
+                      <div className="flex flex-col items-start md:items-center min-w-0 leading-tight">
+                        <span className="font-extrabold text-xs tracking-tight whitespace-nowrap">
+                          Bank Transfer
                         </span>
-                        <span className="text-[9px] sm:text-[10px] opacity-80 shrink-0 font-medium">
-                          (Primary)
+                        <span className="text-[10px] opacity-80 font-medium whitespace-nowrap">
+                          Current A/c (Qwicit)
                         </span>
                       </div>
                     </button>
 
-                    {/* Tag 2: Kotak 811 (Backup) */}
+                    {/* Tag 2: Central Bank (Primary) */}
                     <button
                       type="button"
-                      onClick={() => setActiveQr('qr2')}
-                      className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-lg text-xs font-bold transition-all cursor-pointer w-full text-center ${
-                        activeQr === 'qr2'
-                          ? 'bg-[#062b59] text-white shadow-xs'
-                          : 'text-slate-600 hover:text-[#062b59] hover:bg-white/70'
+                      onClick={() => setActiveQr('qr1')}
+                      className={`flex items-center md:flex-col justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
+                        activeQr === 'qr1'
+                          ? 'bg-[#062b59] text-white shadow-sm ring-2 ring-blue-400/50'
+                          : 'bg-white md:bg-transparent text-slate-700 hover:text-[#062b59] hover:bg-white border border-slate-200/70 md:border-transparent'
                       }`}
                     >
                       <span
-                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-2xs ${
-                          activeQr === 'qr2' ? 'bg-[#9333ea] text-white' : 'bg-slate-300 text-slate-700'
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 shadow-2xs ${
+                          activeQr === 'qr1' ? 'bg-[#2563eb] text-white' : 'bg-slate-200 text-slate-700'
                         }`}
                       >
                         2
                       </span>
-                      <div className="flex flex-col sm:flex-row items-center sm:gap-1 min-w-0 leading-tight">
-                        <span className="font-extrabold truncate text-[11px] sm:text-xs">
+                      <div className="flex flex-col items-start md:items-center min-w-0 leading-tight">
+                        <span className="font-extrabold text-xs tracking-tight whitespace-nowrap">
+                          Central Bank
+                        </span>
+                        <span className="text-[10px] opacity-80 font-medium whitespace-nowrap">
+                          QR 1 (Primary)
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Tag 3: Kotak 811 (Backup) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveQr('qr2')}
+                      className={`flex items-center md:flex-col justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
+                        activeQr === 'qr2'
+                          ? 'bg-[#062b59] text-white shadow-sm ring-2 ring-blue-400/50'
+                          : 'bg-white md:bg-transparent text-slate-700 hover:text-[#062b59] hover:bg-white border border-slate-200/70 md:border-transparent'
+                      }`}
+                    >
+                      <span
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 shadow-2xs ${
+                          activeQr === 'qr2' ? 'bg-[#9333ea] text-white' : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        3
+                      </span>
+                      <div className="flex flex-col items-start md:items-center min-w-0 leading-tight">
+                        <span className="font-extrabold text-xs tracking-tight whitespace-nowrap">
                           Kotak 811
                         </span>
-                        <span className="text-[9px] sm:text-[10px] opacity-80 shrink-0 font-medium">
-                          (Backup)
+                        <span className="text-[10px] opacity-80 font-medium whitespace-nowrap">
+                          QR 2 (Backup)
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Tag 4: PhonePe 1 (Sudhanshu Rahane) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveQr('qr3')}
+                      className={`flex items-center md:flex-col justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
+                        activeQr === 'qr3'
+                          ? 'bg-[#062b59] text-white shadow-sm ring-2 ring-blue-400/50'
+                          : 'bg-white md:bg-transparent text-slate-700 hover:text-[#062b59] hover:bg-white border border-slate-200/70 md:border-transparent'
+                      }`}
+                    >
+                      <span
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 shadow-2xs ${
+                          activeQr === 'qr3' ? 'bg-[#5f259f] text-white' : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        4
+                      </span>
+                      <div className="flex flex-col items-start md:items-center min-w-0 leading-tight">
+                        <span className="font-extrabold text-xs tracking-tight whitespace-nowrap">
+                          SBI
+                        </span>
+                        <span className="text-[10px] opacity-80 font-medium whitespace-nowrap">
+                          Sudhanshu R.
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Tag 5: PhonePe 2 (Umesh Khairnar) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveQr('qr4')}
+                      className={`flex items-center md:flex-col justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
+                        activeQr === 'qr4'
+                          ? 'bg-[#062b59] text-white shadow-sm ring-2 ring-blue-400/50'
+                          : 'bg-white md:bg-transparent text-slate-700 hover:text-[#062b59] hover:bg-white border border-slate-200/70 md:border-transparent'
+                      }`}
+                    >
+                      <span
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 shadow-2xs ${
+                          activeQr === 'qr4' ? 'bg-[#059669] text-white' : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        5
+                      </span>
+                      <div className="flex flex-col items-start md:items-center min-w-0 leading-tight">
+                        <span className="font-extrabold text-xs tracking-tight whitespace-nowrap">
+                          PhonePe
+                        </span>
+                        <span className="text-[10px] opacity-80 font-medium whitespace-nowrap">
+                          Umesh K.
                         </span>
                       </div>
                     </button>
                   </div>
                 </div>
 
-                {/* Only One QR Code Visible at Once (Centered, Responsive) */}
-                <div className="max-w-md mx-auto w-full pt-1">
-                  {activeQr === 'qr1' ? (
-                    /* QR 1: Central Bank of India (Primary) */
-                    <div className="bg-white rounded-2xl border-2 border-blue-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-blue-400 transition-colors space-y-3.5 animate-fadeIn">
-                      {/* Card Header */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-full border border-blue-200 shrink-0">
-                            Option 01 • Primary
+                {/* Only One Payment Option Visible at Once (Centered, Fully Responsive) */}
+                <div className="max-w-xl mx-auto w-full pt-1">
+                  {/* OPTION 1: Direct Bank Transfer (Qwicit Technologies - Current Account) */}
+                  {activeQr === 'bank' && (
+                    <div className="bg-white rounded-2xl border-2 border-blue-300/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-blue-500 transition-colors space-y-4 animate-fadeIn">
+                      {/* Card Header with badges properly spaced and responsive */}
+                      <div className="space-y-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-slate-100">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-1 rounded-full border border-blue-200 shrink-0 flex items-center gap-1.5 shadow-2xs">
+                              <Building className="w-3.5 h-3.5 text-blue-700" />
+                              <span>Option 01 • Bank Transfer</span>
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] font-bold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 uppercase shrink-0 shadow-2xs">
+                              Current Account
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium shrink-0">
+                            <span>Fee:</span>
+                            <span className="font-mono font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 shadow-2xs">
+                              ₹50.00
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-0.5">
+                          <h4 className="text-base sm:text-lg font-black text-[#062b59] uppercase tracking-wide">
+                            Qwicit Technologies
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium">
+                            Official corporate current account for AiTHON 2.0 evaluation fee
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Choose Transfer Mode Selector: IMPS / UPI / NEFT */}
+                      <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/90 border border-slate-200 space-y-2.5">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 shrink-0">
+                            <CreditCard className="w-4 h-4 text-[#062b59]" />
+                            <span>Select Transfer Mode:</span>
                           </span>
-                          <span className="text-[10px] font-bold text-slate-500 uppercase shrink-0">
-                            Central Bank
+                          <span className="text-[10px] text-blue-600 font-semibold shrink-0">
+                            Choose IMPS, UPI, or NEFT
                           </span>
                         </div>
-                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide">
+
+                        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setBankMode('imps')}
+                            className={`py-2 px-1 sm:px-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ${
+                              bankMode === 'imps'
+                                ? 'bg-[#062b59] text-white shadow-xs ring-2 ring-blue-400'
+                                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="font-extrabold text-xs">IMPS</span>
+                            <span className="text-[9px] sm:text-[9.5px] opacity-80 font-medium whitespace-nowrap">Instant 24x7</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setBankMode('upi')}
+                            className={`py-2 px-1 sm:px-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ${
+                              bankMode === 'upi'
+                                ? 'bg-[#062b59] text-white shadow-xs ring-2 ring-blue-400'
+                                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="font-extrabold text-xs">UPI</span>
+                            <span className="text-[9px] sm:text-[9.5px] opacity-80 font-medium whitespace-nowrap">A/c + IFSC</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setBankMode('neft')}
+                            className={`py-2 px-1 sm:px-2 rounded-lg text-xs font-bold transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ${
+                              bankMode === 'neft'
+                                ? 'bg-[#062b59] text-white shadow-xs ring-2 ring-blue-400'
+                                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="font-extrabold text-xs">NEFT</span>
+                            <span className="text-[9px] sm:text-[9.5px] opacity-80 font-medium whitespace-nowrap">Net Banking</span>
+                          </button>
+                        </div>
+
+                        {/* Mode Specific Guidance */}
+                        <div className="text-[11.5px] text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200/90 leading-relaxed font-medium">
+                          {bankMode === 'imps' && (
+                            <div>
+                              ⚡ <strong>IMPS (Instant 24x7):</strong> In your bank app (SBI, HDFC, ICICI, etc.), choose <em>Send Money → To Bank Account (IMPS)</em>. Credit is immediate.
+                            </div>
+                          )}
+                          {bankMode === 'upi' && (
+                            <div>
+                              📱 <strong>UPI (Account + IFSC):</strong> In Google Pay, PhonePe, Paytm, or BHIM, tap <em>To Bank A/c / Pay to Account</em>, then paste the Account Number &amp; IFSC code below.
+                            </div>
+                          )}
+                          {bankMode === 'neft' && (
+                            <div>
+                              🏦 <strong>NEFT:</strong> In net banking, transfer ₹50 to the beneficiary account below. Save the 16-character NEFT reference number.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bank Account Details Grid - Responsive 2-column with no truncate */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 text-xs">
+                        {/* Account Holder Name */}
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                              Account Holder Name
+                            </span>
+                            <span className="font-bold text-[#062b59] text-xs sm:text-sm tracking-tight block">
+                              Qwicit Technologies
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText('Qwicit Technologies', 'holder')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-[#062b59] text-xs font-bold cursor-pointer transition-colors shadow-2xs shrink-0"
+                          >
+                            {copiedField === 'holder' ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Account Number */}
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                              Account Number
+                            </span>
+                            <span className="font-mono font-black text-[#062b59] text-xs sm:text-sm tracking-wide block select-all">
+                              4113667626
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText('4113667626', 'acc')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-[#062b59] text-xs font-bold cursor-pointer transition-colors shadow-2xs shrink-0"
+                          >
+                            {copiedField === 'acc' ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* IFSC Code */}
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                              IFSC Code
+                            </span>
+                            <span className="font-mono font-black text-[#062b59] text-xs sm:text-sm tracking-wide block select-all">
+                              CBIN0282495
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText('CBIN0282495', 'ifsc')}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-[#062b59] text-xs font-bold cursor-pointer transition-colors shadow-2xs shrink-0"
+                          >
+                            {copiedField === 'ifsc' ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Bank & Account Type */}
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                              Bank &amp; Account Type
+                            </span>
+                            <span className="font-bold text-[#062b59] text-xs sm:text-sm block">
+                              Central Bank • Current A/c
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-extrabold uppercase px-2 py-1 rounded-md bg-blue-100 text-blue-900 border border-blue-200 shrink-0 shadow-2xs">
+                            Current
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Shortcut switch to QR options */}
+                      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="text-slate-500 font-medium">Prefer scanning a QR code instead?</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveQr('qr1')}
+                          className="font-bold text-[#2563eb] hover:underline cursor-pointer py-1"
+                        >
+                          Switch to Option 2 (Central Bank) →
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OPTION 2: QR 1: Central Bank of India (Primary) */}
+                  {activeQr === 'qr1' && (
+                    <div className="bg-white rounded-2xl border-2 border-blue-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-blue-400 transition-colors space-y-3.5 animate-fadeIn">
+                      {/* Card Header with non-overlapping badges */}
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-full border border-blue-200 shrink-0 shadow-2xs">
+                              Option 02 • Primary
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase shrink-0">
+                              Central Bank
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium shrink-0">
+                            <span>Fee:</span>
+                            <span className="font-mono font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 shadow-2xs">
+                              ₹50.00
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide pt-0.5">
                           Mr Shri Avinash Ugale
                         </h4>
                       </div>
@@ -1945,7 +2229,7 @@ export default function Registration() {
                         </div>
                         <span className="text-[10.5px] font-bold text-slate-600 flex items-center gap-1">
                           <QrCode className="w-3.5 h-3.5 text-[#2563eb]" />
-                          <span>Scan with GPay / PhonePe / Paytm</span>
+                          <span>Scan with GPay / PhonePe / Paytm / Any UPI</span>
                         </span>
                       </div>
 
@@ -1979,30 +2263,49 @@ export default function Registration() {
                           </button>
                         </div>
 
-                        {/* Switch to backup QR shortcut */}
-                        <button
-                          type="button"
-                          onClick={() => setActiveQr('qr2')}
-                          className="w-full text-center text-[11px] font-bold text-[#2563eb] hover:text-[#062b59] hover:underline cursor-pointer py-1 block leading-normal"
-                        >
-                          QR 1 not working or server busy? Click to switch to QR 2 (Kotak 811) →
-                        </button>
+                        {/* Switch shortcuts */}
+                        <div className="flex items-center justify-between gap-2 pt-0.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('bank')}
+                            className="text-[11px] font-bold text-[#0284c7] hover:underline cursor-pointer py-1"
+                          >
+                            ← Option 1 (Bank Transfer)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('qr2')}
+                            className="text-[11px] font-bold text-purple-600 hover:underline cursor-pointer py-1"
+                          >
+                            Option 3 (Kotak 811) →
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  ) : (
-                    /* QR 2: Kotak 811 (Alternative / Backup) */
+                  )}
+
+                  {/* OPTION 3: QR 2: Kotak 811 (Alternative / Backup) */}
+                  {activeQr === 'qr2' && (
                     <div className="bg-white rounded-2xl border-2 border-indigo-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-indigo-400 transition-colors space-y-3.5 animate-fadeIn">
-                      {/* Card Header */}
+                      {/* Card Header with non-overlapping badges */}
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-purple-100 text-purple-900 px-2.5 py-0.5 rounded-full border border-purple-200 shrink-0">
-                            Option 02 • Backup
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-500 uppercase shrink-0">
-                            Kotak 811
-                          </span>
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider bg-purple-100 text-purple-900 px-2.5 py-0.5 rounded-full border border-purple-200 shrink-0 shadow-2xs">
+                              Option 03 • Backup
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase shrink-0">
+                              Kotak 811
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium shrink-0">
+                            <span>Fee:</span>
+                            <span className="font-mono font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 shadow-2xs">
+                              ₹50.00
+                            </span>
+                          </div>
                         </div>
-                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide">
+                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide pt-0.5">
                           Shri Avinash Ugale
                         </h4>
                       </div>
@@ -2019,7 +2322,7 @@ export default function Registration() {
                         </div>
                         <span className="text-[10.5px] font-bold text-slate-600 flex items-center gap-1">
                           <QrCode className="w-3.5 h-3.5 text-purple-600" />
-                          <span>Scan with GPay / PhonePe / Paytm</span>
+                          <span>Scan with GPay / PhonePe / Paytm / Any UPI</span>
                         </span>
                       </div>
 
@@ -2053,14 +2356,209 @@ export default function Registration() {
                           </button>
                         </div>
 
-                        {/* Switch back to primary QR shortcut */}
-                        <button
-                          type="button"
-                          onClick={() => setActiveQr('qr1')}
-                          className="w-full text-center text-[11px] font-bold text-[#2563eb] hover:text-[#062b59] hover:underline cursor-pointer py-1 block leading-normal"
-                        >
-                          ← Switch back to QR 1 (Central Bank)
-                        </button>
+                        {/* Switch shortcuts */}
+                        <div className="flex items-center justify-between gap-2 pt-0.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('qr1')}
+                            className="text-[11px] font-bold text-[#2563eb] hover:underline cursor-pointer py-1"
+                          >
+                            ← Option 2 (Central Bank)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('qr3')}
+                            className="text-[11px] font-bold text-[#5f259f] hover:underline cursor-pointer py-1"
+                          >
+                            Option 4 (PhonePe 1) →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OPTION 4: QR 3: PhonePe 1 (Sudhanshu Machhindra Rahane) */}
+                  {activeQr === 'qr3' && (
+                    <div className="bg-white rounded-2xl border-2 border-purple-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-purple-400 transition-colors space-y-3.5 animate-fadeIn">
+                      {/* Card Header with non-overlapping badges */}
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider bg-purple-100 text-purple-900 px-2.5 py-0.5 rounded-full border border-purple-200 shrink-0 shadow-2xs">
+                              Option 04 • PhonePe
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] font-bold text-[#5f259f] bg-purple-50 px-2 py-0.5 rounded border border-purple-200 uppercase shrink-0">
+                              Sudhanshu Rahane
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium shrink-0">
+                            <span>Fee:</span>
+                            <span className="font-mono font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 shadow-2xs">
+                              ₹50.00
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide pt-0.5">
+                          Sudhanshu Machhindra Rahane
+                        </h4>
+                      </div>
+
+                      {/* QR Image Container (PhonePe dark card artwork) */}
+                      <div className="flex flex-col items-center text-center space-y-2">
+                        <div className="p-2 sm:p-2.5 bg-white rounded-2xl border border-slate-200 shadow-xs inline-block">
+                          <img
+                            src="/qr-phonepe.jpg"
+                            alt="Scan to Pay ₹50 via PhonePe / SBI - Sudhanshu Machhindra Rahane (7720092989@sbi)"
+                            className="w-44 sm:w-56 h-auto max-w-[220px] sm:max-w-full rounded-xl object-contain shadow-2xs"
+                            loading="eager"
+                          />
+                        </div>
+                        <span className="text-[10.5px] font-bold text-slate-600 flex items-center gap-1">
+                          <QrCode className="w-3.5 h-3.5 text-[#5f259f]" />
+                          <span>Scan with PhonePe / GPay / Paytm / Any UPI</span>
+                        </span>
+                      </div>
+
+                      {/* Dedicated UPI ID Box with One-Click Copy */}
+                      <div className="pt-1 border-t border-slate-100 space-y-2">
+                        <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-purple-100 flex items-center justify-between gap-2 w-full">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">
+                              UPI ID:
+                            </span>
+                            <div className="font-mono text-xs sm:text-sm font-black text-[#062b59] tracking-tight truncate select-all">
+                              {OFFICIAL_UPI_ID_3}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleCopyUpi3}
+                            className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#062b59] hover:bg-[#5f259f] text-white text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-2xs"
+                          >
+                            {copiedUpi3 ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Switch shortcuts */}
+                        <div className="flex items-center justify-between gap-2 pt-0.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('qr2')}
+                            className="text-[11px] font-bold text-purple-600 hover:underline cursor-pointer py-1"
+                          >
+                            ← Option 3 (Kotak 811)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('qr4')}
+                            className="text-[11px] font-bold text-emerald-600 hover:underline cursor-pointer py-1"
+                          >
+                            Option 5 (PhonePe 2) →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OPTION 5: QR 4: PhonePe 2 (Umesh Mahendra Khairnar) */}
+                  {activeQr === 'qr4' && (
+                    <div className="bg-white rounded-2xl border-2 border-emerald-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-emerald-400 transition-colors space-y-3.5 animate-fadeIn">
+                      {/* Card Header with non-overlapping badges */}
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-200 shrink-0 shadow-2xs">
+                              Option 05 • PhonePe
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] font-bold text-[#059669] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase shrink-0">
+                              Umesh Khairnar
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium shrink-0">
+                            <span>Fee:</span>
+                            <span className="font-mono font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 shadow-2xs">
+                              ₹50.00
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-black text-[#062b59] uppercase tracking-wide pt-0.5">
+                          Umesh Mahendra Khairnar
+                        </h4>
+                      </div>
+
+                      {/* QR Image Container (White card artwork) */}
+                      <div className="flex flex-col items-center text-center space-y-2">
+                        <div className="p-2 sm:p-2.5 bg-white rounded-2xl border border-slate-200 shadow-xs inline-block">
+                          <img
+                            src="/qr-umesh.png"
+                            alt="Scan to Pay ₹50 via PhonePe - Umesh Mahendra Khairnar (9975260955-2@ybl)"
+                            className="w-44 sm:w-56 h-auto max-w-[220px] sm:max-w-full rounded-xl object-contain shadow-2xs"
+                            loading="eager"
+                          />
+                        </div>
+                        <span className="text-[10.5px] font-bold text-slate-600 flex items-center gap-1">
+                          <QrCode className="w-3.5 h-3.5 text-[#5f259f]" />
+                          <span>Scan with PhonePe / GPay / Paytm / Any UPI</span>
+                        </span>
+                      </div>
+
+                      {/* Dedicated UPI ID Box with One-Click Copy */}
+                      <div className="pt-1 border-t border-slate-100 space-y-2">
+                        <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-emerald-100 flex items-center justify-between gap-2 w-full">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">
+                              UPI ID:
+                            </span>
+                            <div className="font-mono text-xs sm:text-sm font-black text-[#062b59] tracking-tight truncate select-all">
+                              {OFFICIAL_UPI_ID_4}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleCopyUpi4}
+                            className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-[#062b59] hover:bg-[#059669] text-white text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-2xs"
+                          >
+                            {copiedUpi4 ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Switch shortcuts */}
+                        <div className="flex items-center justify-between gap-2 pt-0.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('qr3')}
+                            className="text-[11px] font-bold text-[#5f259f] hover:underline cursor-pointer py-1"
+                          >
+                            ← Option 4 (PhonePe 1)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveQr('bank')}
+                            className="text-[11px] font-bold text-[#0284c7] hover:underline cursor-pointer py-1"
+                          >
+                            Option 1 (Bank Transfer) →
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2074,26 +2572,27 @@ export default function Registration() {
                   </div>
                   <ol className="list-decimal pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed font-medium">
                     <li>
-                      Scan either <strong>QR 01 (Central Bank)</strong> or <strong>QR 02 (Kotak 811)</strong> using Google Pay, PhonePe, Paytm, BHIM, or any UPI app.
+                      Choose any of the 5 official payment options: <strong>Option 1 (Direct Bank Transfer to Qwicit Technologies via IMPS / UPI / NEFT)</strong> or scan <strong>QR 02 (Central Bank)</strong>, <strong>QR 03 (Kotak 811)</strong>, <strong>QR 04 (PhonePe 1)</strong>, or <strong>QR 05 (PhonePe 2)</strong>.
                     </li>
                     <li>
-                      If the 1st QR code is slow or fails in your app, use the 2nd QR code (Kotak 811). Both transfer the exact ₹50 evaluation fee.
+                      Transfer the exact <strong>₹50 evaluation fee</strong> per team.
                     </li>
                     <li>
-                      From your UPI payment confirmation receipt, copy the <strong>12-digit UPI UTR / Transaction Reference ID</strong>.
+                      From your bank or UPI payment confirmation receipt, copy the <strong>12-digit UPI UTR, Bank IMPS Reference, or NEFT Reference ID</strong>.
                     </li>
                     <li>
-                      Paste the 12-digit UTR number below and confirm your payment to proceed to presentation upload.
+                      Paste the UTR / reference number below and confirm your payment to proceed to presentation upload.
                     </li>
                   </ol>
                 </div>
-                {/* Alternate Payment & Direct Bank Transfer Notice */}
+
+                {/* Alternate Payment / Direct Number Fallback */}
                 <div className="pt-2 border-t border-blue-100/90 space-y-3">
                   {/* Note: Mobile number fallback if transaction not done */}
                   <div className="p-3 sm:p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                     <div className="flex-1 leading-relaxed">
-                      <span className="font-bold">Note:</span> If the transaction is not done / fails via QR code, you can use mobile number:{' '}
+                      <span className="font-bold">Note:</span> If the transaction is not done / fails via QR code or bank transfer, you can also use mobile numbers directly:{' '}
                       <button
                         type="button"
                         onClick={() => handleCopyText('7841895180', 'phone')}
@@ -2107,81 +2606,34 @@ export default function Registration() {
                           <Copy className="w-3 h-3 text-amber-700" />
                         )}
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Direct Bank Transfer Option */}
-                  <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-blue-200/90 shadow-2xs space-y-2.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <Building className="w-4 h-4 text-[#062b59]" />
-                        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#062b59]">
-                          Or Pay via Direct Bank Transfer (IMPS / NEFT)
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                        All Banks Accepted
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                      {/* Bank Name */}
-                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                          Bank Name
-                        </span>
-                        <span className="font-bold text-[#062b59] text-xs">
-                          Central Bank of India
-                        </span>
-                      </div>
-
-                      {/* Account Number */}
-                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-1">
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                            Account Number
-                          </span>
-                          <span className="font-mono font-black text-[#062b59] text-xs tracking-wide">
-                            4113667626
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyText('4113667626', 'acc')}
-                          className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer shrink-0"
-                          title="Copy Account Number"
-                        >
-                          {copiedField === 'acc' ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
-
-                      {/* IFSC Code */}
-                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-1">
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                            IFSC Code
-                          </span>
-                          <span className="font-mono font-black text-[#062b59] text-xs tracking-wide">
-                            CBIN0282495
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyText('CBIN0282495', 'ifsc')}
-                          className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer shrink-0"
-                          title="Copy IFSC Code"
-                        >
-                          {copiedField === 'ifsc' ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
+                      {', '}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyText('7720092989', 'phone2')}
+                        className="inline-flex items-center gap-1 font-mono font-bold text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                        title="Click to copy mobile number"
+                      >
+                        <span>7720092989</span>
+                        {copiedField === 'phone2' ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-amber-700" />
+                        )}
+                      </button>
+                      {' or '}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyText('9975260955', 'phone3')}
+                        className="inline-flex items-center gap-1 font-mono font-bold text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                        title="Click to copy mobile number"
+                      >
+                        <span>9975260955</span>
+                        {copiedField === 'phone3' ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-amber-700" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>

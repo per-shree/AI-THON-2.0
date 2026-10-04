@@ -22,7 +22,7 @@ import {
   ExternalLink,
   FileCheck,
 } from 'lucide-react'
-import { TRACK_OPTIONS, DOMAIN_OPTIONS } from '../pages/Registration'
+import { TRACK_OPTIONS, DOMAIN_OPTIONS } from '../data/registrationConstants'
 
 export default function RegistrationInstructions({ onProceed, rulesAgreed, setRulesAgreed }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
