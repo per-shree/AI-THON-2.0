@@ -75,12 +75,12 @@ import {
 } from '../components/Icons'
 
 const STEPS = [
-  { number: 0, title: 'Instructions' },
-  { number: 1, title: 'Team Lead' },
-  { number: 2, title: 'Team Members' },
-  { number: 3, title: 'Track & Payment' },
-  { number: 4, title: 'PPT / PDF Upload' },
-  { number: 5, title: 'Completed' },
+  { number: 0, title: 'Instructions', shortTitle: 'Rules' },
+  { number: 1, title: 'Team Lead', shortTitle: 'Lead' },
+  { number: 2, title: 'Team Members', shortTitle: 'Members' },
+  { number: 3, title: 'Track & Payment', shortTitle: 'Payment' },
+  { number: 4, title: 'PPT / PDF Upload', shortTitle: 'Upload' },
+  { number: 5, title: 'Completed', shortTitle: 'Done' },
 ]
 
 import {
@@ -146,7 +146,7 @@ function getInitialDraft() {
     const raw = localStorage.getItem('aithon_registration_progress_v2')
     if (!raw) return null
     const parsed = JSON.parse(raw)
-    if (parsed && parsed.formData && Number(parsed.currentStep) < 5) {
+    if (parsed && parsed.formData && (parsed.currentStep !== undefined ? Number(parsed.currentStep) < 5 : true)) {
       return parsed
     }
   } catch (e) {}
@@ -335,6 +335,16 @@ export default function Registration() {
     // Don't save if already reached completed step
     if (currentStep === 5) return
 
+    // Don't save if completely empty initial state on Step 0
+    if (
+      currentStep === 0 &&
+      !rulesAgreed &&
+      !formData.teamName?.trim() &&
+      !formData.leadFullName?.trim()
+    ) {
+      return
+    }
+
     if (isFirstRender.current) {
       isFirstRender.current = false
       return
@@ -371,7 +381,10 @@ export default function Registration() {
   // Flush save synchronously if closing window or navigating away
   useEffect(() => {
     const handleUnloadSave = () => {
-      if (currentStep < 5) {
+      if (
+        currentStep < 5 &&
+        (currentStep > 0 || rulesAgreed || formData.teamName?.trim() || formData.leadFullName?.trim())
+      ) {
         saveRegistrationDraft({
           formData,
           currentStep,
@@ -395,6 +408,9 @@ export default function Registration() {
 
   // Clear/Reset Draft Handler
   const handleResetDraft = async () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
     await clearRegistrationDraft()
     setFormData(INITIAL_FORM_DATA)
     setCurrentStep(0)
@@ -722,7 +738,14 @@ export default function Registration() {
       window.scrollTo({ top: 120, behavior: 'smooth' })
 
       // ⚡ REAL-TIME SYNC: Update member details to Google Sheet in real time
-      syncRegistrationStep(formData, 2, teamId, registrationId)
+      const activeTeamId = (teamId && teamId.indexOf('HOLD') === -1)
+        ? teamId
+        : (sessionStorage.getItem('aithon_allocated_team_id') || '')
+      const activeRegId = (registrationId && registrationId.indexOf('HOLD') === -1)
+        ? registrationId
+        : (sessionStorage.getItem('aithon_allocated_reg_id') || '')
+
+      syncRegistrationStep(formData, 2, activeTeamId, activeRegId)
         .then((res) => {
           if (res && res.teamId && !teamId) {
             setTeamId(res.teamId)
@@ -741,8 +764,15 @@ export default function Registration() {
       setStep4View('review')
       window.scrollTo({ top: 120, behavior: 'smooth' })
 
-      // ⚡ REAL-TIME SYNC: Save PPT & Track selection to Google Sheet in real time
-      syncRegistrationStep(formData, 3, teamId, registrationId)
+      // ⚡ REAL-TIME SYNC: Save Domain, Track & Payment to Google Sheet in real time
+      const activeTeamId = (teamId && teamId.indexOf('HOLD') === -1)
+        ? teamId
+        : (sessionStorage.getItem('aithon_allocated_team_id') || '')
+      const activeRegId = (registrationId && registrationId.indexOf('HOLD') === -1)
+        ? registrationId
+        : (sessionStorage.getItem('aithon_allocated_reg_id') || '')
+
+      syncRegistrationStep(formData, 3, activeTeamId, activeRegId)
         .then((res) => {
           if (res && res.pptUrl) {
             setDrivePptUrl(res.pptUrl)
@@ -752,6 +782,35 @@ export default function Registration() {
     }
   }
 
+  // Progress stepper navigation handler with forward-step validation
+  const handleStepClick = (targetStep) => {
+    if (currentStep === 5) return // Registration already completed
+    if (targetStep === currentStep) return
+
+    // When navigating forward, validate the active step first to prevent corrupted or empty states
+    if (targetStep > currentStep) {
+      if (currentStep === 0 && !rulesAgreed) {
+        return
+      }
+      if (currentStep === 1 && !validateStep1()) {
+        return
+      }
+      if (currentStep === 2 && !validateStep2()) {
+        return
+      }
+      if (currentStep === 3 && !validateStep3()) {
+        return
+      }
+      if (targetStep > maxStepReached) {
+        return
+      }
+    }
+
+    if (targetStep <= Math.max(currentStep, maxStepReached) && targetStep !== 5) {
+      setCurrentStep(targetStep)
+      window.scrollTo({ top: 120, behavior: 'smooth' })
+    }
+  }
 
   // Report payment problem helper
   const handleReportPaymentProblem = async (reason) => {
@@ -782,6 +841,22 @@ export default function Registration() {
   const handleFinalSubmit = async (e, overrideUtr) => {
     if (e && e.preventDefault) e.preventDefault()
 
+    // 🛡️ Ensure all previous steps are valid before final submission
+    if (!validateStep1()) {
+      setCurrentStep(1)
+      window.scrollTo({ top: 120, behavior: 'smooth' })
+      return
+    }
+    if (!validateStep2()) {
+      setCurrentStep(2)
+      window.scrollTo({ top: 120, behavior: 'smooth' })
+      return
+    }
+    if (!validateStep3()) {
+      setCurrentStep(3)
+      window.scrollTo({ top: 120, behavior: 'smooth' })
+      return
+    }
     if (!validateStep4()) {
       return
     }
@@ -814,22 +889,55 @@ export default function Registration() {
     setUtrError('')
     setIsSubmitting(true)
 
-    // 1. Determine next serial ID baseline
-    let currentTeamId = getNextSerialTeamId ? getNextSerialTeamId() : `TEAM-101`
-    let teamNumMatch = currentTeamId.match(/\d+/)
-    let currentNum = teamNumMatch ? parseInt(teamNumMatch[0], 10) : 101
-    let currentRegId = `AI26-${currentNum}`
+    // 1. Authoritative Team ID & Registration ID:
+    // ALWAYS preserve the team's already-allocated ID from Step 1 / draft / sessionStorage!
+    // NEVER overwrite an existing team's ID with a fresh serial lookup!
+    let currentTeamId = (teamId && String(teamId).trim() && teamId.indexOf('HOLD') === -1)
+      ? teamId
+      : ''
 
-    try {
-      const live = await fetchNextSerialId()
-      if (live && live.nextNum) {
-        currentNum = live.nextNum
-        currentTeamId = live.teamId
-        currentRegId = live.registrationId
-        if (syncNextSerialNum) syncNextSerialNum(currentNum)
+    if (!currentTeamId) {
+      try {
+        const storedTeam = sessionStorage.getItem('aithon_allocated_team_id')
+        if (storedTeam && storedTeam.indexOf('HOLD') === -1) {
+          currentTeamId = storedTeam
+        }
+      } catch (e) {}
+    }
+
+    let currentRegId = (registrationId && String(registrationId).trim() && registrationId.indexOf('HOLD') === -1)
+      ? registrationId
+      : ''
+
+    if (!currentRegId) {
+      try {
+        const storedReg = sessionStorage.getItem('aithon_allocated_reg_id')
+        if (storedReg && storedReg.indexOf('HOLD') === -1) {
+          currentRegId = storedReg
+        }
+      } catch (e) {}
+    }
+
+    // Only if the team was NEVER allocated an ID previously (e.g. offline or step 1 sync failed):
+    if (!currentTeamId) {
+      currentTeamId = getNextSerialTeamId ? getNextSerialTeamId() : 'TEAM-101'
+      let teamNumMatch = currentTeamId.match(/\d+/)
+      let currentNum = teamNumMatch ? parseInt(teamNumMatch[0], 10) : 101
+      currentRegId = `AI26-${currentNum}`
+
+      try {
+        const live = await fetchNextSerialId()
+        if (live && live.nextNum) {
+          currentNum = live.nextNum
+          currentTeamId = live.teamId
+          currentRegId = live.registrationId
+          if (syncNextSerialNum) syncNextSerialNum(currentNum)
+        }
+      } catch (err) {
+        console.warn('[Registration] Could not fetch live ID before submit:', err)
       }
-    } catch (err) {
-      console.warn('[Registration] Could not fetch live ID before submit:', err)
+    } else if (!currentRegId) {
+      currentRegId = currentTeamId.replace('TEAM-', 'AI26-')
     }
 
     try {
@@ -895,6 +1003,7 @@ export default function Registration() {
       })
       setSlipSubmissionDate(finalDate)
       setCurrentStep(5)
+      setMaxStepReached(5)
       window.scrollTo({ top: 100, behavior: 'smooth' })
     } catch (err) {
       console.error('[Registration] Error completing registration:', err)
@@ -913,6 +1022,7 @@ export default function Registration() {
       )
       // Even if network fails, ensure UI gracefully confirms
       setCurrentStep(5)
+      setMaxStepReached(5)
       window.scrollTo({ top: 100, behavior: 'smooth' })
     } finally {
       setIsSubmitting(false)
@@ -1043,13 +1153,7 @@ export default function Registration() {
           currentStep={currentStep}
           maxStepReached={maxStepReached}
           steps={STEPS}
-          onStepClick={(stepNum) => {
-            // Allow stepping to any unlocked step
-            if (stepNum <= Math.max(currentStep, maxStepReached) && currentStep !== 5) {
-              setCurrentStep(stepNum)
-              window.scrollTo({ top: 120, behavior: 'smooth' })
-            }
-          }}
+          onStepClick={handleStepClick}
         />
 
         {/* Auto-Save & Draft State Pill */}
