@@ -2385,7 +2385,7 @@ export default function Registration() {
                         <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider bg-purple-100 text-purple-900 px-2.5 py-0.5 rounded-full border border-purple-200 shrink-0 shadow-2xs">
-                              Option 04 • PhonePe
+                              Option 04 • SBI
                             </span>
                             <span className="text-[10px] sm:text-[11px] font-bold text-[#5f259f] bg-purple-50 px-2 py-0.5 rounded border border-purple-200 uppercase shrink-0">
                               Sudhanshu Rahane
