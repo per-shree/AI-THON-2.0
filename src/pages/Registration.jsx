@@ -19,6 +19,7 @@ import {
   getNextSerialTeamId,
   syncNextSerialNum,
 } from '../services/googleSheetsService'
+import { IS_REGISTRATION_CLOSED } from '../config/registrationConfig'
 import {
   Download,
   FileText,
@@ -983,9 +984,159 @@ export default function Registration() {
       {/* Main Page Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* ==================================================
-            PAGE HEADER (AiTHON 2.0 • Team Registration)
+            REGISTRATIONS CLOSED NOTICE OR REGISTRATION FLOW
             ================================================== */}
-        <section className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-2.5">
+        {IS_REGISTRATION_CLOSED && currentStep !== 5 ? (
+          <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 animate-fadeIn">
+            {/* Top Closed Hero Card */}
+            <div className="bg-white rounded-3xl p-6 sm:p-10 md:p-12 shadow-xl border-2 border-blue-100 text-center relative overflow-hidden">
+              {/* Background ambient lighting */}
+              <div className="absolute -top-24 -left-24 w-72 h-72 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Status Indicator Tag */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 shadow-2xs font-extrabold text-[11px] sm:text-xs uppercase tracking-widest relative z-10 mb-4 sm:mb-6">
+                <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping shrink-0" />
+                <span>REGISTRATIONS OFFICIALLY CLOSED</span>
+              </div>
+
+              {/* Centerpiece: Chained Padlock Plaque matching user reference */}
+              <div className="relative z-10 my-4 sm:my-6 flex flex-col items-center justify-center">
+                <div className="relative inline-block transition-transform hover:scale-105 duration-300">
+                  <img
+                    src="/registration-closed-plaque.png"
+                    alt="Registration Closed with Lock and Chain"
+                    className="h-32 xs:h-40 sm:h-52 md:h-60 w-auto object-contain drop-shadow-[0_20px_45px_rgba(6,43,89,0.3)] filter brightness-105 select-none"
+                  />
+                </div>
+              </div>
+
+              {/* Main Headline & Context */}
+              <div className="space-y-3 relative z-10 max-w-xl mx-auto mt-4 sm:mt-6">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#062b59] tracking-tight uppercase">
+                  Thank You for the Overwhelming Response!
+                </h2>
+                <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed font-medium">
+                  Registrations for <strong className="text-[#062b59]">AI-THON 2.0</strong> have officially reached full capacity across all tracks. New submissions are now closed as our technical evaluation process begins.
+                </p>
+              </div>
+
+              {/* Three Strategic Guidance Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4 text-left relative z-10 mt-8 pt-6 border-t border-[#edebe6]">
+                {/* 1. Screening & Review */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/60 border border-blue-200/70 hover:border-blue-300 transition-all flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                      <FileText className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-extrabold text-[#062b59] uppercase tracking-wide">
+                      1. Screening & Review
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+                      Our evaluation panel is actively scoring all submitted Idea PPT decks on innovation, feasibility, and technical depth.
+                    </p>
+                  </div>
+                  <span className="mt-3 inline-block text-[10px] font-bold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded w-fit">
+                    Round 1 Underway
+                  </span>
+                </div>
+
+                {/* 2. Confirmation Emails */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/70 hover:border-emerald-300 transition-all flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-extrabold text-[#062b59] uppercase tracking-wide">
+                      2. Confirmation Emails
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+                      Team Leads of shortlisted teams will receive official selection emails and WhatsApp announcements with reporting instructions.
+                    </p>
+                  </div>
+                  <span className="mt-3 inline-block text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded w-fit">
+                    Check Inbox & Spam
+                  </span>
+                </div>
+
+                {/* 3. Already Registered */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border border-amber-200/70 hover:border-amber-300 transition-all flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="w-9 h-9 rounded-xl bg-[#ea580c] text-white flex items-center justify-center shadow-xs">
+                      <ShieldCheck className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-extrabold text-[#062b59] uppercase tracking-wide">
+                      3. Already Registered?
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+                      Please ensure you keep your Team ID, Payment UTR, and official Registration Slip handy for on-desk verification.
+                    </p>
+                  </div>
+                  <span className="mt-3 inline-block text-[10px] font-bold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded w-fit">
+                    Keep Details Safe
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons & Quick Controls */}
+              <div className="mt-8 pt-6 border-t border-[#edebe6] flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 relative z-10">
+                <Link
+                  to="/"
+                  className="w-full sm:w-auto px-6 py-3 bg-[#062b59] hover:bg-[#1e3a8a] text-white text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Return to Homepage</span>
+                </Link>
+
+                {/* If team data exists in local state, allow viewing registration slip */}
+                {(teamId || registrationId || (formData && formData.teamName)) && (
+                  <button
+                    type="button"
+                    onClick={() => setIsReceiptModalOpen(true)}
+                    className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-slate-50 text-[#062b59] border-2 border-[#062b59] text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-colors shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4 text-[#ea580c]" />
+                    <span>View Saved Registration Slip</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsSupportModalOpen(true)}
+                  className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-amber-50/50 text-[#ea580c] border border-amber-300 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-colors shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Headphones className="w-4 h-4" />
+                  <span>Contact Coordinators</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Hackathon Event Details Snapshot Bar */}
+            <div className="bg-[#062b59] text-white rounded-2xl p-5 sm:p-6 shadow-md border border-blue-900 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+              <div className="space-y-1">
+                <span className="text-[10px] text-blue-300 font-extrabold uppercase tracking-widest block">GRAND FINALE</span>
+                <span className="text-xs sm:text-sm font-black text-white block">23 OCT 2026</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-blue-300 font-extrabold uppercase tracking-widest block">FORMAT</span>
+                <span className="text-xs sm:text-sm font-black text-white block">12-HR OFFLINE</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-blue-300 font-extrabold uppercase tracking-widest block">VENUE</span>
+                <span className="text-xs sm:text-sm font-black text-white block truncate">AVCOE, SANGAMNER</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-blue-300 font-extrabold uppercase tracking-widest block">PRIZE POOL</span>
+                <span className="text-xs sm:text-sm font-black text-amber-300 block">₹2,50,000</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* ==================================================
+                PAGE HEADER (AiTHON 2.0 • Team Registration)
+                ================================================== */}
+            <section className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-2.5">
           {/* Eyebrow Tag */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-[#062b59] via-[#0b3b75] to-[#062b59] text-white shadow-xs border border-blue-400/30">
             <Sparkles className="w-3.5 h-3.5 text-[#ea580c]" />
@@ -3253,6 +3404,8 @@ export default function Registration() {
               </Link>
             </div>
           </div>
+        )}
+          </>
         )}
 
         {/* Dedicated Single-Page Portal Print Mount (Mounted directly into document.body outside #root) */}

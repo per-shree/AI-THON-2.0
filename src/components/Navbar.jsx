@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
+import { IS_REGISTRATION_CLOSED } from '../config/registrationConfig'
+import LockedRegisterButton from './LockedRegisterButton'
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -114,12 +116,16 @@ export default function Navbar() {
               ))}
             </div>
 
-            <Link 
-              to="/register"
-              className="px-5 py-2.5 bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-widest transition-colors rounded-lg shadow-xs shrink-0 whitespace-nowrap"
-            >
-              REGISTER
-            </Link>
+            {IS_REGISTRATION_CLOSED ? (
+              <LockedRegisterButton variant="nav" />
+            ) : (
+              <Link 
+                to="/register"
+                className="px-5 py-2.5 bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-widest transition-colors rounded-lg shadow-xs shrink-0 whitespace-nowrap"
+              >
+                REGISTER
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -148,13 +154,20 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
-          <Link 
-            to="/register"
-            className="w-full mt-2 px-6 py-3 bg-[#062b59] text-white text-center text-xs font-bold uppercase tracking-widest rounded-lg shadow-xs"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            REGISTER
-          </Link>
+          {IS_REGISTRATION_CLOSED ? (
+            <LockedRegisterButton 
+              variant="nav-mobile" 
+              onClick={() => setMobileMenuOpen(false)} 
+            />
+          ) : (
+            <Link 
+              to="/register"
+              className="w-full mt-2 px-6 py-3 bg-[#062b59] text-white text-center text-xs font-bold uppercase tracking-widest rounded-lg shadow-xs"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              REGISTER
+            </Link>
+          )}
         </div>
       )}
     </nav>

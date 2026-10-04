@@ -13,6 +13,8 @@ import {
   MessageSquare
 } from 'lucide-react'
 import OrganizersModal from './OrganizersModal'
+import { IS_REGISTRATION_CLOSED } from '../config/registrationConfig'
+import LockedRegisterButton from './LockedRegisterButton'
 
 function InstagramIcon({ className = "w-5 h-5", ...props }) {
   return (
@@ -250,13 +252,17 @@ export default function ContactSection() {
 
               {/* Action Buttons */}
               <div className="space-y-3 pt-2">
-                <Link
-                  to="/register"
-                  className="w-full py-4 bg-[#062b59] hover:bg-[#1e3a8a] text-white font-bold text-sm uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md group"
-                >
-                  <span>REGISTER YOUR TEAM</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                {IS_REGISTRATION_CLOSED ? (
+                  <LockedRegisterButton variant="contact" />
+                ) : (
+                  <Link
+                    to="/register"
+                    className="w-full py-4 bg-[#062b59] hover:bg-[#1e3a8a] text-white font-bold text-sm uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md group"
+                  >
+                    <span>REGISTER YOUR TEAM</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                )}
 
                 <button
                   type="button"

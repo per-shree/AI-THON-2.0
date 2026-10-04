@@ -3,6 +3,8 @@ import aithonHeroLogo from '../assets/aithon-hero-logo.png'
 import BackgroundArtwork from './BackgroundArtwork'
 import CountdownTimer from './CountdownTimer'
 import { CalendarIcon, ClockIcon, UsersIcon, MapPinIcon } from './Icons'
+import { IS_REGISTRATION_CLOSED } from '../config/registrationConfig'
+import LockedRegisterButton from './LockedRegisterButton'
 
 export default function HeroSection() {
   return (
@@ -115,31 +117,50 @@ export default function HeroSection() {
         </div>
 
         {/* Action Buttons - Distinctly positioned and mobile responsive */}
-        <div className="flex flex-row items-center justify-center gap-2.5 sm:gap-3.5 md:gap-4 w-full sm:w-auto relative z-20 mb-3 sm:mb-4 px-2 sm:px-0">
-          <Link
-            to="/register"
-            className="flex-1 sm:flex-none px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-3.5 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
-          >
-            REGISTER NOW
-          </Link>
+        <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 md:gap-5 w-full sm:w-auto relative z-20 mb-3 sm:mb-4 px-2 sm:px-0">
+          {IS_REGISTRATION_CLOSED ? (
+            <LockedRegisterButton variant="hero" />
+          ) : (
+            <Link
+              to="/register"
+              className="flex-1 sm:flex-none px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-3.5 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+            >
+              REGISTER NOW
+            </Link>
+          )}
+
           <a
             href="#about"
-            className="flex-1 sm:flex-none px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-3.5 bg-white hover:bg-[#faf9f6] text-[#062b59] border-2 border-[#062b59] font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 text-center shadow-xs rounded-xl hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center h-11 xs:h-12 sm:h-13 md:h-14 px-5 xs:px-6 sm:px-8 md:px-10 bg-white hover:bg-[#faf9f6] text-[#062b59] border-2 border-[#062b59] font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 text-center shadow-xs rounded-xl hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
           >
             EXPLORE AITHON
           </a>
         </div>
 
-        {/* Urgency Badge & Live Countdown Timer Below Registration Button */}
-        <div className="w-full max-w-md mx-auto space-y-2 sm:space-y-2.5 px-1 sm:px-0 relative z-20 mb-2 sm:mb-3 flex flex-col items-center">
-          <div className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ea580c] text-white border border-orange-600/40 shadow-2xs">
-            <span className="w-1 h-1 rounded-full bg-blue-200 animate-ping shrink-0" />
-            <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-white leading-tight">
-              REGISTRATIONS CLOSE IN (04 OCT 2026)
-            </span>
+        {/* Urgency Badge & Live Status Below Registration Button */}
+        {IS_REGISTRATION_CLOSED ? (
+          <div className="w-full max-w-md mx-auto space-y-2 sm:space-y-2.5 px-1 sm:px-0 relative z-20 mb-2 sm:mb-3 flex flex-col items-center animate-fadeIn">
+            <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-rose-600 text-white border border-rose-500/40 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-white animate-ping shrink-0" />
+              <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-widest text-white leading-tight">
+                REGISTRATIONS ARE OFFICIALLY CLOSED
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-slate-600 font-semibold text-center">
+              Round 1 Evaluation & Shortlisting Underway • Grand Finale: 23 Oct 2026
+            </p>
           </div>
-          <CountdownTimer variant="hero" />
-        </div>
+        ) : (
+          <div className="w-full max-w-md mx-auto space-y-2 sm:space-y-2.5 px-1 sm:px-0 relative z-20 mb-2 sm:mb-3 flex flex-col items-center">
+            <div className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ea580c] text-white border border-orange-600/40 shadow-2xs">
+              <span className="w-1 h-1 rounded-full bg-blue-200 animate-ping shrink-0" />
+              <span className="text-[7.5px] xs:text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-white leading-tight">
+                REGISTRATIONS CLOSE IN (04 OCT 2026)
+              </span>
+            </div>
+            <CountdownTimer variant="hero" />
+          </div>
+        )}
 
       </div>
 
