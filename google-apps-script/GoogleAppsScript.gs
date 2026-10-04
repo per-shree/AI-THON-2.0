@@ -22,7 +22,7 @@
 // Target Google Drive Folder where accepted PPTs are stored
 var PPT_FOLDER_ID = "1vSfgU8HnOmDrt9we13ZnHAktIqeQ8os1pzXRvKw3PDxMREplpa8l6FBLspayXfynJiqJAw7R";
 
-// Target Google Spreadsheet ID
+// Target Google Spreadsheet ID (Active Sheet)
 var SPREADSHEET_ID = "1uBkGnCNJ8dIRhLUY9N4zbTWSh5VEy-p-fbnTkfUNt6k";
 
 // Official WhatsApp Community Group link for Team Leaders
@@ -266,7 +266,21 @@ function doPost(e) {
     var pptDriveUrl = "-";
     if (data.pptBase64 && String(data.pptBase64).trim() !== "") {
       try {
-        var folder = DriveApp.getFolderById(PPT_FOLDER_ID);
+        var folder;
+        try {
+          folder = DriveApp.getFolderById(PPT_FOLDER_ID);
+        } catch (fErr) {
+          Logger.log("Could not open PPT_FOLDER_ID (" + PPT_FOLDER_ID + "): " + fErr.toString() + ". Falling back to AITHON 2.0 PPT Submissions folder.");
+          var folders = DriveApp.getFoldersByName("AITHON 2.0 PPT Submissions");
+          if (folders.hasNext()) {
+            folder = folders.next();
+          } else {
+            folder = DriveApp.createFolder("AITHON 2.0 PPT Submissions");
+            try {
+              folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+            } catch (shareFolderErr) {}
+          }
+        }
         var base64Data = String(data.pptBase64);
         
         if (base64Data.indexOf("base64,") !== -1) {
@@ -974,6 +988,8 @@ function onOpen() {
   try {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu("🚀 AITHON 2.0")
+      .addItem("🚀 Send ALL Pending Emails (Registration + PPT + Finale)", "processAllPendingNotifications")
+      .addSeparator()
       .addItem("🧹 Clean Up Blank Rows & Compact Sheet", "compactAndCleanSheet")
       .addSeparator()
       .addItem("✅ Verify Registration Payment & Send Email", "processAllVerifiedRegistrations")
@@ -989,6 +1005,7 @@ function onOpen() {
       .addItem("🔄 Fix Sheet Dropdowns & Payment UTRs", "fixEvalColumnsDropdownAndUtr")
       .addItem("🛠️ Setup Sheet Columns & Dropdowns (50 Cols)", "updateSheetStructure")
       .addItem("⚡ Enable Real-Time Edit Trigger", "installEditTrigger")
+      .addItem("⏰ Enable 5-Minute Auto-Email Trigger (All Stages)", "installAutomatic5MinTrigger")
       .addToUi();
   } catch (e) {
     Logger.log("onOpen UI notice: " + e.toString());
@@ -1236,6 +1253,36 @@ function installEditTrigger() {
 }
 
 /**
+ * ⚡ Installs a 5-minute automated background trigger:
+ * Automatically checks and sends all pending emails (Eval Fee + PPT + Finale)
+ * every 5 minutes from this account without any manual intervention!
+ */
+function installAutomatic5MinTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "processAllPendingNotifications") {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+
+  ScriptApp.newTrigger("processAllPendingNotifications")
+    .timeBased()
+    .everyMinutes(5)
+    .create();
+
+  Logger.log("✓ Automated 5-minute background email trigger successfully installed!");
+  try {
+    SpreadsheetApp.getUi().alert(
+      "✓ 5-Minute Auto-Email Trigger Installed!\n\n" +
+      "Every 5 minutes, this script will automatically check your active sheet and dispatch:\n" +
+      "• Registration Confirmation Emails (Col 42 Verified)\n" +
+      "• PPT Acceptance & Rejection Emails (Col 43)\n" +
+      "• Grand Finale Hall Tickets (Col 45 Paid)"
+    );
+  } catch (e) {}
+}
+
+/**
  * Trigger handler for real-time edits:
  * - Eval Fee Status
  * - PPT Status
@@ -1267,6 +1314,22 @@ function installedOnEdit(e) {
 }
 
 /**
+ * 🔒 Safely appends an email status tag into Column 50 (Email Notification Status)
+ * without overwriting previously recorded email statuses (e.g. Confirmation, Acceptance, Ticket)
+ */
+function recordEmailStatus(sheet, rowNum, colIdx, tag, nowStr) {
+  var cell = sheet.getRange(rowNum, colIdx);
+  var existing = String(cell.getValue() || "").trim();
+  if (existing.indexOf(tag) !== -1) {
+    return; // Already recorded
+  }
+  var fullTag = tag + " (" + nowStr + ")";
+  var updated = existing ? (existing + " | " + fullTag) : fullTag;
+  cell.setValue(updated);
+  SpreadsheetApp.flush();
+}
+
+/**
  * 📧 MANUAL EVALUATION FEE PROCESSOR:
  * Processes a single row for Column 42 ("Eval Fee Status") manual payment verification & confirmation email dispatch.
  * Confirmation emails will ONLY be sent when Col 42 is manually marked as "Verified", "Paid", "Approved", or "Successful".
@@ -1289,7 +1352,8 @@ function processEvalFeeStatusRow(sheet, rowNum) {
   var pptLink = String(rowData[cols.pptLinkIdx] || "").trim();
   var evalFeeStatus = String(rowData[cols.evalFeeStatusIdx] || "").trim();
   var utr = String(rowData[cols.evalUtrIdx] || "").replace("'", "").trim();
-  var emailSentStatus = String(rowData[cols.emailStatusIdx] || "").trim();
+  // Read live email notification status directly from cell to avoid stale data
+  var emailSentStatus = String(sheet.getRange(rowNum, cols.emailStatusCol).getValue() || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
@@ -1302,7 +1366,7 @@ function processEvalFeeStatusRow(sheet, rowNum) {
   // If status is "Rejected", style as red, record in Email Status, and exit
   if (lowerStatus === "rejected" || lowerStatus.indexOf("rejected") !== -1) {
     sheet.getRange(rowNum, cols.evalFeeStatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
-    sheet.getRange(rowNum, cols.emailStatusCol).setValue("❌ Payment Rejected (" + nowStr + ")");
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "❌ Payment Rejected", nowStr);
     Logger.log("Row " + rowNum + " (" + teamId + "): Eval fee status marked as Rejected.");
     return false;
   }
@@ -1355,8 +1419,8 @@ function processEvalFeeStatusRow(sheet, rowNum) {
 
   sendConfirmationEmail(teamData);
 
-  // Update Email Notification Status
-  sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Confirmation Email Sent (" + nowStr + ")");
+  // Update Email Notification Status safely without overwriting other flags
+  recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Confirmation Email Sent", nowStr);
   // Style Eval Fee Status with verified green and ensure text is "Verified"
   sheet.getRange(rowNum, cols.evalFeeStatusCol).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
 
@@ -1421,6 +1485,73 @@ function processAllPptEvaluations() {
 }
 
 /**
+ * 🚀 ALL-IN-ONE AUTOMATED NOTIFICATION DISPATCHER:
+ * Runs on a 5-minute timer (or 1-click manual trigger) to automatically check
+ * and dispatch ALL pending emails across every stage:
+ * 1. 📧 Registration Payment Verification (Col 42) -> Confirmation Email
+ * 2. 📊 PPT Status Evaluations (Col 43) -> Acceptance / Rejection Email
+ * 3. 🎟️ Grand Finale Payment Status (Col 45) -> Official Entry Ticket & Pass
+ */
+function processAllPendingNotifications() {
+  Logger.log("=== 🚀 Starting All-in-One Automated Email Dispatch ===");
+  var ss = getTargetSpreadsheet();
+  var sheet = ss.getSheetByName("Registrations") || ss.getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    Logger.log("No registration rows found to process.");
+    return;
+  }
+
+  var regEmailCount = 0;
+  var pptEmailCount = 0;
+  var finaleEmailCount = 0;
+
+  // Single pass through all rows for maximum efficiency
+  for (var r = 2; r <= lastRow; r++) {
+    try {
+      // 1. Check Registration Fee Verification
+      if (processEvalFeeStatusRow(sheet, r)) {
+        regEmailCount++;
+      }
+    } catch (e1) {
+      Logger.log("Row " + r + " Eval Fee check error: " + e1.toString());
+    }
+
+    try {
+      // 2. Check PPT Evaluation (Accepted / Rejected)
+      if (processPptEvaluationRow(sheet, r)) {
+        pptEmailCount++;
+      }
+    } catch (e2) {
+      Logger.log("Row " + r + " PPT Evaluation check error: " + e2.toString());
+    }
+
+    try {
+      // 3. Check Grand Finale Payment (Paid -> Ticket)
+      if (processRound2PaymentRow(sheet, r)) {
+        finaleEmailCount++;
+      }
+    } catch (e3) {
+      Logger.log("Row " + r + " Finale Payment check error: " + e3.toString());
+    }
+  }
+
+  var totalSent = regEmailCount + pptEmailCount + finaleEmailCount;
+  Logger.log("=== 🏁 Automated Dispatch Completed! Total Sent: " + totalSent + 
+             " (Registration: " + regEmailCount + ", PPT: " + pptEmailCount + ", Finale Tickets: " + finaleEmailCount + ") ===");
+
+  try {
+    SpreadsheetApp.getUi().alert(
+      "🚀 All-in-One Notification Dispatch Complete!\n\n" +
+      "• Registration Confirmation Emails: " + regEmailCount + "\n" +
+      "• PPT Acceptance / Rejection Emails: " + pptEmailCount + "\n" +
+      "• Grand Finale Hall Tickets: " + finaleEmailCount + "\n\n" +
+      "Total Emails Dispatched: " + totalSent
+    );
+  } catch (uiErr) {}
+}
+
+/**
  * Processes a single row for PPT Status evaluation & email dispatch
  */
 function processPptEvaluationRow(sheet, rowNum) {
@@ -1441,7 +1572,8 @@ function processPptEvaluationRow(sheet, rowNum) {
   var selectedDomain = cols.hasDomain ? String(rowData[cols.domainIdx] || "Software").trim() : "Software";
   var selectedTrack = String(rowData[cols.trackIdx] || "").trim();
   var pptStatus = String(rowData[cols.pptStatusIdx] || "").trim();
-  var emailSentStatus = String(rowData[cols.emailStatusIdx] || "").trim();
+  // Read live email notification status directly from cell to avoid stale data
+  var emailSentStatus = String(sheet.getRange(rowNum, cols.emailStatusCol).getValue() || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
@@ -1491,7 +1623,8 @@ function processPptEvaluationRow(sheet, rowNum) {
     sheet.getRange(rowNum, cols.round2FeeCol).setValue("₹" + feeAmount);
     sheet.getRange(rowNum, cols.round2LinkCol).setValue(paymentLink);
     sheet.getRange(rowNum, cols.round2StatusCol).setValue("Pending Verification");
-    sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Accepted Email Sent (" + nowStr + ")");
+    // Safely record Accepted status without overwriting previous confirmation status
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Accepted Email Sent", nowStr);
 
     // Highlight row status
     sheet.getRange(rowNum, cols.pptStatusCol).setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
@@ -1521,7 +1654,7 @@ function processPptEvaluationRow(sheet, rowNum) {
     sendPptRejectionEmail(teamDataReject);
 
     // Update Sheet: Email Status and highlight
-    sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Rejection Email Sent (" + nowStr + ")");
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Rejection Email Sent", nowStr);
     sheet.getRange(rowNum, cols.pptStatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
 
     Logger.log("✓ Rejection feedback email sent to: " + leadEmail + " for " + teamId);
@@ -2220,23 +2353,70 @@ function sendPaymentProblemEmail(data) {
  * Helper to send email via GmailApp with MailApp fallback
  */
 function sendEmailSafe(recipient, subject, plainText, htmlBody) {
+  var replyToEmail = "shivaji.wathore@avcoe.org";
+  
+  // Check remaining daily email quota
+  var quotaRemaining = MailApp.getRemainingDailyQuota();
+  if (quotaRemaining <= 0) {
+    Logger.log("⚠️ Daily email quota reached (0 remaining). Cannot send email to: " + recipient);
+    return false;
+  }
+
   try {
     GmailApp.sendEmail(recipient, subject, plainText, {
       htmlBody: htmlBody,
-      name: "AITHON 2.0 Organizing Committee"
+      name: "AITHON 2.0 Organizing Committee",
+      replyTo: replyToEmail
     });
-    Logger.log("Email dispatched via GmailApp to: " + recipient);
+    Logger.log("Email dispatched via GmailApp to: " + recipient + " (Quota remaining: " + (quotaRemaining - 1) + ")");
+    return true;
   } catch (gErr) {
     Logger.log("GmailApp warning, trying MailApp: " + gErr.toString());
-    MailApp.sendEmail({
-      to: recipient,
-      subject: subject,
-      body: plainText,
-      htmlBody: htmlBody,
-      name: "AITHON 2.0 Organizing Committee"
-    });
-    Logger.log("Email dispatched via MailApp to: " + recipient);
+    try {
+      MailApp.sendEmail({
+        to: recipient,
+        subject: subject,
+        body: plainText,
+        htmlBody: htmlBody,
+        name: "AITHON 2.0 Organizing Committee",
+        replyTo: replyToEmail
+      });
+      Logger.log("Email dispatched via MailApp to: " + recipient);
+      return true;
+    } catch (mErr) {
+      Logger.log("❌ Failed to send email to " + recipient + ": " + mErr.toString());
+      return false;
+    }
   }
+}
+
+/**
+ * 📁 1-Click PPT Folder Creator inside shivaji.wathore@avcoe.org Google Drive
+ * Eliminates all cross-domain permission errors by creating a dedicated folder natively!
+ */
+function setupPptFolderInDrive() {
+  var folder = DriveApp.createFolder("AITHON 2.0 PPT Submissions");
+  try {
+    folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {}
+  var folderId = folder.getId();
+  var folderUrl = folder.getUrl();
+
+  Logger.log("==========================================");
+  Logger.log("✓ NEW PPT FOLDER CREATED IN DRIVE!");
+  Logger.log("Folder Name: AITHON 2.0 PPT Submissions");
+  Logger.log("Folder ID: " + folderId);
+  Logger.log("Folder URL: " + folderUrl);
+  Logger.log("==========================================");
+
+  try {
+    SpreadsheetApp.getUi().alert(
+      "✓ New PPT Folder Created!\n\n" +
+      "Folder ID: " + folderId + "\n\n" +
+      "Update PPT_FOLDER_ID on Line 23 with this ID, click Save, then Deploy > Manage Deployments > Edit > New Version > Deploy!"
+    );
+  } catch (uiErr) {}
+  return folderId;
 }
 
 /**
@@ -2244,10 +2424,24 @@ function sendEmailSafe(recipient, subject, plainText, htmlBody) {
  */
 function testPptDriveUpload() {
   Logger.log("Testing PPT upload to folder ID: " + PPT_FOLDER_ID);
-  var folder = DriveApp.getFolderById(PPT_FOLDER_ID);
-  var testBlob = Utilities.newBlob("AITHON 2.0 Sample PPT Content", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "TEAM-101.pptx");
+  var folder;
+  try {
+    folder = DriveApp.getFolderById(PPT_FOLDER_ID);
+  } catch (err) {
+    Logger.log("Could not open PPT_FOLDER_ID: " + err.toString() + ". Using fallback folder...");
+    var folders = DriveApp.getFoldersByName("AITHON 2.0 PPT Submissions");
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder("AITHON 2.0 PPT Submissions");
+    }
+  }
+
+  var testBlob = Utilities.newBlob("AITHON 2.0 Sample PPT Content", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "TEST-UPLOAD.pptx");
   var file = folder.createFile(testBlob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {}
   var url = file.getUrl();
   Logger.log("✓ Successfully created test PPT in Drive: " + url);
   return url;
@@ -2476,7 +2670,8 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
   var feeAmount = amount || rawFee || (teamSize * 200);
   var r2PaymentStatus = String(rowData[cols.round2StatusIdx] || "").trim();
   var r2PaymentUtr = String(rowData[cols.round2UtrIdx] || "").replace("'", "").trim();
-  var emailSentStatus = String(rowData[cols.emailStatusIdx] || "").trim();
+  // Read live email notification status directly from cell to avoid stale data
+  var emailSentStatus = String(sheet.getRange(rowNum, cols.emailStatusCol).getValue() || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
@@ -2489,7 +2684,7 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
   // If status is "Rejected", style as red, record in Email Status, and exit
   if (lowerStatus === "rejected" || lowerStatus.indexOf("rejected") !== -1) {
     sheet.getRange(rowNum, cols.round2StatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
-    sheet.getRange(rowNum, cols.emailStatusCol).setValue("❌ Finale Payment Rejected (" + nowStr + ")");
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "❌ Finale Payment Rejected", nowStr);
     Logger.log("Row " + rowNum + " (" + teamId + "): Round 2 payment marked as Rejected.");
     return false;
   }
@@ -2543,9 +2738,9 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount) {
 
   sendGrandFinaleTicketEmail(teamData);
 
-  // Update Sheet: Verified green, Ticket Sent status
+  // Update Sheet: Verified green, Ticket Sent status safely recorded
   sheet.getRange(rowNum, cols.round2StatusCol).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
-  sheet.getRange(rowNum, cols.emailStatusCol).setValue("✓ Finale Ticket Sent (" + nowStr + ")");
+  recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Finale Ticket Sent", nowStr);
 
   Logger.log("✓ Grand Finale Ticket email sent to: " + leadEmail + " for " + teamId + " (UTR: " + (payId || r2PaymentUtr) + ")");
   return true;

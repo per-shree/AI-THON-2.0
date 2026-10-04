@@ -28,9 +28,11 @@ import {
   QrCode,
   Copy,
   Cpu,
+  Headphones,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import PaymentSupportWidget from '../components/PaymentSupportWidget'
 import { getGoogleSheetUrl } from '../services/googleSheetsService'
 
 const OFFICIAL_UPI_ID = '9404665180@centralbank'
@@ -76,6 +78,7 @@ export default function FinalePayment() {
   const [errorMsg, setErrorMsg] = useState('')
   const [utrInput, setUtrInput] = useState('')
   const [copiedUpi, setCopiedUpi] = useState(false)
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false)
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText(OFFICIAL_UPI_ID)
@@ -279,6 +282,22 @@ export default function FinalePayment() {
           <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium max-w-xl mx-auto leading-relaxed">
             Your idea presentation was shortlisted for the offline Grand Finale at AVCOE Sangamner. Confirm your team workstation below.
           </p>
+
+          {/* Quick Support Trigger Button */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setIsSupportModalOpen(true)}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white hover:bg-blue-50 text-[#062b59] border border-blue-200 text-xs font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <Headphones className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
+              <span>Need Help? Contact Coordinators (Umesh & Shree)</span>
+            </button>
+          </div>
         </section>
 
         {paidInfo ? (
@@ -456,6 +475,15 @@ export default function FinalePayment() {
                 className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#faf9f6] hover:bg-white text-slate-700 border border-[#edebe6] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
               >
                 Print / Save Slip
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsSupportModalOpen(true)}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#062b59] border border-blue-200 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Headphones className="w-4 h-4 text-blue-600" />
+                <span>Contact Support (Umesh & Shree)</span>
               </button>
 
               <Link
@@ -663,6 +691,31 @@ export default function FinalePayment() {
                     <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                     <span>We will review your payment shortly in 24hr will get confirmation.</span>
                   </div>
+
+                  {/* Dedicated Payment Support Help Card */}
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-blue-50/90 via-slate-50 to-orange-50/50 border border-blue-200/90 text-left flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-[#062b59] text-white flex items-center justify-center shrink-0">
+                        <Headphones className="w-4 h-4 text-blue-200" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-[#062b59] tracking-tight truncate">
+                          Payment Help & Inquiries
+                        </div>
+                        <div className="text-[10.5px] text-slate-500 truncate">
+                          Umesh (Tech) & Shree (UPI) available
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSupportModalOpen(true)}
+                      className="px-3 py-1.5 rounded-lg bg-[#062b59] hover:bg-[#2563eb] text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 shadow-xs flex items-center gap-1.5"
+                    >
+                      <Phone className="w-3 h-3" />
+                      <span>Contact</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -702,6 +755,13 @@ export default function FinalePayment() {
           </div>
         )}
       </main>
+
+      {/* Contact Support Widget (Floating Contact Icon + Dialog with Umesh & Shree) */}
+      <PaymentSupportWidget
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        teamId={teamData.teamId}
+      />
 
       {/* Official Footer matching root website */}
       <Footer />
