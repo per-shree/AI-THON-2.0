@@ -144,11 +144,11 @@ PPT – [Attach PPT file]`
                     <Clock className="w-4 h-4 text-orange-400 shrink-0" />
                     <span className="text-blue-200 font-medium">Submission Deadline:</span>
                     <span className="font-bold text-white text-xs sm:text-sm">
-                      Up to 12:00 Noon
+                      Up to 12:00 Noon (05/10/2026)
                     </span>
                   </div>
                   <span className="px-2 py-0.5 rounded-md bg-orange-600 text-white font-extrabold text-[10px] tracking-wider uppercase shrink-0">
-                    Till 12 Noon
+                    05/10/2026 • 12 Noon
                   </span>
                 </div>
 
@@ -299,7 +299,7 @@ PPT – [Attach PPT file]`
             </span>
             <span className="tracking-wide">PPT Submission Notice</span>
             <span className="bg-orange-500 text-white text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold group-hover:bg-white group-hover:text-[#062b59] transition-colors shrink-0">
-              Till 12 Noon
+              Till 12 Noon (05/10/2026)
             </span>
           </button>
         </aside>
