@@ -22,7 +22,7 @@
 // Target Google Drive Folder where accepted PPTs are stored
 var PPT_FOLDER_ID = "1vSfgU8HnOmDrt9we13ZnHAktIqeQ8os1pzXRvKw3PDxMREplpa8l6FBLspayXfynJiqJAw7R";
 
-// Target Google Spreadsheet ID
+// Target Google Spreadsheet ID (Active Sheet)
 var SPREADSHEET_ID = "1uBkGnCNJ8dIRhLUY9N4zbTWSh5VEy-p-fbnTkfUNt6k";
 
 // Official WhatsApp Community Group link for Team Leaders
@@ -974,6 +974,8 @@ function onOpen() {
   try {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu("🚀 AITHON 2.0")
+      .addItem("🚀 Send ALL Pending Emails (Registration + PPT + Finale)", "processAllPendingNotifications")
+      .addSeparator()
       .addItem("🧹 Clean Up Blank Rows & Compact Sheet", "compactAndCleanSheet")
       .addSeparator()
       .addItem("✅ Verify Registration Payment & Send Email", "processAllVerifiedRegistrations")
@@ -989,6 +991,7 @@ function onOpen() {
       .addItem("🔄 Fix Sheet Dropdowns & Payment UTRs", "fixEvalColumnsDropdownAndUtr")
       .addItem("🛠️ Setup Sheet Columns & Dropdowns (50 Cols)", "updateSheetStructure")
       .addItem("⚡ Enable Real-Time Edit Trigger", "installEditTrigger")
+      .addItem("⏰ Enable 5-Minute Auto-Email Trigger (All Stages)", "installAutomatic5MinTrigger")
       .addToUi();
   } catch (e) {
     Logger.log("onOpen UI notice: " + e.toString());
@@ -1236,6 +1239,36 @@ function installEditTrigger() {
 }
 
 /**
+ * ⚡ Installs a 5-minute automated background trigger:
+ * Automatically checks and sends all pending emails (Eval Fee + PPT + Finale)
+ * every 5 minutes from this account without any manual intervention!
+ */
+function installAutomatic5MinTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "processAllPendingNotifications") {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+
+  ScriptApp.newTrigger("processAllPendingNotifications")
+    .timeBased()
+    .everyMinutes(5)
+    .create();
+
+  Logger.log("✓ Automated 5-minute background email trigger successfully installed!");
+  try {
+    SpreadsheetApp.getUi().alert(
+      "✓ 5-Minute Auto-Email Trigger Installed!\n\n" +
+      "Every 5 minutes, this script will automatically check your active sheet and dispatch:\n" +
+      "• Registration Confirmation Emails (Col 42 Verified)\n" +
+      "• PPT Acceptance & Rejection Emails (Col 43)\n" +
+      "• Grand Finale Hall Tickets (Col 45 Paid)"
+    );
+  } catch (e) {}
+}
+
+/**
  * Trigger handler for real-time edits:
  * - Eval Fee Status
  * - PPT Status
@@ -1418,6 +1451,73 @@ function processAllPptEvaluations() {
   try {
     SpreadsheetApp.getUi().alert("AITHON 2.0 Evaluation Processing Complete!\n\nDispatched evaluation emails to " + processedCount + " team(s).");
   } catch (e) {}
+}
+
+/**
+ * 🚀 ALL-IN-ONE AUTOMATED NOTIFICATION DISPATCHER:
+ * Runs on a 5-minute timer (or 1-click manual trigger) to automatically check
+ * and dispatch ALL pending emails across every stage:
+ * 1. 📧 Registration Payment Verification (Col 42) -> Confirmation Email
+ * 2. 📊 PPT Status Evaluations (Col 43) -> Acceptance / Rejection Email
+ * 3. 🎟️ Grand Finale Payment Status (Col 45) -> Official Entry Ticket & Pass
+ */
+function processAllPendingNotifications() {
+  Logger.log("=== 🚀 Starting All-in-One Automated Email Dispatch ===");
+  var ss = getTargetSpreadsheet();
+  var sheet = ss.getSheetByName("Registrations") || ss.getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    Logger.log("No registration rows found to process.");
+    return;
+  }
+
+  var regEmailCount = 0;
+  var pptEmailCount = 0;
+  var finaleEmailCount = 0;
+
+  // Single pass through all rows for maximum efficiency
+  for (var r = 2; r <= lastRow; r++) {
+    try {
+      // 1. Check Registration Fee Verification
+      if (processEvalFeeStatusRow(sheet, r)) {
+        regEmailCount++;
+      }
+    } catch (e1) {
+      Logger.log("Row " + r + " Eval Fee check error: " + e1.toString());
+    }
+
+    try {
+      // 2. Check PPT Evaluation (Accepted / Rejected)
+      if (processPptEvaluationRow(sheet, r)) {
+        pptEmailCount++;
+      }
+    } catch (e2) {
+      Logger.log("Row " + r + " PPT Evaluation check error: " + e2.toString());
+    }
+
+    try {
+      // 3. Check Grand Finale Payment (Paid -> Ticket)
+      if (processRound2PaymentRow(sheet, r)) {
+        finaleEmailCount++;
+      }
+    } catch (e3) {
+      Logger.log("Row " + r + " Finale Payment check error: " + e3.toString());
+    }
+  }
+
+  var totalSent = regEmailCount + pptEmailCount + finaleEmailCount;
+  Logger.log("=== 🏁 Automated Dispatch Completed! Total Sent: " + totalSent + 
+             " (Registration: " + regEmailCount + ", PPT: " + pptEmailCount + ", Finale Tickets: " + finaleEmailCount + ") ===");
+
+  try {
+    SpreadsheetApp.getUi().alert(
+      "🚀 All-in-One Notification Dispatch Complete!\n\n" +
+      "• Registration Confirmation Emails: " + regEmailCount + "\n" +
+      "• PPT Acceptance / Rejection Emails: " + pptEmailCount + "\n" +
+      "• Grand Finale Hall Tickets: " + finaleEmailCount + "\n\n" +
+      "Total Emails Dispatched: " + totalSent
+    );
+  } catch (uiErr) {}
 }
 
 /**
@@ -2220,22 +2320,40 @@ function sendPaymentProblemEmail(data) {
  * Helper to send email via GmailApp with MailApp fallback
  */
 function sendEmailSafe(recipient, subject, plainText, htmlBody) {
+  var replyToEmail = "shivaji.wathore@avcoe.org";
+  
+  // Check remaining daily email quota
+  var quotaRemaining = MailApp.getRemainingDailyQuota();
+  if (quotaRemaining <= 0) {
+    Logger.log("⚠️ Daily email quota reached (0 remaining). Cannot send email to: " + recipient);
+    return false;
+  }
+
   try {
     GmailApp.sendEmail(recipient, subject, plainText, {
       htmlBody: htmlBody,
-      name: "AITHON 2.0 Organizing Committee"
+      name: "AITHON 2.0 Organizing Committee",
+      replyTo: replyToEmail
     });
-    Logger.log("Email dispatched via GmailApp to: " + recipient);
+    Logger.log("Email dispatched via GmailApp to: " + recipient + " (Quota remaining: " + (quotaRemaining - 1) + ")");
+    return true;
   } catch (gErr) {
     Logger.log("GmailApp warning, trying MailApp: " + gErr.toString());
-    MailApp.sendEmail({
-      to: recipient,
-      subject: subject,
-      body: plainText,
-      htmlBody: htmlBody,
-      name: "AITHON 2.0 Organizing Committee"
-    });
-    Logger.log("Email dispatched via MailApp to: " + recipient);
+    try {
+      MailApp.sendEmail({
+        to: recipient,
+        subject: subject,
+        body: plainText,
+        htmlBody: htmlBody,
+        name: "AITHON 2.0 Organizing Committee",
+        replyTo: replyToEmail
+      });
+      Logger.log("Email dispatched via MailApp to: " + recipient);
+      return true;
+    } catch (mErr) {
+      Logger.log("❌ Failed to send email to " + recipient + ": " + mErr.toString());
+      return false;
+    }
   }
 }
 

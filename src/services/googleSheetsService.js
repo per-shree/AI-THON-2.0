@@ -9,7 +9,7 @@
 // Default or fallback Google Apps Script Web App URL
 export const DEFAULT_SHEET_URL =
   import.meta.env.VITE_GOOGLE_SHEETS_URL ||
-  'https://script.google.com/macros/s/AKfycbzskVa7z-Jw-ThDFhc1Nk6hIsu5bbwT8TChhwma7R5dfj_5y1RDfgJf2nOAe5NK6sKE/exec'
+  'https://script.google.com/macros/s/AKfycbzyzglC1gJrUWnzah7g_KmxM-lrEf1_n1F7JPVecYenMT6l6ho-Y5lNktPfipAkBWqC/exec'
 
 /**
  * Gets the active Google Apps Script Web App URL
