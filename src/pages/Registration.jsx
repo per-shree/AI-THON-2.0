@@ -52,8 +52,11 @@ import {
   Printer,
   Headphones,
   Phone,
+  MessageSquare,
+  Mail,
 } from 'lucide-react'
 import PaymentSupportWidget from '../components/PaymentSupportWidget'
+import OrganizersModal from '../components/OrganizersModal'
 import { RegistrationSlip, RegistrationSlipModal } from '../components/RegistrationSlip'
 import {
   validateFullName,
@@ -199,6 +202,7 @@ export default function Registration() {
   const [reportSentMessage, setReportSentMessage] = useState('')
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false)
+  const [isOrganizersOpen, setIsOrganizersOpen] = useState(false)
   const [slipSubmissionDate, setSlipSubmissionDate] = useState(() =>
     new Date().toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -1212,7 +1216,7 @@ export default function Registration() {
 
                 <button
                   type="button"
-                  onClick={() => setIsSupportModalOpen(true)}
+                  onClick={() => setIsOrganizersOpen(true)}
                   className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-amber-50/50 text-[#ea580c] border border-amber-300 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-colors shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Headphones className="w-4 h-4" />
@@ -1238,6 +1242,152 @@ export default function Registration() {
               <div className="space-y-1">
                 <span className="text-[10px] text-blue-300 font-extrabold uppercase tracking-widest block">PRIZE POOL</span>
                 <span className="text-xs sm:text-sm font-black text-amber-300 block">₹2,50,000</span>
+              </div>
+            </div>
+
+            {/* Direct Helpline & Student Coordinators Directory (All Contacts) */}
+            <div id="registration-coordinators" className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-[#edebe6] space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#edebe6]">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-[10px] font-bold uppercase tracking-widest text-[#ea580c]">
+                    <Headphones className="w-3 h-3 text-[#ea580c]" />
+                    <span>Direct Helpline & Coordination Desk</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-[#062b59] tracking-tight uppercase">
+                    Contact Coordinators
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                    Have questions about your registration, PPT evaluation, or shortlisting? Connect directly with our coordinators.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsOrganizersOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#062b59] hover:bg-[#1e3a8a] text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs shrink-0 self-start sm:self-auto cursor-pointer"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>View Full Committee</span>
+                </button>
+              </div>
+
+              {/* Grid of All 7 Coordinators */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {[
+                  {
+                    name: 'Vedant J. Mande',
+                    role: 'President & Core Organizer',
+                    phone: '+918591910018',
+                    phoneDisplay: '+91 85919 10018',
+                    email: 'work.vedantmande@gmail.com',
+                    initials: 'VM',
+                    bg: 'bg-indigo-600',
+                  },
+                  {
+                    name: 'Sudhanshu M. Rahane',
+                    role: 'Technical Head & Core Organizer',
+                    phone: '+917720092989',
+                    phoneDisplay: '+91 77200 92989',
+                    email: 'sudhanshurahane89@gmail.com',
+                    initials: 'SR',
+                    bg: 'bg-purple-600',
+                  },
+                  {
+                    name: 'Umesh M. Khairnar',
+                    role: 'Technical Sub-Head & Core Organizer',
+                    phone: '+919975260955',
+                    phoneDisplay: '+91 99752 60955',
+                    email: 'khairnarumesh685@gmail.com',
+                    initials: 'UK',
+                    bg: 'bg-blue-600',
+                  },
+                  {
+                    name: 'Shree A. Ugale',
+                    role: 'Core Organizer & Payment Desk',
+                    phone: '+917841895180',
+                    phoneDisplay: '+91 78418 95180',
+                    email: 'shreeugale123@gmail.com',
+                    initials: 'SU',
+                    bg: 'bg-emerald-600',
+                  },
+                  {
+                    name: 'Omkar R. Gopale',
+                    role: 'Jr. Developer & Coordinator',
+                    phone: '+917588004691',
+                    phoneDisplay: '+91 75880 04691',
+                    email: 'omkarravindra15@gmail.com',
+                    initials: 'OG',
+                    bg: 'bg-amber-600',
+                  },
+                  {
+                    name: 'Saad K. Shaikh',
+                    role: 'Jr. Developer & Coordinator',
+                    phone: '+918793869334',
+                    phoneDisplay: '+91 87938 69334',
+                    email: 'shaikhsaadp@gmail.com',
+                    initials: 'SS',
+                    bg: 'bg-teal-600',
+                  },
+                  {
+                    name: 'AIESA Student Body',
+                    role: 'Event Management Team & Official Desk',
+                    phone: '',
+                    phoneDisplay: '',
+                    email: 'ai.veer2k26@gmail.com',
+                    initials: 'AI',
+                    bg: 'bg-[#062b59]',
+                    colSpan: 'md:col-span-2',
+                  },
+                ].map((c) => (
+                  <div
+                    key={c.name}
+                    className={`p-4 rounded-2xl bg-[#faf9f6] border border-[#edebe6] hover:border-blue-300 transition-all shadow-xs hover:shadow-md flex flex-col justify-between gap-3 ${c.colSpan || ''}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl ${c.bg} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs`}>
+                        {c.initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-bold text-[#062b59] truncate">
+                          {c.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 font-medium truncate">
+                          {c.role}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#edebe6]">
+                      {c.phone ? (
+                        <>
+                          <a
+                            href={`tel:${c.phone}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-300 text-[#062b59] text-xs font-bold transition-all shadow-2xs hover:bg-blue-50/50"
+                          >
+                            <Phone className="w-3.5 h-3.5 text-blue-600" />
+                            <span>{c.phoneDisplay}</span>
+                          </a>
+                          <a
+                            href={`https://wa.me/${c.phone.replace('+', '')}?text=${encodeURIComponent('Hello, I have an inquiry regarding AI-THON 2.0 registration.')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all shadow-2xs"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>WhatsApp</span>
+                          </a>
+                        </>
+                      ) : null}
+                      <a
+                        href={`mailto:${c.email}?subject=AI-THON%202.0%20Inquiry`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-orange-300 text-slate-700 text-xs font-medium transition-all shadow-2xs truncate"
+                        title={c.email}
+                      >
+                        <Mail className="w-3.5 h-3.5 text-[#ea580c] shrink-0" />
+                        <span className="truncate">{c.email}</span>
+                      </a>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -2847,14 +2997,14 @@ export default function Registration() {
                   <div className="p-3 sm:p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                     <div className="flex-1 leading-relaxed">
-                      <span className="font-bold">Note:</span> If the transaction is not done / fails via QR code or bank transfer, you can also use mobile numbers directly:{' '}
+                      <span className="font-bold">Note:</span> If the transaction is not done / fails via QR code or bank transfer, you can also pay or verify with coordinators directly:{' '}
                       <button
                         type="button"
                         onClick={() => handleCopyText('7841895180', 'phone')}
                         className="inline-flex items-center gap-1 font-mono font-bold text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
-                        title="Click to copy mobile number"
+                        title="Click to copy Shree's mobile number"
                       >
-                        <span>7841895180</span>
+                        <span>7841895180 (Shree)</span>
                         {copiedField === 'phone' ? (
                           <Check className="w-3 h-3 text-emerald-600" />
                         ) : (
@@ -2866,10 +3016,24 @@ export default function Registration() {
                         type="button"
                         onClick={() => handleCopyText('7720092989', 'phone2')}
                         className="inline-flex items-center gap-1 font-mono font-bold text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
-                        title="Click to copy mobile number"
+                        title="Click to copy Sudhanshu's mobile number"
                       >
-                        <span>7720092989</span>
+                        <span>7720092989 (Sudhanshu)</span>
                         {copiedField === 'phone2' ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-amber-700" />
+                        )}
+                      </button>
+                      {', '}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyText('9975260955', 'phone3')}
+                        className="inline-flex items-center gap-1 font-mono font-bold text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                        title="Click to copy Umesh's mobile number"
+                      >
+                        <span>9975260955 (Umesh)</span>
+                        {copiedField === 'phone3' ? (
                           <Check className="w-3 h-3 text-emerald-600" />
                         ) : (
                           <Copy className="w-3 h-3 text-amber-700" />
@@ -2878,12 +3042,12 @@ export default function Registration() {
                       {' or '}
                       <button
                         type="button"
-                        onClick={() => handleCopyText('9975260955', 'phone3')}
+                        onClick={() => handleCopyText('8591910018', 'phone4')}
                         className="inline-flex items-center gap-1 font-mono font-bold text-amber-950 bg-amber-200/70 hover:bg-amber-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
-                        title="Click to copy mobile number"
+                        title="Click to copy Vedant's mobile number"
                       >
-                        <span>9975260955</span>
-                        {copiedField === 'phone3' ? (
+                        <span>8591910018 (Vedant)</span>
+                        {copiedField === 'phone4' ? (
                           <Check className="w-3 h-3 text-emerald-600" />
                         ) : (
                           <Copy className="w-3 h-3 text-amber-700" />
@@ -2902,10 +3066,10 @@ export default function Registration() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-black text-[#062b59] tracking-tight">
-                      Payment Verification Support
+                      Coordination & Verification Support
                     </div>
                     <div className="text-[11px] text-slate-600 font-medium">
-                      Need help with UPI payment or UTR? Contact Umesh or Shree
+                      Need help with UPI payment, UTR, or registration? Connect with our Coordinators
                     </div>
                   </div>
                 </div>
@@ -3724,6 +3888,12 @@ export default function Registration() {
           document.body
         )}
       </main>
+
+      {/* Organizing Committee & Coordinators Modal (All Contacts) */}
+      <OrganizersModal
+        isOpen={isOrganizersOpen}
+        onClose={() => setIsOrganizersOpen(false)}
+      />
 
       {/* Payment Support Dialog (Umesh & Shree contact details) */}
       <PaymentSupportWidget

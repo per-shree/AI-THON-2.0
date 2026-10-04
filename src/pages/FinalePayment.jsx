@@ -295,7 +295,7 @@ export default function FinalePayment() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <Headphones className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
-              <span>Need Help? Contact Coordinators (Umesh & Shree)</span>
+              <span>Need Help? Contact Coordinators</span>
             </button>
           </div>
         </section>

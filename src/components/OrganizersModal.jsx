@@ -166,13 +166,14 @@ export default function OrganizersModal({ isOpen, onClose }) {
                       </a>
                     </>
                   )}
-                  {m.email && !m.phone && (
+                  {m.email && (
                     <a
                       href={`mailto:${m.email}`}
+                      title={m.email}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-medium transition-colors"
                     >
                       <Mail size={12} className="text-slate-500" />
-                      {m.email}
+                      <span className={m.phone ? "hidden sm:inline" : ""}>{m.phone ? "Email" : m.email}</span>
                     </a>
                   )}
                 </div>
