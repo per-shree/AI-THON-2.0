@@ -6,8 +6,10 @@ export default function BackgroundMusic() {
   const location = useLocation()
   const audioRef = useRef(null)
 
-  // Default audio volume set to 9% (0.09)
-  const DEFAULT_VOLUME = 0.09
+  // Default audio volume set to 20% (0.20)
+  const DEFAULT_VOLUME = 0.20
+  // Track starts at 0:13 (13 seconds) where the iconic intro riff hits
+  const START_TIME_SECONDS = 13
   const [volume, setVolume] = useState(DEFAULT_VOLUME)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
@@ -54,6 +56,9 @@ export default function BackgroundMusic() {
 
     audio.muted = false
     audio.volume = isMutedRef.current ? 0 : volumeRef.current
+    if (audio.currentTime < START_TIME_SECONDS) {
+      audio.currentTime = START_TIME_SECONDS
+    }
 
     const playPromise = audio.play()
     if (playPromise !== undefined) {
@@ -85,6 +90,9 @@ export default function BackgroundMusic() {
 
     audio.loop = true
     audio.volume = volume
+    if (audio.currentTime < START_TIME_SECONDS) {
+      audio.currentTime = START_TIME_SECONDS
+    }
 
     // Attempt automatic playback immediately
     ensurePlayback()
@@ -107,6 +115,9 @@ export default function BackgroundMusic() {
       if (audio.paused || audio.muted) {
         audio.muted = false
         audio.volume = volumeRef.current
+        if (audio.currentTime < START_TIME_SECONDS) {
+          audio.currentTime = START_TIME_SECONDS
+        }
         audio.play()
           .then(() => {
             setIsPlaying(true)
@@ -195,6 +206,9 @@ export default function BackgroundMusic() {
       audio.muted = false
       audio.volume = volume
       setIsMuted(false)
+      if (audio.currentTime < START_TIME_SECONDS) {
+        audio.currentTime = START_TIME_SECONDS
+      }
       audio.play()
         .then(() => {
           setIsPlaying(true)
@@ -236,12 +250,17 @@ export default function BackgroundMusic() {
       {/* Persistent HTML5 Audio Element in infinite loop */}
       <audio
         ref={audioRef}
-        src="/alex-warren.mp3"
+        src="/Europe%20The%20Final%20Countdown%20Instrumental.mp3"
         loop
         autoPlay
         preload="auto"
         playsInline
         webkit-playsinline="true"
+        onLoadedMetadata={(e) => {
+          if (e.target.currentTime < START_TIME_SECONDS) {
+            e.target.currentTime = START_TIME_SECONDS
+          }
+        }}
         onPlay={() => setIsPlaying(true)}
         onPause={() => {
           if (audioRef.current?.paused) {
@@ -251,13 +270,13 @@ export default function BackgroundMusic() {
         onEnded={() => {
           const audio = audioRef.current
           if (audio && !isAdminRoute) {
-            audio.currentTime = 0
+            audio.currentTime = START_TIME_SECONDS
             audio.play().catch(() => {})
           }
         }}
       >
-        <source src="/alex-warren.mp3" type="audio/mpeg" />
-        <source src="/Alex%20Warren%20-%20Ordinary%20(Karaoke%20Version).mp3" type="audio/mpeg" />
+        <source src="/Europe%20The%20Final%20Countdown%20Instrumental.mp3" type="audio/mpeg" />
+        <source src="/Europe The Final Countdown Instrumental.mp3" type="audio/mpeg" />
       </audio>
 
       {/* Floating Ambient Music Tag - Right Hand Side (public routes only) */}
@@ -282,7 +301,7 @@ export default function BackgroundMusic() {
                 <input
                   type="range"
                   min="0"
-                  max="0.30"
+                  max="0.50"
                   step="0.01"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
@@ -305,7 +324,7 @@ export default function BackgroundMusic() {
                   }}
                   className="font-bold text-[#2563eb] hover:text-[#062b59] hover:underline transition-colors cursor-pointer"
                 >
-                  Reset (9%)
+                  Reset (20%)
                 </button>
               </div>
             </div>
@@ -317,7 +336,7 @@ export default function BackgroundMusic() {
             <button
               type="button"
               onClick={togglePlay}
-              aria-label={isPlaying ? 'Pause Alex Warren background music' : 'Play Alex Warren background music'}
+              aria-label={isPlaying ? 'Pause The Final Countdown background music' : 'Play The Final Countdown background music'}
               title={isPlaying ? 'Click to Pause' : 'Click to Play'}
               className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden shrink-0 cursor-pointer shadow-2xs group focus:outline-none"
             >
@@ -355,10 +374,10 @@ export default function BackgroundMusic() {
               type="button"
               onClick={togglePlay}
               className="flex items-center gap-1 cursor-pointer text-left focus:outline-none"
-              title={isPlaying ? 'Alex Warren - Ordinary (Playing at 9%)' : 'Alex Warren - Ordinary (Paused)'}
+              title={isPlaying ? 'Europe - The Final Countdown (Playing at 20%)' : 'Europe - The Final Countdown (Paused)'}
             >
               <span className="text-[11px] font-bold text-[#062b59] tracking-tight whitespace-nowrap">
-                Alex Warren
+                The Final Countdown
               </span>
               <span className="text-[8.5px] font-extrabold text-[#2563eb] bg-blue-50 px-1 py-0.2 rounded-full border border-blue-200/60 leading-none">
                 {isMuted ? 'Mute' : `${Math.round(volume * 100)}%`}
