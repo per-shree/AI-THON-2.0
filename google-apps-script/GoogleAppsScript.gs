@@ -2125,6 +2125,11 @@ function sendConfirmationEmail(data) {
     "• Payment UTR         : " + utrNumber + "\n" +
     "• Evaluation Status   : Confirmed for Round 1 Jury Review\n\n" +
     "----------------------------------------------------------\n" +
+    "OFFICIAL ASSOCIATE SPONSORS\n" +
+    "----------------------------------------------------------\n" +
+    "• Choudhary Estate Agency — Premier Real Estate & Property Advisory\n" +
+    "• Yuva Polyprint & Packaging Industries — Polyprint & Packaging Solutions\n\n" +
+    "----------------------------------------------------------\n" +
     "ACTION REQUIRED: JOIN OFFICIAL WHATSAPP COMMUNITY\n" +
     "----------------------------------------------------------\n" +
     "Stay tuned for evaluation results, shortlisted announcements, and schedules:\n" +
@@ -2233,6 +2238,26 @@ function sendConfirmationEmail(data) {
     '                  <td><strong style="color: #047857;">&#10003; Enrolled for Jury Evaluation</strong></td>' +
     '                </tr>' +
     '              </table>' +
+    '            </td>' +
+    '          </tr>' +
+    '        </table>' +
+    '        <!-- Official Associate Sponsors Card -->' +
+    '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border: 1px solid #fed7aa; border-radius: 12px; margin-bottom: 24px; overflow: hidden; box-shadow: 0 2px 8px rgba(234,88,12,0.06);">' +
+    '          <tr>' +
+    '            <td colspan="2" style="background-color: #fff7ed; padding: 7px 16px; border-bottom: 1px solid #fed7aa; font-size: 10px; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 1px; text-align: center;">' +
+    '              Official Associate Sponsors' +
+    '            </td>' +
+    '          </tr>' +
+    '          <tr>' +
+    '            <td width="50%" style="padding: 16px 12px; text-align: center; vertical-align: middle; border-right: 1px solid #fef3c7;">' +
+    '              <img src="' + WEBSITE_URL + '/choudhary_logo.png" alt="Choudhary Estate Agency" width="170" style="width: 170px; max-width: 90%; height: auto; display: block; margin: 0 auto 6px auto;" />' +
+    '              <div style="font-size: 12.5px; font-weight: 800; color: #062b59; margin-top: 4px;">Choudhary Estate Agency</div>' +
+    '              <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">Real Estate &amp; Property Advisory</div>' +
+    '            </td>' +
+    '            <td width="50%" style="padding: 16px 12px; text-align: center; vertical-align: middle;">' +
+    '              <img src="' + WEBSITE_URL + '/yuva_polyprint_logo.png" alt="Yuva Polyprint &amp; Packaging Industries" width="170" style="width: 170px; max-width: 90%; height: auto; display: block; margin: 0 auto 6px auto;" />' +
+    '              <div style="font-size: 12.5px; font-weight: 800; color: #062b59; margin-top: 4px;">Yuva Polyprint &amp; Packaging</div>' +
+    '              <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">Polyprint &amp; Packaging Solutions</div>' +
     '            </td>' +
     '          </tr>' +
     '        </table>' +

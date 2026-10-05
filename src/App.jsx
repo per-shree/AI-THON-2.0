@@ -5,13 +5,11 @@ import Home from './pages/Home'
 import Registration from './pages/Registration'
 import FinalePayment from './pages/FinalePayment'
 import ScrollToHash from './components/ScrollToHash'
-import NoticePopup from './components/NoticePopup'
 
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToHash />
-      <NoticePopup />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />

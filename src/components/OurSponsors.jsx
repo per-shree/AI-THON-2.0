@@ -61,6 +61,22 @@ const partnersList = [
     isWhiteBg: true,
   },
   {
+    name: 'Choudhary Estate Agency',
+    logo: '/choudhary_logo.png',
+    url: '',
+    role: 'ASSOCIATE SPONSOR',
+    desc: 'Premier real estate advisory, property consultancy, and trusted estate management services.',
+    isWhiteBg: true,
+  },
+  {
+    name: 'Yuva Polyprint & Packaging Industries',
+    logo: '/yuva_polyprint_logo.png',
+    url: '',
+    role: 'ASSOCIATE SPONSOR',
+    desc: 'High-quality polyprint packaging solutions, flexible printing, and industrial manufacturing.',
+    isWhiteBg: true,
+  },
+  {
     name: 'Vajra Infra',
     logo: '/vajra_logo.png',
     url: '',
@@ -85,7 +101,7 @@ const partnersList = [
   {
     name: 'Dainik Yuvavarta',
     logo: '/yuvavarta_logo.png',
-    url: '',
+    url: 'https://yuvavarta.in/',
     role: 'Official Media Partner',
     desc: 'Leading regional daily newspaper delivering trusted journalism and extensive media coverage.',
   },

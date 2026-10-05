@@ -82,6 +82,26 @@ export default function SponsorsSection() {
       isWhiteBg: true
     },
     {
+      name: 'Choudhary Estate Agency',
+      logo: '/choudhary_logo.png',
+      url: '#',
+      tier: 'ASSOCIATE SPONSOR',
+      desc: 'Real Estate & Property Advisory',
+      isActive: true,
+      isLargeLogo: true,
+      isWhiteBg: true
+    },
+    {
+      name: 'Yuva Polyprint & Packaging Industries',
+      logo: '/yuva_polyprint_logo.png',
+      url: '#',
+      tier: 'ASSOCIATE SPONSOR',
+      desc: 'Polyprint & Packaging Solutions',
+      isActive: true,
+      isLargeLogo: true,
+      isWhiteBg: true
+    },
+    {
       name: 'Vajra Infra',
       logo: '/vajra_logo.png',
       url: '#',
@@ -113,7 +133,7 @@ export default function SponsorsSection() {
     {
       name: 'Dainik Yuvavarta',
       logo: '/yuvavarta_logo.png',
-      url: '#',
+      url: 'https://yuvavarta.in/',
       tier: 'MEDIA PARTNER',
       desc: 'Official Media Partner',
       isActive: true,
