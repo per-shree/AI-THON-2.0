@@ -2078,7 +2078,9 @@ function sendPptRejectionEmail(data) {
 }
 
 /**
- * SENDS INITIAL REGISTRATION CONFIRMATION EMAIL
+ * SENDS INITIAL REGISTRATION & EVALUATION FEE PAYMENT VERIFICATION EMAIL
+ * Triggered when Column 42 ("Eval Fee Status") is verified by the committee.
+ * Confirms payment via bank UTR without requiring or mentioning payment upload.
  */
 function sendConfirmationEmail(data) {
   var recipient = data.leadEmail;
@@ -2093,8 +2095,9 @@ function sendConfirmationEmail(data) {
   var leadName = data.leadFullName || "Team Leader";
   var teamSize = data.teamSize || "4";
   var pptLink = data.pptDriveUrl || "";
+  var utrNumber = data.utr || "Verified";
 
-  var subject = "[CONFIRMED] AITHON 2.0 Registration — " + teamName + " [" + teamId + "]";
+  var subject = "[VERIFIED] AITHON 2.0 Evaluation Fee Confirmed — " + teamName + " [" + teamId + "]";
 
   var plainText = 
     "==========================================================\n" +
@@ -2103,30 +2106,32 @@ function sendConfirmationEmail(data) {
     "Amrutvahini College of Engineering (AVCOE), Sangamner\n" +
     "==========================================================\n\n" +
     "Dear " + leadName + ",\n\n" +
-    "Congratulations! Your team registration and idea presentation for AITHON 2.0 have been successfully recorded and verified.\n\n" +
+    "Congratulations! Your team's ₹50 Round 1 Evaluation Fee has been successfully verified, and your team registration for AITHON 2.0 is officially confirmed.\n\n" +
+    "Your payment was validated directly through your 12-digit banking reference (UTR). Your team is now registered and queued for Round 1 technical evaluation.\n\n" +
     "----------------------------------------------------------\n" +
-    "OFFICIAL REGISTRATION SUMMARY\n" +
+    "OFFICIAL REGISTRATION & PAYMENT VERIFICATION SUMMARY\n" +
     "----------------------------------------------------------\n" +
-    "• Team Name         : " + teamName + "\n" +
-    "• Team ID           : " + teamId + "\n" +
-    "• Registration ID   : " + regId + "\n" +
-    "• Team Leader       : " + leadName + (data.leadCollege ? " (" + data.leadCollege + ")" : "") + "\n" +
-    "• Leader Email      : " + recipient + "\n" +
-    (data.leadPhone ? ("• Leader Phone      : " + data.leadPhone + "\n") : "") +
-    (data.members && data.members.length > 0 ? ("• Team Members      : " + data.members.join(", ") + "\n") : "") +
-    "• Project Domain   : " + (data.selectedDomain || "Software") + "\n" +
-    "• Competition Track : " + (data.selectedTrack || "General AI Track") + "\n" +
-    "• Team Size         : " + teamSize + " Members\n" +
-    "• PPT Submission    : Uploaded (" + teamId + ".pptx)\n" +
-    "• Evaluation Fee    : ₹50 Verified & Confirmed" + (data.utr ? (" (UTR: " + data.utr + ")") : "") + "\n" +
-    "• Event Date        : Friday, 23 October 2026\n" +
-    "• Venue             : Dept. of AI & DS, AVCOE Sangamner, Maharashtra\n\n" +
+    "• Team Name           : " + teamName + "\n" +
+    "• Team ID             : " + teamId + "\n" +
+    "• Registration ID     : " + regId + "\n" +
+    "• Team Leader         : " + leadName + (data.leadCollege ? " (" + data.leadCollege + ")" : "") + "\n" +
+    "• Leader Email        : " + recipient + "\n" +
+    (data.leadPhone ? ("• Leader Phone        : " + data.leadPhone + "\n") : "") +
+    (data.members && data.members.length > 0 ? ("• Team Members        : " + data.members.join(", ") + "\n") : "") +
+    "• Project Domain      : " + (data.selectedDomain || "Software") + "\n" +
+    "• Competition Track   : " + (data.selectedTrack || "General AI Track") + "\n" +
+    "• Team Size           : " + teamSize + " Members\n" +
+    "• Evaluation Fee      : ₹50 Paid & Verified\n" +
+    "• Payment UTR         : " + utrNumber + "\n" +
+    "• Evaluation Status   : Confirmed for Round 1 Jury Review\n\n" +
     "----------------------------------------------------------\n" +
     "ACTION REQUIRED: JOIN OFFICIAL WHATSAPP COMMUNITY\n" +
     "----------------------------------------------------------\n" +
-    "Join WhatsApp Group: " + WHATSAPP_COMMUNITY_URL + "\n\n" +
+    "Stay tuned for evaluation results, shortlisted announcements, and schedules:\n" +
+    "Join WhatsApp Community: " + WHATSAPP_COMMUNITY_URL + "\n\n" +
     "Best regards,\n" +
     "Organizing Committee — AITHON 2.0\n" +
+    "Department of Artificial Intelligence & Data Science\n" +
     "Amrutvahini College of Engineering, Sangamner";
 
   var htmlBody = 
@@ -2135,7 +2140,7 @@ function sendConfirmationEmail(data) {
     '<head>' +
     '  <meta charset="utf-8">' +
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
-    '  <title>AITHON 2.0 Registration Confirmed</title>' +
+    '  <title>AITHON 2.0 Evaluation Fee Verified</title>' +
     '</head>' +
     '<body style="margin: 0; padding: 24px 12px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">' +
     '  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.07); border: 1px solid #e2e8f0;">' +
@@ -2152,28 +2157,31 @@ function sendConfirmationEmail(data) {
     '        <div style="display: inline-block; background-color: rgba(37,99,235,0.3); border: 1px solid #38bdf8; color: #93c5fd; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">' +
     '          National Level AI Hackathon' +
     '        </div>' +
-    '        <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 4px; font-weight: 500;">Dept. of Artificial Intelligence &amp; Data Science • AVCOE Sangamner</div>' +
+    '        <div style="font-size: 18px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 4px; color: #ffffff;">' +
+    '          ROUND 1: EVALUATION FEE PAYMENT VERIFIED' +
+    '        </div>' +
+    '        <div style="font-size: 12.5px; color: #cbd5e1; font-weight: 500;">Dept. of Artificial Intelligence &amp; Data Science • AVCOE Sangamner</div>' +
     '      </td>' +
     '    </tr>' +
     '    <tr>' +
     '      <td style="padding: 32px 28px;">' +
     '        <div style="display: inline-block; background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 5px 14px; border-radius: 20px; margin-bottom: 12px;">' +
-    '          &#10003; Application Confirmed' +
+    '          &#10003; Payment Verified &amp; Confirmed' +
     '        </div>' +
     '        <h2 style="margin: 0 0 12px 0; color: #062b59; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">' +
-    '          Team Registration Confirmed' +
+    '          ₹50 Evaluation Fee Verified' +
     '        </h2>' +
     '        <p style="font-size: 15px; margin: 0 0 14px 0; color: #0f172a;">' +
     '          Dear <strong>' + leadName + '</strong>,' +
     '        </p>' +
-    '        <p style="font-size: 13.5px; color: #334155; margin: 0 0 22px 0; line-height: 1.6;">' +
-    '          Congratulations! Your team registration and idea PPT for <strong>AITHON 2.0</strong> have been successfully recorded and verified.' +
+    '        <p style="font-size: 13.5px; color: #334155; margin: 0 0 20px 0; line-height: 1.6;">' +
+    '          Congratulations! Your team\'s <strong>₹50 Round 1 Evaluation Fee</strong> has been successfully verified via banking reference. Your team registration is officially confirmed, and your entry is queued for Round 1 technical evaluation.' +
     '        </p>' +
     '        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 24px;">' +
     '          <tr>' +
     '            <td style="padding: 18px 20px;">' +
     '              <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">' +
-    '                Registration Summary' +
+    '                Registration &amp; Payment Summary' +
     '              </div>' +
     '              <table role="presentation" width="100%" cellspacing="0" cellpadding="5" style="font-size: 13px;">' +
     '                <tr>' +
@@ -2213,22 +2221,21 @@ function sendConfirmationEmail(data) {
     '                  <td style="color: #0f172a;">' + teamSize + ' Members</td>' +
     '                </tr>' +
     '                <tr>' +
-    '                  <td style="color: #64748b;">PPT Submission:</td>' +
-    '                  <td><span style="color: #047857; font-weight: 700;">&#10003; Uploaded (' + teamId + '.pptx)</span></td>' +
-    '                </tr>' +
-    '                <tr>' +
     '                  <td style="color: #64748b;">Evaluation Fee:</td>' +
-    '                  <td><span style="color: #047857; font-weight: 700;">&#10003; ₹50 Verified & Confirmed' + (data.utr ? (' (UTR: ' + data.utr + ')') : '') + '</span></td>' +
+    '                  <td><span style="color: #047857; font-weight: 700;">&#10003; ₹50 Verified &amp; Confirmed</span></td>' +
     '                </tr>' +
     '                <tr>' +
-    '                  <td style="color: #64748b;">Event Date:</td>' +
-    '                  <td style="color: #0f172a; font-weight: 600;">Friday, 23 October 2026</td>' +
+    '                  <td style="color: #64748b;">Payment UTR:</td>' +
+    '                  <td><span style="font-family: monospace; font-weight: 700; color: #062b59;">' + utrNumber + '</span></td>' +
+    '                </tr>' +
+    '                <tr>' +
+    '                  <td style="color: #64748b;">Round 1 Status:</td>' +
+    '                  <td><strong style="color: #047857;">&#10003; Enrolled for Jury Evaluation</strong></td>' +
     '                </tr>' +
     '              </table>' +
     '            </td>' +
     '          </tr>' +
     '        </table>' +
-
     '        <!-- WhatsApp Community -->' +
     '        <div style="background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 22px 20px; text-align: center; margin-bottom: 26px;">' +
     '          <div style="display: inline-block; background-color: #25D366; color: #ffffff; padding: 4px 14px; border-radius: 20px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px;">' +
@@ -2288,9 +2295,8 @@ function sendPaymentProblemEmail(data) {
     "   Amount: ₹50\n\n" +
     "2. After completing payment, reply directly to this email (ai.veer2k26@gmail.com) with:\n" +
     "   • Team ID: " + teamId + "\n" +
-    "   • 12-digit UPI UTR / Transaction Reference Number\n" +
-    "   • Payment confirmation screenshot\n\n" +
-    "Our committee will verify your payment and activate your registration.\n\n" +
+    "   • 12-digit UPI UTR / Transaction Reference Number\n\n" +
+    "Our committee will verify your payment against bank records and activate your registration.\n\n" +
     "Best regards,\n" +
     "Organizing Committee — AITHON 2.0\n" +
     "Amrutvahini College of Engineering, Sangamner";
@@ -2354,7 +2360,7 @@ function sendPaymentProblemEmail(data) {
     '          </div>' +
     '        </div>' +
     '        <p style="font-size: 13px; color: #475569; margin-bottom: 16px; line-height: 1.6;">' +
-    '          <strong>Already Paid?</strong> If the amount was debited from your account, please reply directly to this email (<strong style="color: #062b59;">ai.veer2k26@gmail.com</strong>) with your payment screenshot and 12-digit UTR to activate your registration immediately.' +
+    '          <strong>Already Paid?</strong> If the amount was debited from your account, please reply directly to this email (<strong style="color: #062b59;">ai.veer2k26@gmail.com</strong>) with your 12-digit UPI UTR number to verify and activate your registration immediately.' +
     '        </p>' +
     '        <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">' +
     '          Best regards,<br>' +
