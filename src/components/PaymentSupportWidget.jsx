@@ -94,7 +94,7 @@ export const SUPPORT_CONTACTS = [
     tag: 'Official Helpdesk & Inquiries',
     phone: '',
     phoneDisplay: '',
-    email: 'ai.veer2k26@gmail.com',
+    email: 'shivaji.wathore@avcoe.org',
     initials: 'AI',
     avatarBg: 'bg-rose-600',
     whatsappMessage: 'Hello AIESA Team, I have an inquiry regarding Ai-THON 2.0.',

@@ -376,7 +376,7 @@ export function RegistrationSlip({
             Confirmation email will be dispatched to <strong className="font-mono text-slate-900">{formData.leadEmail || 'your email'}</strong> upon bank verification of the ₹50 UTR within 24 hours.
           </li>
           <li>
-            For inquiries, quote your <strong className="font-mono">{finalTeamId}</strong> to <strong className="text-[#062b59]">ai.veer2k26@gmail.com</strong> or event coordinators.
+            For inquiries, quote your <strong className="font-mono">{finalTeamId}</strong> to <strong className="text-[#062b59]">shivaji.wathore@avcoe.org</strong> or event coordinators.
           </li>
         </ol>
       </div>

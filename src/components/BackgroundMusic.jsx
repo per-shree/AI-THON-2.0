@@ -16,12 +16,9 @@ export default function BackgroundMusic() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [userHasPaused, setUserHasPaused] = useState(false)
 
-  const isAdminRoute = location.pathname.startsWith('/admin')
-
   // Keep stable refs synchronized with state so persistent listeners always see latest values
   const volumeRef = useRef(volume)
   const isMutedRef = useRef(isMuted)
-  const isAdminRouteRef = useRef(isAdminRoute)
   const userHasPausedRef = useRef(userHasPaused)
 
   useEffect(() => {
@@ -31,10 +28,6 @@ export default function BackgroundMusic() {
   useEffect(() => {
     isMutedRef.current = isMuted
   }, [isMuted])
-
-  useEffect(() => {
-    isAdminRouteRef.current = isAdminRoute
-  }, [isAdminRoute])
 
   useEffect(() => {
     userHasPausedRef.current = userHasPaused
@@ -52,7 +45,7 @@ export default function BackgroundMusic() {
   // Master function to start/resume audio playback unmuted
   const ensurePlayback = () => {
     const audio = audioRef.current
-    if (!audio || isAdminRouteRef.current) return
+    if (!audio) return
 
     audio.muted = false
     audio.volume = isMutedRef.current ? 0 : volumeRef.current
@@ -101,8 +94,6 @@ export default function BackgroundMusic() {
   // 2. Global interaction listener: ANY click, tap, touch, keydown anywhere on website turns song ON
   useEffect(() => {
     const handleGlobalInteraction = (e) => {
-      if (isAdminRouteRef.current) return
-
       // If clicking inside the player controls widget itself, let widget buttons handle toggle
       if (e?.target?.closest?.('[data-music-player="true"]')) {
         return
@@ -144,28 +135,23 @@ export default function BackgroundMusic() {
     }
   }, [])
 
-  // 3. React to route changes (silence in admin, play in public)
+  // 3. Keep audio playback intact on route navigation
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    if (isAdminRoute) {
-      audio.pause()
-      setIsPlaying(false)
-    } else {
-      if (audio.paused) {
-        audio.muted = false
-        audio.volume = volumeRef.current
-        audio.play().then(() => setIsPlaying(true)).catch(() => {})
-      }
+    if (audio.paused && !userHasPausedRef.current) {
+      audio.muted = false
+      audio.volume = volumeRef.current
+      audio.play().then(() => setIsPlaying(true)).catch(() => {})
     }
-  }, [location.pathname, isAdminRoute])
+  }, [location.pathname])
 
   // 4. Resume playback when returning to the tab (tab switch, mobile app focus, screen unlock)
   useEffect(() => {
     const handleResume = () => {
       const audio = audioRef.current
-      if (!audio || isAdminRouteRef.current) return
+      if (!audio) return
 
       if (document.visibilityState === 'visible' && audio.paused) {
         audio.muted = false
@@ -269,7 +255,7 @@ export default function BackgroundMusic() {
         }}
         onEnded={() => {
           const audio = audioRef.current
-          if (audio && !isAdminRoute) {
+          if (audio) {
             audio.currentTime = START_TIME_SECONDS
             audio.play().catch(() => {})
           }
@@ -279,13 +265,12 @@ export default function BackgroundMusic() {
         <source src="/Europe The Final Countdown Instrumental.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* Floating Ambient Music Tag - Right Hand Side (public routes only) */}
-      {!isAdminRoute && (
-        <aside
-          data-music-player="true"
-          aria-label="Background audio player"
-          className="no-print fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 transition-all duration-300 select-none flex flex-col items-end"
-        >
+      {/* Floating Ambient Music Tag - Right Hand Side */}
+      <aside
+        data-music-player="true"
+        aria-label="Background audio player"
+        className="no-print fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 transition-all duration-300 select-none flex flex-col items-end"
+      >
           {/* Optional Micro Popover for Volume Adjustment */}
           {isExpanded && (
             <div className="mb-2 p-2.5 w-48 bg-white/95 hover:bg-white backdrop-blur-md border border-[#edebe6] shadow-[0_8px_25px_rgba(6,43,89,0.12)] rounded-xl animate-fadeIn flex flex-col gap-2">
@@ -411,7 +396,6 @@ export default function BackgroundMusic() {
             </button>
           </div>
         </aside>
-      )}
     </>
   )
 }

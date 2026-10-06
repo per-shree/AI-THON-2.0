@@ -214,6 +214,8 @@ export default function Registration() {
     })
   )
   const fileInputRef = useRef(null)
+  const formMountTime = useRef(Date.now())
+  const [honeypot, setHoneypot] = useState('')
 
   // Auto-Save UI & Feedback State
   const [saveStatus, setSaveStatus] = useState('saved') // 'idle' | 'saving' | 'saved'
@@ -836,7 +838,7 @@ export default function Registration() {
       setReportSentMessage('Payment issue noted! A Payment Assistance email has been sent to ' + (formData.leadEmail || 'your email') + ' with coordinator contacts.')
     } catch (e) {
       console.warn('Could not dispatch payment issue report:', e)
-      setReportSentMessage('Payment issue recorded. Please contact support at ai.veer2k26@gmail.com.')
+      setReportSentMessage('Payment issue recorded. Please contact support at shivaji.wathore@avcoe.org.')
     } finally {
       setIsSendingReport(false)
     }
@@ -845,6 +847,17 @@ export default function Registration() {
   // Final Registration & Payment Submission
   const handleFinalSubmit = async (e, overrideUtr) => {
     if (e && e.preventDefault) e.preventDefault()
+    if (isSubmitting) return
+
+    // 🛡️ ANTI-BOT HONEYPOT & TIMING PROTECTION
+    if (honeypot && honeypot.trim()) {
+      console.warn('Spam/bot detected via honeypot.')
+      return
+    }
+    if (Date.now() - formMountTime.current < 2500) {
+      alert('Please take a moment to review all fields before submitting.')
+      return
+    }
 
     // 🛡️ Ensure all previous steps are valid before final submission
     if (!validateStep1()) {
@@ -960,7 +973,7 @@ export default function Registration() {
             : m.course,
       }))
 
-      // 2. Submit to Google Sheets (Target Account: ai.veer2k26@gmail.com)
+      // 2. Submit to Google Sheets (Target Account: shivaji.wathore@avcoe.org)
       const payloadData = {
         ...formData,
         paymentUtr: rawUtr,
@@ -1332,7 +1345,7 @@ export default function Registration() {
                     role: 'Event Management Team & Official Desk',
                     phone: '',
                     phoneDisplay: '',
-                    email: 'ai.veer2k26@gmail.com',
+                    email: 'shivaji.wathore@avcoe.org',
                     initials: 'AI',
                     bg: 'bg-[#062b59]',
                     colSpan: 'md:col-span-2',
@@ -1456,6 +1469,20 @@ export default function Registration() {
           steps={STEPS}
           onStepClick={handleStepClick}
         />
+
+        {/* 🛡️ Anti-bot invisible honeypot field */}
+        <div className="hidden opacity-0 pointer-events-none absolute -left-[9999px]" aria-hidden="true">
+          <label htmlFor="website_hp_auth">Leave this field blank</label>
+          <input
+            id="website_hp_auth"
+            type="text"
+            name="website_hp_auth"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </div>
 
         {/* Auto-Save & Draft State Pill */}
         {currentStep > 0 && currentStep < 5 && (

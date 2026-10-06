@@ -145,15 +145,15 @@ export default function ContactSection() {
                     For sponsorship inquiries, college participation letters, or rulebook questions:
                   </p>
                   <a
-                    href="mailto:ai.veer2k26@gmail.com"
+                    href="mailto:shivaji.wathore@avcoe.org"
                     className="text-xs sm:text-sm font-bold text-[#062b59] hover:text-[#ea580c] transition-colors block truncate"
                   >
-                    ai.veer2k26@gmail.com
+                    shivaji.wathore@avcoe.org
                   </a>
                 </div>
 
                 <a
-                  href="mailto:ai.veer2k26@gmail.com"
+                  href="mailto:shivaji.wathore@avcoe.org"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#062b59] hover:text-[#ea580c] transition-colors pt-2 border-t border-[#edebe6] group"
                 >
                   <span>Write an Email</span>

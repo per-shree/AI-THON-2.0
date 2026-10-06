@@ -38,7 +38,7 @@ export default function NoticePopup() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen])
 
-  const targetEmail = 'ai.veer2k26@gmail.com'
+  const targetEmail = 'shivaji.wathore@avcoe.org'
 
   const emailFormatText = `Team No. – (if not known kindly keep blank)
 Team Name – 

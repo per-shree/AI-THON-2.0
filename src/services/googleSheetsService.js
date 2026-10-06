@@ -1,6 +1,6 @@
 /**
  * Google Sheets Service for AITHON 2.0
- * Target Google Account: ai.veer2k26@gmail.com
+ * Target Google Account: shivaji.wathore@avcoe.org
  *
  * Handles transmission of team registration data to Google Sheets
  * via Google Apps Script Web App.
@@ -9,7 +9,7 @@
 // Default or fallback Google Apps Script Web App URL
 export const DEFAULT_SHEET_URL =
   import.meta.env.VITE_GOOGLE_SHEETS_URL ||
-  'https://script.google.com/macros/s/AKfycbzyzglC1gJrUWnzah7g_KmxM-lrEf1_n1F7JPVecYenMT6l6ho-Y5lNktPfipAkBWqC/exec'
+  'https://script.google.com/macros/s/AKfycbwAyAjB46NMcYwMUDxae-WWqDQZ_h0fZh9PJhKp0t4f0ZXH-ud37P1ToWfihHMDAObo/exec'
 
 /**
  * Gets the active Google Apps Script Web App URL
@@ -133,7 +133,7 @@ export function formatGoogleSheetPayload(formData, teamId, registrationId) {
 
     // Status
     status: 'Pending Review',
-    targetAccount: 'ai.veer2k26@gmail.com',
+    targetAccount: 'shivaji.wathore@avcoe.org',
   }
 }
 
@@ -242,7 +242,7 @@ export async function submitRegistrationToGoogleSheet(formData, teamId, registra
 
   if (!scriptUrl || scriptUrl.includes('docs.google.com/spreadsheets')) {
     console.warn(
-      '[GoogleSheets] Google Sheet document link detected instead of Apps Script Web App URL. To log rows automatically into this sheet, deploy the script from Extensions > Apps Script and use the Web App URL (starts with https://script.google.com/macros/s/.../exec). Payload ready for account ai.veer2k26@gmail.com:',
+      '[GoogleSheets] Google Sheet document link detected instead of Apps Script Web App URL. To log rows automatically into this sheet, deploy the script from Extensions > Apps Script and use the Web App URL (starts with https://script.google.com/macros/s/.../exec). Payload ready for account shivaji.wathore@avcoe.org:',
       payload
     )
     return {

@@ -176,13 +176,14 @@ export default function FinalePayment() {
 
   // Confirm Round 2 Payment via UPI UTR
   const handleConfirmFinalePayment = async () => {
+    if (isPaying) return
     if (!teamData.teamId) {
       setErrorMsg('Please enter a valid Team ID to proceed.')
       return
     }
 
     const cleanUtr = utrInput.trim()
-    if (!cleanUtr || cleanUtr.length < 6) {
+    if (!cleanUtr || cleanUtr.length < 10) {
       setErrorMsg('Please enter a valid 12-digit UPI UTR number from your payment receipt.')
       return
     }
@@ -202,7 +203,7 @@ export default function FinalePayment() {
         paymentId: paymentId,
         paymentUtr: paymentId,
         amount: lockedFee,
-        ...(!teamData.teamId && teamData.leadEmail ? { leadEmail: teamData.leadEmail } : {}),
+        leadEmail: teamData.leadEmail || '',
       }
 
       // 1. Primary: POST request with text/plain body
