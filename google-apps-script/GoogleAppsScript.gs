@@ -9,13 +9,13 @@
  * 
  * FEATURES IN THIS VERSION:
  * 1. 📁 PPT Upload: Automatically saved to Google Drive and renamed as Team ID (TEAM-XXX.pptx).
- * 2. 📊 47-Column Google Sheet Structure with Column 43 "PPT Status" (Accepted / Rejected / Pending Review).
- * 3. 📧 Automated Evaluation Emails:
- *    - ACCEPTED: Sends Round 2 confirmation email with NON-EDITABLE payment link
- *      calculated strictly as Team Members × ₹200 (4 = ₹800, 5 = ₹1000, 6 = ₹1200).
+ * 2. 📊 50-Column Google Sheet Structure with Column 45 "PPT Status" (Accepted / Rejected / Pending Review).
+ * 3. 📧 Automated Evaluation Emails (Single-Row Focused):
+ *    - ACCEPTED: Sends Round 2 confirmation email with payment link calculated strictly as Team Members × ₹200.
  *    - REJECTED: Sends encouraging evaluation feedback & participation certificate email.
- * 4. 🚀 Spreadsheet Menu: "🚀 AITHON 2.0" added directly to Google Sheets toolbar for 1-click
- *    header setup, dropdown validation, and batch email processing!
+ *    - VERIFIED: Sends Round 1 payment confirmation email.
+ * 4. 🚀 Spreadsheet Menu: "🚀 AITHON 2.0" added directly to Google Sheets toolbar with dedicated
+ *    SINGLE ROW ONLY actions with confirmation popups to prevent bulk spamming!
  * ============================================================================
  */
 
@@ -23,7 +23,7 @@
 var PPT_FOLDER_ID = "1vSfgU8HnOmDrt9we13ZnHAktIqeQ8os1pzXRvKw3PDxMREplpa8l6FBLspayXfynJiqJAw7R";
 
 // Target Google Spreadsheet ID (Active Sheet)
-var SPREADSHEET_ID = "1wV96WZBPiKUyA08BrL9d8dqwXcxRFDDQKHUdXvhx-rM";
+var SPREADSHEET_ID = "1uBkGnCNJ8dIRhLUY9N4zbTWSh5VEy-p-fbnTkfUNt6k";
 
 // Official WhatsApp Community Group link for Team Leaders
 var WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/HRvMvxxB2NUIvw5zMiTsQ9";
@@ -32,11 +32,14 @@ var WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/HRvMvxxB2NUIvw5zMiTsQ9";
 var UPI_VPA = "9404665180@centralbank";
 
 // Official Website Domain (used to generate private Grand Finale payment portal link in acceptance emails)
-// Update this to your deployed domain (e.g. "https://aithon2026.vercel.app") or custom domain
 var WEBSITE_URL = "https://aithon2-0.xyz";
 
 // Official AITHON 2.0 Brand Logo for Email Headers
 var LOGO_IMAGE_URL = "https://aithon2-0.xyz/aithon-hero-logo.png";
+
+// Official Sender Display Name and Authorized Email
+var SENDER_NAME = "AITHON 2.0 Organizing Committee";
+var SENDER_EMAIL = "shivaji.wathore@avcoe.org";
 
 /**
  * ROUND 2 / GRAND FINALE FINAL PAYMENT FORM & FEE STRUCTURE:
@@ -175,32 +178,17 @@ var HEADERS = [
 ];
 
 /**
-/**
  * Helper to identify if a sheet is the registration submissions sheet
- * Matches 'Registrations', 'Sheet1', or checks headers in Row 1
+ * Permissive to ensure edits on any data sheet are processed
  */
 function isRegistrationSheet(sheet) {
   if (!sheet) return false;
   var name = sheet.getName().toLowerCase().trim();
-  // Filter out non-registration auxiliary sheets
-  if (name.indexOf("unmatched") !== -1 || name.indexOf("summary") !== -1 || name.indexOf("analytic") !== -1 || name.indexOf("log") !== -1) {
+  // Filter out explicit auxiliary sheets
+  if (name.indexOf("unmatched") !== -1 || name.indexOf("summary") !== -1 || name.indexOf("analytic") !== -1 || name.indexOf("log") !== -1 || name.indexOf("setting") !== -1) {
     return false;
   }
-  if (name === "registrations" || name === "sheet1" || name.indexOf("registration") !== -1 || name.indexOf("response") !== -1) {
-    return true;
-  }
-  // Check headers in row 1
-  try {
-    var lastCol = Math.min(sheet.getLastColumn(), 50);
-    if (lastCol > 0) {
-      var headerText = sheet.getRange(1, 1, 1, lastCol).getValues()[0].join(" ").toLowerCase();
-      if (headerText.indexOf("ppt status") !== -1 || headerText.indexOf("eval fee status") !== -1 || headerText.indexOf("team id") !== -1) {
-        return true;
-      }
-    }
-  } catch (e) {}
-  // Default fallback: first tab in workbook
-  return sheet.getIndex() === 1;
+  return true;
 }
 
 /**
@@ -296,7 +284,42 @@ function getSheetColumnIndexes(sheet) {
   };
 }
 
+/**
+ * Reliably extracts the team leader's email address from a row
+ * Checks preferred column, standard Column 7, and falls back to scanning the row
+ */
+function extractLeaderEmail(rowData, cols) {
+  if (!rowData || !rowData.length) return "";
+  // 1. Try dynamic column index
+  if (cols && cols.leadEmailCol > 0 && rowData[cols.leadEmailCol - 1]) {
+    var em = String(rowData[cols.leadEmailCol - 1]).trim().toLowerCase();
+    if (em.indexOf("@") !== -1 && em.indexOf(" ") === -1) return em;
+  }
+  // 2. Try standard Column 7 (G: Leader Email)
+  if (rowData[6]) {
+    var em6 = String(rowData[6]).trim().toLowerCase();
+    if (em6.indexOf("@") !== -1 && em6.indexOf(" ") === -1) return em6;
+  }
+  // 3. Try Column 6 (F)
+  if (rowData[5]) {
+    var em5 = String(rowData[5]).trim().toLowerCase();
+    if (em5.indexOf("@") !== -1 && em5.indexOf(" ") === -1) return em5;
+  }
+  // 4. Scan columns 1 to 15 for an email address
+  for (var i = 0; i < Math.min(rowData.length, 15); i++) {
+    var val = String(rowData[i] || "").trim().toLowerCase();
+    if (val.indexOf("@") !== -1 && val.indexOf(" ") === -1 && val.length > 5) {
+      return val;
+    }
+  }
+  return "";
+}
+
 function getTargetSpreadsheet() {
+  try {
+    var active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) return active;
+  } catch (aErr) {}
   try {
     if (SPREADSHEET_ID && SPREADSHEET_ID.trim() !== "") {
       return SpreadsheetApp.openById(SPREADSHEET_ID.trim());
@@ -1183,22 +1206,17 @@ function onOpen() {
   try {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu("🚀 AITHON 2.0")
-      .addItem("⚡ Enable Instant Email Trigger (Verified / Accepted / Rejected)", "installEditTrigger")
-      .addItem("🧪 Test Email on Selected Row", "testSelectedRowDispatch")
+      .addItem("🎯 Send Email to SELECTED ROW ONLY", "testSelectedRowDispatch")
+      .addItem("✅ Accept PPT & Send Email (Selected Row Only)", "acceptSelectedTeamAndSendEmail")
+      .addItem("❌ Reject PPT & Send Email (Selected Row Only)", "rejectSelectedTeamAndSendEmail")
+      .addItem("💳 Verify Fee & Send Email (Selected Row Only)", "verifySelectedTeamFeeAndSendEmail")
+      .addSeparator()
+      .addItem("⚡ Enable Instant Email Trigger (On-Edit Dropdowns)", "installEditTrigger")
+      .addItem("📨 Health Check: Send Test Email to Admin", "sendInstantTestEmail")
       .addSeparator()
       .addItem("🚀 Send ALL Pending Emails (Registration + PPT + Finale)", "processAllPendingNotifications")
-      .addSeparator()
-      .addItem("✅ Verify Registration Payment & Send Email", "processAllVerifiedRegistrations")
-      .addItem("⚡ Quick Verify Registration Payment (1-Click)", "quickVerifyRegistrationPaymentPrompt")
-      .addSeparator()
-      .addItem("⚡ Quick Mark Team as Paid (Finale)", "quickMarkTeamPaidPrompt")
-      .addItem("🎟️ Dispatch Finale Tickets to Paid Teams", "processAllPaidFinaleTeams")
-      .addItem("📧 Process PPT Evaluations (Send Emails)", "processAllPptEvaluations")
-      .addSeparator()
       .addItem("🧹 Clean Up Blank Rows & Compact Sheet", "compactAndCleanSheet")
       .addItem("🔄 Fix Sheet Dropdowns & Payment UTRs", "fixEvalColumnsDropdownAndUtr")
-      .addItem("🛠️ Setup Sheet Columns & Dropdowns (50 Cols)", "updateSheetStructure")
-      .addItem("⏰ Enable 5-Minute Auto-Email Trigger (All Stages)", "installAutomatic5MinTrigger")
       .addToUi();
   } catch (e) {
     Logger.log("onOpen UI notice: " + e.toString());
@@ -1427,6 +1445,40 @@ function openUnmatchedPaymentsSheet() {
  * 2. Sends acceptance/rejection email when PPT Status is set to 'Accepted' / 'Rejected',
  * 3. Sends Grand Finale Hall Ticket when Round 2 Payment Status is set to 'Paid' / 'Verified'!
  */
+/**
+ * 🔒 Automatically ensures that the installable edit trigger is active
+ */
+function ensureEditTriggerInstalled() {
+  try {
+    var triggers = ScriptApp.getProjectTriggers();
+    var found = false;
+    for (var i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === "installedOnEdit") {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      var ss = getTargetSpreadsheet();
+      if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+      ScriptApp.newTrigger("installedOnEdit")
+        .forSpreadsheet(ss)
+        .onEdit()
+        .create();
+      Logger.log("✓ Auto-installed missing onEdit trigger.");
+    }
+  } catch (e) {
+    Logger.log("ensureEditTriggerInstalled notice: " + e.toString());
+  }
+}
+
+/**
+ * ⚡ Installable Trigger on Edit:
+ * Activates instant real-time email dispatch on cell edits:
+ * 1. Sends confirmation email when Eval Fee Status is set to 'Verified' / 'Paid',
+ * 2. Sends acceptance/rejection email when PPT Status is set to 'Accepted' / 'Rejected',
+ * 3. Sends Grand Finale Hall Ticket when Round 2 Payment Status is set to 'Paid' / 'Verified'!
+ */
 function installEditTrigger() {
   var ss = getTargetSpreadsheet();
   if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -1470,9 +1522,45 @@ function installEditTrigger() {
 }
 
 /**
+ * 📨 Sends a live test email directly to shivaji.wathore@avcoe.org
+ * Validates Google Apps Script authorizations and email quota in 5 seconds!
+ */
+function sendInstantTestEmail() {
+  ensureEditTriggerInstalled();
+  var target = SENDER_EMAIL || "shivaji.wathore@avcoe.org";
+  var quota = MailApp.getRemainingDailyQuota();
+  
+  var sent = sendEmailSafe(
+    target,
+    "[HEALTH CHECK] AITHON 2.0 Email Dispatch System Test",
+    "This is an automated health check from AITHON 2.0 Google Apps Script.\n\nYour email dispatch system is fully functional!\nSender: " + target + "\nDaily Quota Remaining: " + quota,
+    "<div style='font-family:sans-serif;padding:24px;border:1px solid #16a34a;border-radius:12px;background:#f0fdf4;max-width:550px;margin:0 auto;'>" +
+    "<h2 style='color:#15803d;margin-top:0;'>✓ AITHON 2.0 Email System Active</h2>" +
+    "<p style='color:#1e293b;font-size:14px;line-height:1.6;'>This confirms that Google Apps Script has full permissions to dispatch emails from <strong>" + target + "</strong>.</p>" +
+    "<div style='background:#ffffff;border:1px solid #bbf7d0;padding:12px 16px;border-radius:8px;font-size:13px;color:#166534;margin-bottom:14px;'>" +
+    "<strong>Remaining Daily Quota:</strong> " + quota + " emails<br>" +
+    "<strong>Real-Time Trigger:</strong> ACTIVE" +
+    "</div>" +
+    "<p style='font-size:12px;color:#64748b;margin:0;'>AVCOE Sangamner — Dept. of Artificial Intelligence & Data Science</p>" +
+    "</div>"
+  );
+
+  if (sent) {
+    try {
+      SpreadsheetApp.getUi().alert("✓ Email System Working!\n\nA live test email was successfully sent to " + target + ".\nPlease check your inbox.\n\nRemaining Daily Quota: " + quota);
+    } catch(e) {}
+  } else {
+    try {
+      SpreadsheetApp.getUi().alert("❌ Test Email Failed!\n\nCould not send email from " + target + ".\nPlease ensure you authorized the script under shivaji.wathore@avcoe.org.");
+    } catch(e) {}
+  }
+}
+
+/**
  * 🧪 Test Email Dispatch on the Currently Selected Row in Google Sheets:
  */
 function testSelectedRowDispatch() {
+  ensureEditTriggerInstalled();
   var sheet = SpreadsheetApp.getActiveSheet();
   var row = sheet.getActiveCell().getRow();
   if (row < 2) {
@@ -1480,29 +1568,192 @@ function testSelectedRowDispatch() {
     return;
   }
   var cols = getSheetColumnIndexes(sheet);
+  var rowData = sheet.getRange(row, 1, 1, cols.totalCols).getValues()[0];
+  var leadEmail = extractLeaderEmail(rowData, cols);
+
+  if (!leadEmail) {
+    SpreadsheetApp.getUi().alert("Row " + row + " Error: No valid email address found in this row!");
+    return;
+  }
+
   var pptVal = String(sheet.getRange(row, cols.pptStatusCol).getValue() || "").trim();
   var evalVal = String(sheet.getRange(row, cols.evalFeeStatusCol).getValue() || "").trim();
   var r2Val = String(sheet.getRange(row, cols.round2StatusCol).getValue() || "").trim();
 
-  sheet.getParent().toast("🧪 Testing email dispatch on Row " + row + "...", "AITHON 2.0", 4);
+  sheet.getParent().toast("🧪 Testing email dispatch for Row " + row + " (to: " + leadEmail + ")...", "AITHON 2.0", 4);
 
   var sent = false;
-  if (evalVal.toLowerCase() === "verified" || evalVal.toLowerCase() === "paid") {
-    sent = processEvalFeeStatusRow(sheet, row, true) || sent;
-  }
+  var actionTaken = "";
   if (pptVal.toLowerCase() === "accepted" || pptVal.toLowerCase() === "selected") {
-    sent = processPptEvaluationRow(sheet, row, true) || sent;
+    sent = processPptEvaluationRow(sheet, row, true, cols.pptStatusCol, "accepted");
+    actionTaken = "Round 2 Acceptance Email";
   } else if (pptVal.toLowerCase() === "rejected") {
-    sent = processPptEvaluationRow(sheet, row, true) || sent;
-  }
-  if (r2Val.toLowerCase() === "verified" || r2Val.toLowerCase() === "paid") {
-    sent = processRound2PaymentRow(sheet, row, null, null, true) || sent;
+    sent = processPptEvaluationRow(sheet, row, true, cols.pptStatusCol, "rejected");
+    actionTaken = "Evaluation Rejection/Certificate Email";
+  } else if (r2Val.toLowerCase() === "verified" || r2Val.toLowerCase() === "paid") {
+    sent = processRound2PaymentRow(sheet, row, null, null, true, cols.round2StatusCol, "verified");
+    actionTaken = "Grand Finale Hall Ticket Email";
+  } else if (evalVal.toLowerCase() === "verified" || evalVal.toLowerCase() === "paid") {
+    sent = processEvalFeeStatusRow(sheet, row, true, cols.evalFeeStatusCol, "verified");
+    actionTaken = "Registration Confirmation Email";
+  } else {
+    var ui = SpreadsheetApp.getUi();
+    var resp = ui.alert(
+      "Test Email on Row " + row,
+      "Row " + row + " has no Verified or Accepted status.\n\nSend a TEST ACCEPTANCE EMAIL to:\n" + leadEmail + "?",
+      ui.ButtonSet.YES_NO
+    );
+    if (resp === ui.Button.YES) {
+      sent = processPptEvaluationRow(sheet, row, true, cols.pptStatusCol, "accepted");
+      actionTaken = "Test Round 2 Acceptance Email";
+    }
   }
 
   if (sent) {
-    SpreadsheetApp.getUi().alert("✓ Email dispatched successfully for Row " + row + "!");
+    SpreadsheetApp.getUi().alert("✓ Success!\n\nDispatched " + actionTaken + " to:\n" + leadEmail);
+  } else if (actionTaken) {
+    SpreadsheetApp.getUi().alert("❌ Dispatch Failed for " + actionTaken + " to: " + leadEmail + "\n\nCheck quota or permissions.");
+  }
+}
+
+/**
+ * 🎯 Accept PPT & Send Email ONLY for the currently selected row
+ */
+function acceptSelectedTeamAndSendEmail() {
+  ensureEditTriggerInstalled();
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var row = sheet.getActiveCell().getRow();
+  if (row < 2) {
+    SpreadsheetApp.getUi().alert("Please select a team row (Row 2 or below) first.");
+    return;
+  }
+  var cols = getSheetColumnIndexes(sheet);
+  var rowData = sheet.getRange(row, 1, 1, cols.totalCols).getValues()[0];
+  var leadEmail = extractLeaderEmail(rowData, cols);
+  var teamName = String(rowData[cols.teamNameCol - 1] || rowData[3] || "Team").trim();
+  var teamId = String(rowData[cols.teamIdCol - 1] || rowData[1] || "N/A").trim();
+
+  if (!leadEmail) {
+    SpreadsheetApp.getUi().alert("Row " + row + " Error: No valid email address found in this row!");
+    return;
+  }
+
+  var ui = SpreadsheetApp.getUi();
+  var resp = ui.alert(
+    "Confirm Single-Team Dispatch",
+    "Send Round 2 ACCEPTANCE email ONLY to this team?\n\n• Team: " + teamName + " [" + teamId + "]\n• Recipient: " + leadEmail + "\n• Row: " + row + "\n\n(No other teams will receive emails)",
+    ui.ButtonSet.YES_NO
+  );
+
+  if (resp !== ui.Button.YES) return;
+
+  sheet.getRange(row, cols.pptStatusCol).setValue("Accepted");
+  var sent = processPptEvaluationRow(sheet, row, true, cols.pptStatusCol, "accepted");
+  if (sent) {
+    sheet.getRange(row, cols.pptStatusCol)
+      .setValue("Accepted")
+      .setBackground("#16a34a")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center");
+    SpreadsheetApp.flush();
+    ui.alert("✓ Success!\n\nRound 2 Acceptance Email was sent ONLY to:\n" + leadEmail + " (" + teamName + ")\n\n• PPT Status button is now coloured GREEN.");
   } else {
-    SpreadsheetApp.getUi().alert("Row " + row + " Statuses:\n• Eval Fee: " + (evalVal || "Empty") + "\n• PPT Status: " + (pptVal || "Empty") + "\n• Round 2 Payment: " + (r2Val || "Empty") + "\n\nTo trigger an email, set one of the above to 'Verified', 'Accepted', or 'Rejected'.");
+    ui.alert("❌ Dispatch Failed for " + leadEmail + ". Please check quota or script permissions.");
+  }
+}
+
+/**
+ * 🎯 Reject PPT & Send Email ONLY for the currently selected row
+ */
+function rejectSelectedTeamAndSendEmail() {
+  ensureEditTriggerInstalled();
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var row = sheet.getActiveCell().getRow();
+  if (row < 2) {
+    SpreadsheetApp.getUi().alert("Please select a team row (Row 2 or below) first.");
+    return;
+  }
+  var cols = getSheetColumnIndexes(sheet);
+  var rowData = sheet.getRange(row, 1, 1, cols.totalCols).getValues()[0];
+  var leadEmail = extractLeaderEmail(rowData, cols);
+  var teamName = String(rowData[cols.teamNameCol - 1] || rowData[3] || "Team").trim();
+  var teamId = String(rowData[cols.teamIdCol - 1] || rowData[1] || "N/A").trim();
+
+  if (!leadEmail) {
+    SpreadsheetApp.getUi().alert("Row " + row + " Error: No valid email address found in this row!");
+    return;
+  }
+
+  var ui = SpreadsheetApp.getUi();
+  var resp = ui.alert(
+    "Confirm Single-Team Dispatch",
+    "Send REJECTION & Certificate feedback email ONLY to this team?\n\n• Team: " + teamName + " [" + teamId + "]\n• Recipient: " + leadEmail + "\n• Row: " + row + "\n\n(No other teams will receive emails)",
+    ui.ButtonSet.YES_NO
+  );
+
+  if (resp !== ui.Button.YES) return;
+
+  sheet.getRange(row, cols.pptStatusCol).setValue("Rejected");
+  var sent = processPptEvaluationRow(sheet, row, true, cols.pptStatusCol, "rejected");
+  if (sent) {
+    sheet.getRange(row, cols.pptStatusCol)
+      .setValue("Rejected")
+      .setBackground("#dc2626")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center");
+    SpreadsheetApp.flush();
+    ui.alert("✓ Success!\n\nRejection feedback email was sent ONLY to:\n" + leadEmail + " (" + teamName + ")\n\n• PPT Status button is now coloured RED.");
+  } else {
+    ui.alert("❌ Dispatch Failed for " + leadEmail + ". Please check quota or script permissions.");
+  }
+}
+
+/**
+ * 🎯 Verify Registration Fee & Send Email ONLY for the currently selected row
+ */
+function verifySelectedTeamFeeAndSendEmail() {
+  ensureEditTriggerInstalled();
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var row = sheet.getActiveCell().getRow();
+  if (row < 2) {
+    SpreadsheetApp.getUi().alert("Please select a team row (Row 2 or below) first.");
+    return;
+  }
+  var cols = getSheetColumnIndexes(sheet);
+  var rowData = sheet.getRange(row, 1, 1, cols.totalCols).getValues()[0];
+  var leadEmail = extractLeaderEmail(rowData, cols);
+  var teamName = String(rowData[cols.teamNameCol - 1] || rowData[3] || "Team").trim();
+  var teamId = String(rowData[cols.teamIdCol - 1] || rowData[1] || "N/A").trim();
+
+  if (!leadEmail) {
+    SpreadsheetApp.getUi().alert("Row " + row + " Error: No valid email address found in this row!");
+    return;
+  }
+
+  var ui = SpreadsheetApp.getUi();
+  var resp = ui.alert(
+    "Confirm Single-Team Dispatch",
+    "Verify ₹50 Evaluation Fee & send confirmation email ONLY to this team?\n\n• Team: " + teamName + " [" + teamId + "]\n• Recipient: " + leadEmail + "\n• Row: " + row + "\n\n(No other teams will receive emails)",
+    ui.ButtonSet.YES_NO
+  );
+
+  if (resp !== ui.Button.YES) return;
+
+  sheet.getRange(row, cols.evalFeeStatusCol).setValue("Verified");
+  var sent = processEvalFeeStatusRow(sheet, row, true, cols.evalFeeStatusCol, "verified");
+  if (sent) {
+    sheet.getRange(row, cols.evalFeeStatusCol)
+      .setValue("Verified")
+      .setBackground("#16a34a")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center");
+    SpreadsheetApp.flush();
+    ui.alert("✓ Success!\n\nRegistration Confirmation email was sent ONLY to:\n" + leadEmail + " (" + teamName + ")\n\n• Fee Status button is now coloured GREEN.");
+  } else {
+    ui.alert("❌ Dispatch Failed for " + leadEmail + ". Please check quota or script permissions.");
   }
 }
 
@@ -1537,8 +1788,25 @@ function installAutomatic5MinTrigger() {
 }
 
 /**
+ * ⚡ Simple onEdit trigger (Native Google Trigger):
+ * Runs immediately for every edit in the spreadsheet without manual installation!
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    var rawVal = String((e.value !== undefined) ? e.value : e.range.getValue() || "").trim().toLowerCase();
+    if (rawVal === "verified" || rawVal === "accepted" || rawVal === "rejected" || rawVal === "paid") {
+      try {
+        e.source.toast("⚡ Updating " + rawVal + "... Triggering email dispatch.", "AITHON 2.0", 4);
+      } catch (t) {}
+    }
+  } catch (err) {}
+}
+
+/**
  * ⚡ Real-Time On-Edit Trigger Handler:
  * Dispatches emails IMMEDIATELY when a cell is changed to Verified, Accepted, or Rejected!
+ * Works independently of column shifting or exact column index.
  */
 function installedOnEdit(e) {
   try {
@@ -1551,59 +1819,68 @@ function installedOnEdit(e) {
     var col = e.range.getColumn();
     var cols = getSheetColumnIndexes(sheet);
 
+    var rawVal = String((e && e.value !== undefined) ? e.value : sheet.getRange(startRow, col).getValue() || "").trim();
+    var lowerVal = rawVal.toLowerCase();
+    var colHeader = String(sheet.getRange(1, col).getValue() || "").toLowerCase();
+
     for (var r = startRow; r < startRow + numRows; r++) {
       if (r < 2) continue; // Skip header row
 
-      var cellVal = String(sheet.getRange(r, col).getValue() || "").trim();
-      var lowerVal = cellVal.toLowerCase();
+      var rowVal = String(sheet.getRange(r, col).getValue() || "").trim();
+      var rLower = (numRows === 1 && lowerVal) ? lowerVal : rowVal.toLowerCase();
 
-      // 1. Eval Fee Status edited
-      if (col === cols.evalFeeStatusCol) {
-        if (lowerVal === "verified" || lowerVal === "paid" || lowerVal === "approved" || lowerVal === "successful") {
-          try { sheet.getParent().toast("📧 Dispatching Registration Confirmation email for Row " + r + "...", "AITHON 2.0", 4); } catch(t){}
-          var sent = processEvalFeeStatusRow(sheet, r, true);
-          if (sent) {
-            try { sheet.getParent().toast("✅ Registration Confirmation Email sent!", "AITHON 2.0", 5); } catch(t){}
+      // 1. PPT Status Action (Accepted / Selected / Rejected)
+      var isPptMatch = (rLower === "accepted" || rLower === "selected") ||
+                       (rLower === "rejected" && colHeader.indexOf("payment") === -1 && colHeader.indexOf("fee") === -1 && colHeader.indexOf("utr") === -1) ||
+                       (col === cols.pptStatusCol && (rLower === "accepted" || rLower === "rejected"));
+
+      if (isPptMatch) {
+        try { sheet.getParent().toast("📧 Dispatching PPT Evaluation email for Row " + r + "...", "AITHON 2.0", 4); } catch (t) {}
+        var sentPpt = processPptEvaluationRow(sheet, r, true, col, rLower);
+        if (sentPpt) {
+          if (rLower === "accepted" || rLower === "selected") {
+            sheet.getRange(r, col).setValue("Accepted").setBackground("#16a34a").setFontColor("#ffffff").setFontWeight("bold").setHorizontalAlignment("center");
+          } else if (rLower === "rejected") {
+            sheet.getRange(r, col).setValue("Rejected").setBackground("#dc2626").setFontColor("#ffffff").setFontWeight("bold").setHorizontalAlignment("center");
           }
-        } else if (lowerVal === "rejected") {
-          try { sheet.getParent().toast("📧 Dispatching Payment Verification Issue email for Row " + r + "...", "AITHON 2.0", 4); } catch(t){}
-          var sentRej = processEvalFeeStatusRow(sheet, r, true);
-          if (sentRej) {
-            try { sheet.getParent().toast("❌ Payment Rejection Email sent!", "AITHON 2.0", 5); } catch(t){}
-          }
+          SpreadsheetApp.flush();
+          try { sheet.getParent().toast("✅ PPT Evaluation Email sent!", "AITHON 2.0", 5); } catch (t) {}
         }
+        continue;
       }
 
-      // 2. PPT Status edited (Accepted / Rejected)
-      if (col === cols.pptStatusCol) {
-        if (lowerVal === "accepted" || lowerVal === "selected") {
-          try { sheet.getParent().toast("📧 Dispatching Round 2 Acceptance email & Finale link for Row " + r + "...", "AITHON 2.0", 4); } catch(t){}
-          var sentAcc = processPptEvaluationRow(sheet, r, true);
-          if (sentAcc) {
-            try { sheet.getParent().toast("🎉 Round 2 Acceptance Email dispatched!", "AITHON 2.0", 5); } catch(t){}
+      // 2. Verified / Paid Action
+      var isVerifiedMatch = (rLower === "verified" || rLower === "paid" || rLower === "approved" || rLower === "successful");
+      if (isVerifiedMatch) {
+        var isRound2 = (col === cols.round2StatusCol) || (colHeader.indexOf("round 2") !== -1) || (colHeader.indexOf("finale") !== -1);
+        if (isRound2) {
+          try { sheet.getParent().toast("📧 Dispatching Grand Finale Hall Ticket for Row " + r + "...", "AITHON 2.0", 4); } catch (t) {}
+          var sentFinale = processRound2PaymentRow(sheet, r, null, null, true, col, rLower);
+          if (sentFinale) {
+            sheet.getRange(r, col).setValue("Verified").setBackground("#16a34a").setFontColor("#ffffff").setFontWeight("bold").setHorizontalAlignment("center");
+            SpreadsheetApp.flush();
+            try { sheet.getParent().toast("🎟️ Grand Finale Hall Ticket dispatched!", "AITHON 2.0", 5); } catch (t) {}
           }
-        } else if (lowerVal === "rejected") {
-          try { sheet.getParent().toast("📧 Dispatching Evaluation Feedback & Certificate email for Row " + r + "...", "AITHON 2.0", 4); } catch(t){}
-          var sentPptRej = processPptEvaluationRow(sheet, r, true);
-          if (sentPptRej) {
-            try { sheet.getParent().toast("✉️ Rejection Feedback Email dispatched!", "AITHON 2.0", 5); } catch(t){}
+        } else {
+          try { sheet.getParent().toast("📧 Dispatching Registration Confirmation email for Row " + r + "...", "AITHON 2.0", 4); } catch (t) {}
+          var sentReg = processEvalFeeStatusRow(sheet, r, true, col, rLower);
+          if (sentReg) {
+            sheet.getRange(r, col).setValue("Verified").setBackground("#16a34a").setFontColor("#ffffff").setFontWeight("bold").setHorizontalAlignment("center");
+            SpreadsheetApp.flush();
+            try { sheet.getParent().toast("✅ Registration Confirmation Email sent!", "AITHON 2.0", 5); } catch (t) {}
           }
         }
+        continue;
       }
 
-      // 3. Round 2 Payment Status edited (Verified / Paid)
-      if (col === cols.round2StatusCol) {
-        if (lowerVal === "verified" || lowerVal === "paid" || lowerVal === "approved") {
-          try { sheet.getParent().toast("📧 Dispatching Grand Finale Hall Ticket for Row " + r + "...", "AITHON 2.0", 4); } catch(t){}
-          var sentTik = processRound2PaymentRow(sheet, r, null, null, true);
-          if (sentTik) {
-            try { sheet.getParent().toast("🎟️ Grand Finale Hall Ticket dispatched!", "AITHON 2.0", 5); } catch(t){}
-          }
-        } else if (lowerVal === "rejected") {
-          sheet.getRange(r, cols.round2StatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
-          var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
-          recordEmailStatus(sheet, r, cols.emailStatusCol, "❌ Finale Payment Rejected", nowStr);
-          try { sheet.getParent().toast("❌ Round 2 Payment marked as Rejected.", "AITHON 2.0", 5); } catch(t){}
+      // 3. Payment Rejection
+      if (rLower === "rejected") {
+        var isRound2Rej = (col === cols.round2StatusCol) || (colHeader.indexOf("round 2") !== -1) || (colHeader.indexOf("finale") !== -1);
+        if (isRound2Rej) {
+          sheet.getRange(r, col).setValue("Rejected").setBackground("#dc2626").setFontColor("#ffffff").setFontWeight("bold").setHorizontalAlignment("center");
+          recordEmailStatus(sheet, r, cols.emailStatusCol, "❌ Finale Payment Rejected", Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a"));
+        } else {
+          processEvalFeeStatusRow(sheet, r, true);
         }
       }
     }
@@ -1635,6 +1912,14 @@ function recordEmailStatus(sheet, rowNum, colIdx, tag, nowStr) {
     var updated = existing ? (existing + " | " + fullTag) : fullTag;
     cell.setValue(updated);
   }
+
+  // Visually colour the Email Status button badge
+  if (tag.indexOf("✓") !== -1 || tag.indexOf("Sent") !== -1) {
+    cell.setBackground("#dcfce7").setFontColor("#15803d").setFontWeight("bold");
+  } else if (tag.indexOf("❌") !== -1 || tag.indexOf("Failed") !== -1 || tag.indexOf("Rejected") !== -1) {
+    cell.setBackground("#fee2e2").setFontColor("#b91c1c").setFontWeight("bold");
+  }
+
   SpreadsheetApp.flush();
 }
 
@@ -1643,7 +1928,7 @@ function recordEmailStatus(sheet, rowNum, colIdx, tag, nowStr) {
  */
 function sendPaymentRejectionEmail(data) {
   var recipient = data.leadEmail;
-  if (!recipient || recipient.indexOf("@") === -1) return;
+  if (!recipient || recipient.indexOf("@") === -1) return false;
 
   var teamName = data.teamName || "Team";
   var teamId = data.teamId || "N/A";
@@ -1692,13 +1977,7 @@ function sendPaymentRejectionEmail(data) {
     '  </table>' +
     '</body></html>';
 
-  MailApp.sendEmail({
-    to: recipient,
-    subject: subject,
-    body: plainText,
-    htmlBody: htmlBody,
-    name: SENDER_NAME
-  });
+  return sendEmailSafe(recipient, subject, plainText, htmlBody);
 }
 
 /**
@@ -1706,9 +1985,16 @@ function sendPaymentRejectionEmail(data) {
  * Processes a single row for Column 42/43 ("Eval Fee Status") manual payment verification & confirmation email dispatch.
  * Confirmation emails will be sent when status is 'Verified', 'Paid', 'Approved', or 'Successful'.
  */
-function processEvalFeeStatusRow(sheet, rowNum, forceSend) {
+function processEvalFeeStatusRow(sheet, rowNum, forceSend, editedCol, statusOverride) {
   var cols = getSheetColumnIndexes(sheet);
   var rowData = sheet.getRange(rowNum, 1, 1, cols.totalCols).getValues()[0];
+
+  var leadEmail = extractLeaderEmail(rowData, cols);
+  if (!leadEmail || leadEmail.indexOf("@") === -1) {
+    Logger.log("Row " + rowNum + " skipped: No valid leader email.");
+    try { sheet.getParent().toast("⚠️ Row " + rowNum + ": No valid email address found in row.", "AITHON 2.0", 6); } catch (t) {}
+    return false;
+  }
 
   var teamId = String(rowData[cols.teamIdCol - 1] || rowData[1] || "").trim();
   var regId = String(rowData[cols.regIdCol - 1] || rowData[2] || "").trim();
@@ -1716,20 +2002,25 @@ function processEvalFeeStatusRow(sheet, rowNum, forceSend) {
   var rawSize = rowData[cols.teamSizeCol - 1] || rowData[4];
   var teamSize = parseInt(rawSize, 10) || 4;
   var leadName = String(rowData[cols.leadNameCol - 1] || rowData[5] || "").trim();
-  var leadEmail = String(rowData[cols.leadEmailCol - 1] || rowData[6] || "").trim().toLowerCase();
   var leadPhone = String(rowData[cols.leadPhoneCol - 1] || rowData[7] || "").replace("'", "").trim();
   var leadCollege = String(rowData[cols.leadCollegeCol - 1] || rowData[8] || "").trim();
   var selectedDomain = cols.hasDomain ? String(rowData[cols.domainIdx] || "Software").trim() : "Software";
   var selectedTrack = String(rowData[cols.trackIdx] || "").trim();
   var pptLink = String(rowData[cols.pptLinkIdx] || "").trim();
-  var evalFeeStatus = String(rowData[cols.evalFeeStatusIdx] || "").trim();
+
+  var evalFeeStatus = statusOverride || "";
+  if (!evalFeeStatus && editedCol) {
+    evalFeeStatus = String(sheet.getRange(rowNum, editedCol).getValue() || "").trim();
+  }
+  if (!evalFeeStatus && cols.evalFeeStatusCol) {
+    evalFeeStatus = String(sheet.getRange(rowNum, cols.evalFeeStatusCol).getValue() || "").trim();
+  }
+  if (!evalFeeStatus) {
+    evalFeeStatus = String(rowData[cols.evalFeeStatusIdx] || "").trim();
+  }
+
   var utr = String(rowData[cols.evalUtrIdx] || "").replace("'", "").trim();
   var emailSentStatus = String(sheet.getRange(rowNum, cols.emailStatusCol).getValue() || "").trim();
-
-  if (!leadEmail || leadEmail.indexOf("@") === -1) {
-    Logger.log("Row " + rowNum + " skipped: No valid leader email.");
-    return false;
-  }
 
   var nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd MMM yyyy, hh:mm a");
   var lowerStatus = evalFeeStatus.toLowerCase().trim();
@@ -1739,7 +2030,7 @@ function processEvalFeeStatusRow(sheet, rowNum, forceSend) {
     sheet.getRange(rowNum, cols.evalFeeStatusCol).setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
 
     if (forceSend || emailSentStatus.indexOf("Payment Rejection Sent") === -1) {
-      sendPaymentRejectionEmail({
+      var sentRej = sendPaymentRejectionEmail({
         teamId: teamId,
         registrationId: regId,
         teamName: teamName,
@@ -1747,9 +2038,14 @@ function processEvalFeeStatusRow(sheet, rowNum, forceSend) {
         leadEmail: leadEmail,
         utr: utr
       });
-      recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "❌ Payment Rejection Sent", nowStr);
-      Logger.log("Row " + rowNum + " (" + teamId + "): Eval fee payment rejection email sent to " + leadEmail);
-      return true;
+      if (sentRej) {
+        recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "❌ Payment Rejection Sent", nowStr);
+        Logger.log("Row " + rowNum + " (" + teamId + "): Eval fee payment rejection email sent to " + leadEmail);
+        return true;
+      } else {
+        recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "⚠️ Email Failed", nowStr);
+        return false;
+      }
     }
     return false;
   }
@@ -1802,15 +2098,23 @@ function processEvalFeeStatusRow(sheet, rowNum, forceSend) {
     utr: utr
   };
 
-  sendConfirmationEmail(teamData);
+  var emailSuccess = sendConfirmationEmail(teamData);
 
-  // Update Email Notification Status safely
-  recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Confirmation Email Sent", nowStr);
-  // Style Eval Fee Status with verified green
-  sheet.getRange(rowNum, cols.evalFeeStatusCol).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
-
-  Logger.log("✓ Manual payment verified & confirmation email sent to: " + leadEmail + " for " + teamId);
-  return true;
+  if (emailSuccess) {
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Confirmation Email Sent", nowStr);
+    sheet.getRange(rowNum, cols.evalFeeStatusCol)
+      .setValue("Verified")
+      .setBackground("#16a34a")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center");
+    SpreadsheetApp.flush();
+    Logger.log("✓ Manual payment verified & confirmation email sent to: " + leadEmail + " for " + teamId);
+    return true;
+  } else {
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "⚠️ Confirmation Email Failed", nowStr);
+    return false;
+  }
 }
 
 /**
@@ -1939,7 +2243,7 @@ function processAllPendingNotifications() {
 /**
  * Processes a single row for PPT Status evaluation & email dispatch
  */
-function processPptEvaluationRow(sheet, rowNum, forceSend) {
+function processPptEvaluationRow(sheet, rowNum, forceSend, editedCol, statusOverride) {
   var cols = getSheetColumnIndexes(sheet);
   var rowData = sheet.getRange(rowNum, 1, 1, cols.totalCols).getValues()[0];
 
@@ -1951,16 +2255,27 @@ function processPptEvaluationRow(sheet, rowNum, forceSend) {
   if (teamSize < 4) teamSize = 4;
   if (teamSize > 6) teamSize = 6;
   var leadName = String(rowData[cols.leadNameCol - 1] || rowData[5] || "").trim();
-  var leadEmail = String(rowData[cols.leadEmailCol - 1] || rowData[6] || "").trim().toLowerCase();
+  var leadEmail = extractLeaderEmail(rowData, cols);
   var leadPhone = String(rowData[cols.leadPhoneCol - 1] || rowData[7] || "").replace("'", "").trim();
   var leadCollege = String(rowData[cols.leadCollegeCol - 1] || rowData[8] || "").trim();
   var selectedDomain = cols.hasDomain ? String(rowData[cols.domainIdx] || "Software").trim() : "Software";
   var selectedTrack = String(rowData[cols.trackIdx] || "").trim();
-  var pptStatus = String(rowData[cols.pptStatusIdx] || "").trim();
+
+  var pptStatus = statusOverride || "";
+  if (!pptStatus && editedCol) {
+    pptStatus = String(sheet.getRange(rowNum, editedCol).getValue() || "").trim();
+  }
+  if (!pptStatus && cols.pptStatusCol) {
+    pptStatus = String(sheet.getRange(rowNum, cols.pptStatusCol).getValue() || "").trim();
+  }
+  if (!pptStatus) {
+    pptStatus = String(rowData[cols.pptStatusIdx] || "").trim();
+  }
   var emailSentStatus = String(sheet.getRange(rowNum, cols.emailStatusCol).getValue() || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
+    try { sheet.getParent().toast("⚠️ Row " + rowNum + ": No valid email address found in row.", "AITHON 2.0", 6); } catch (t) {}
     return false;
   }
 
@@ -2002,17 +2317,27 @@ function processPptEvaluationRow(sheet, rowNum, forceSend) {
       paymentLink: paymentLink
     };
 
-    sendPptAcceptanceEmail(teamData);
+    var sent = sendPptAcceptanceEmail(teamData);
+    if (sent) {
+      // Update Sheet: Fee, Link, Payment Status, Email Status
+      sheet.getRange(rowNum, cols.round2FeeCol).setValue("₹" + feeAmount);
+      sheet.getRange(rowNum, cols.round2LinkCol).setValue(paymentLink);
+      sheet.getRange(rowNum, cols.round2StatusCol).setValue("Pending Verification");
+      recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Accepted Email Sent", nowStr);
+      sheet.getRange(rowNum, cols.pptStatusCol)
+        .setValue("Accepted")
+        .setBackground("#16a34a")
+        .setFontColor("#ffffff")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center");
+      SpreadsheetApp.flush();
 
-    // Update Sheet: Fee, Link, Payment Status, Email Status
-    sheet.getRange(rowNum, cols.round2FeeCol).setValue("₹" + feeAmount);
-    sheet.getRange(rowNum, cols.round2LinkCol).setValue(paymentLink);
-    sheet.getRange(rowNum, cols.round2StatusCol).setValue("Pending Verification");
-    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Accepted Email Sent", nowStr);
-    sheet.getRange(rowNum, cols.pptStatusCol).setValue("Accepted").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
-
-    Logger.log("✓ Acceptance email sent to: " + leadEmail + " for " + teamId + " (Track: " + (selectedTrack || "N/A") + ", Fee: ₹" + feeAmount + ")");
-    return true;
+      Logger.log("✓ Acceptance email sent to: " + leadEmail + " for " + teamId + " (Track: " + (selectedTrack || "N/A") + ", Fee: ₹" + feeAmount + ")");
+      return true;
+    } else {
+      recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "⚠️ Accepted Email Failed", nowStr);
+      return false;
+    }
   }
 
   // CASE 2: PPT REJECTED
@@ -2033,14 +2358,24 @@ function processPptEvaluationRow(sheet, rowNum, forceSend) {
       selectedTrack: selectedTrack || "General AI Track"
     };
 
-    sendPptRejectionEmail(teamDataReject);
+    var sentRej = sendPptRejectionEmail(teamDataReject);
+    if (sentRej) {
+      // Update Sheet: Email Status and highlight
+      recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Rejection Email Sent", nowStr);
+      sheet.getRange(rowNum, cols.pptStatusCol)
+        .setValue("Rejected")
+        .setBackground("#dc2626")
+        .setFontColor("#ffffff")
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center");
+      SpreadsheetApp.flush();
 
-    // Update Sheet: Email Status and highlight
-    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Rejection Email Sent", nowStr);
-    sheet.getRange(rowNum, cols.pptStatusCol).setValue("Rejected").setBackground("#fee2e2").setFontColor("#991b1b").setFontWeight("bold");
-
-    Logger.log("✓ Rejection feedback email sent to: " + leadEmail + " for " + teamId);
-    return true;
+      Logger.log("✓ Rejection feedback email sent to: " + leadEmail + " for " + teamId);
+      return true;
+    } else {
+      recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "⚠️ Rejection Email Failed", nowStr);
+      return false;
+    }
   }
 
   return false;
@@ -2323,7 +2658,7 @@ function sendPptAcceptanceEmail(data) {
     '</body>' +
     '</html>';
 
-  sendEmailSafe(recipient, subject, plainText, htmlBody);
+  return sendEmailSafe(recipient, subject, plainText, htmlBody);
 }
 
 /**
@@ -2434,7 +2769,7 @@ function sendPptRejectionEmail(data) {
     '</body>' +
     '</html>';
 
-  sendEmailSafe(recipient, subject, plainText, htmlBody);
+  return sendEmailSafe(recipient, subject, plainText, htmlBody);
 }
 
 /**
@@ -2642,7 +2977,7 @@ function sendConfirmationEmail(data) {
     '</body>' +
     '</html>';
 
-  sendEmailSafe(recipient, subject, plainText, htmlBody);
+  return sendEmailSafe(recipient, subject, plainText, htmlBody);
 }
 
 /**
@@ -2759,45 +3094,54 @@ function sendPaymentProblemEmail(data) {
     '</body>' +
     '</html>';
 
-  sendEmailSafe(recipient, subject, plainText, htmlBody);
+  return sendEmailSafe(recipient, subject, plainText, htmlBody);
 }
 
 /**
- * Helper to send email via GmailApp with MailApp fallback
+ * Helper to send email via MailApp (recommended for Google Workspace) with GmailApp fallback
  */
 function sendEmailSafe(recipient, subject, plainText, htmlBody) {
-  var replyToEmail = "shivaji.wathore@avcoe.org";
-  
-  // Check remaining daily email quota
-  var quotaRemaining = MailApp.getRemainingDailyQuota();
-  if (quotaRemaining <= 0) {
-    Logger.log("⚠️ Daily email quota reached (0 remaining). Cannot send email to: " + recipient);
+  var replyToEmail = SENDER_EMAIL || "shivaji.wathore@avcoe.org";
+  var senderName = SENDER_NAME || "AITHON 2.0 Organizing Committee";
+
+  if (!recipient || recipient.indexOf("@") === -1) {
+    Logger.log("⚠️ Invalid recipient email: " + recipient);
     return false;
   }
 
+  // Check remaining daily email quota
   try {
-    GmailApp.sendEmail(recipient, subject, plainText, {
+    var quotaRemaining = MailApp.getRemainingDailyQuota();
+    if (quotaRemaining <= 0) {
+      Logger.log("⚠️ Daily email quota reached (0 remaining). Cannot send email to: " + recipient);
+      return false;
+    }
+  } catch (qErr) {}
+
+  // 1. Try MailApp first (Standard script send_mail scope, most reliable on workspace domains)
+  try {
+    MailApp.sendEmail({
+      to: recipient,
+      subject: subject,
+      body: plainText,
       htmlBody: htmlBody,
-      name: "AITHON 2.0 Organizing Committee",
+      name: senderName,
       replyTo: replyToEmail
     });
-    Logger.log("Email dispatched via GmailApp to: " + recipient + " (Quota remaining: " + (quotaRemaining - 1) + ")");
+    Logger.log("✓ Email dispatched via MailApp to: " + recipient);
     return true;
-  } catch (gErr) {
-    Logger.log("GmailApp warning, trying MailApp: " + gErr.toString());
+  } catch (mErr) {
+    Logger.log("MailApp notice (" + mErr.toString() + "), trying GmailApp fallback...");
     try {
-      MailApp.sendEmail({
-        to: recipient,
-        subject: subject,
-        body: plainText,
+      GmailApp.sendEmail(recipient, subject, plainText, {
         htmlBody: htmlBody,
-        name: "AITHON 2.0 Organizing Committee",
+        name: senderName,
         replyTo: replyToEmail
       });
-      Logger.log("Email dispatched via MailApp to: " + recipient);
+      Logger.log("✓ Email dispatched via GmailApp to: " + recipient);
       return true;
-    } catch (mErr) {
-      Logger.log("❌ Failed to send email to " + recipient + ": " + mErr.toString());
+    } catch (gErr) {
+      Logger.log("❌ Failed to send email to " + recipient + " via both MailApp and GmailApp: " + gErr.toString());
       return false;
     }
   }
@@ -3084,7 +3428,7 @@ function handleDirectRound2Confirmation(data, sheet) {
  * 🎟️ PROCESS ROUND 2 PAYMENT ROW & DISPATCH GRAND FINALE TICKET
  * =========================================================================
  */
-function processRound2PaymentRow(sheet, rowNum, payId, amount, forceSend) {
+function processRound2PaymentRow(sheet, rowNum, payId, amount, forceSend, editedCol, statusOverride) {
   var cols = getSheetColumnIndexes(sheet);
   var rowData = sheet.getRange(rowNum, 1, 1, cols.totalCols).getValues()[0];
 
@@ -3096,19 +3440,31 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount, forceSend) {
   if (teamSize < 4) teamSize = 4;
   if (teamSize > 6) teamSize = 6;
   var leadName = String(rowData[cols.leadNameCol - 1] || rowData[5] || "").trim();
-  var leadEmail = String(rowData[cols.leadEmailCol - 1] || rowData[6] || "").trim().toLowerCase();
+  var leadEmail = extractLeaderEmail(rowData, cols);
   var leadPhone = String(rowData[cols.leadPhoneCol - 1] || rowData[7] || "").replace("'", "").trim();
   var leadCollege = String(rowData[cols.leadCollegeCol - 1] || rowData[8] || "").trim();
   var selectedDomain = cols.hasDomain ? String(rowData[cols.domainIdx] || "Software").trim() : "Software";
   var selectedTrack = String(rowData[cols.trackIdx] || "").trim();
   var rawFee = parseInt(String(rowData[cols.round2FeeIdx] || "").replace(/[^0-9]/g, ""), 10);
   var feeAmount = amount || rawFee || (teamSize * 200);
-  var r2PaymentStatus = String(rowData[cols.round2StatusIdx] || "").trim();
+
+  var r2PaymentStatus = statusOverride || "";
+  if (!r2PaymentStatus && editedCol) {
+    r2PaymentStatus = String(sheet.getRange(rowNum, editedCol).getValue() || "").trim();
+  }
+  if (!r2PaymentStatus && cols.round2StatusCol) {
+    r2PaymentStatus = String(sheet.getRange(rowNum, cols.round2StatusCol).getValue() || "").trim();
+  }
+  if (!r2PaymentStatus) {
+    r2PaymentStatus = String(rowData[cols.round2StatusIdx] || "").trim();
+  }
+
   var r2PaymentUtr = String(rowData[cols.round2UtrIdx] || "").replace("'", "").trim();
   var emailSentStatus = String(sheet.getRange(rowNum, cols.emailStatusCol).getValue() || "").trim();
 
   if (!leadEmail || leadEmail.indexOf("@") === -1) {
     Logger.log("Row " + rowNum + " skipped: No valid leader email.");
+    try { sheet.getParent().toast("⚠️ Row " + rowNum + ": No valid email address found in row.", "AITHON 2.0", 6); } catch (t) {}
     return false;
   }
 
@@ -3170,14 +3526,24 @@ function processRound2PaymentRow(sheet, rowNum, payId, amount, forceSend) {
     paymentId: payId || r2PaymentUtr || "VERIFIED"
   };
 
-  sendGrandFinaleTicketEmail(teamData);
+  var sentTicket = sendGrandFinaleTicketEmail(teamData);
+  if (sentTicket) {
+    // Update Sheet: Verified solid green button, Ticket Sent status safely recorded
+    sheet.getRange(rowNum, cols.round2StatusCol)
+      .setValue("Verified")
+      .setBackground("#16a34a")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center");
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Finale Ticket Sent", nowStr);
+    SpreadsheetApp.flush();
 
-  // Update Sheet: Verified green, Ticket Sent status safely recorded
-  sheet.getRange(rowNum, cols.round2StatusCol).setValue("Verified").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
-  recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "✓ Finale Ticket Sent", nowStr);
-
-  Logger.log("✓ Grand Finale Ticket email sent to: " + leadEmail + " for " + teamId + " (UTR: " + (payId || r2PaymentUtr) + ")");
-  return true;
+    Logger.log("✓ Grand Finale Ticket email sent to: " + leadEmail + " for " + teamId + " (UTR: " + (payId || r2PaymentUtr) + ")");
+    return true;
+  } else {
+    recordEmailStatus(sheet, rowNum, cols.emailStatusCol, "⚠️ Finale Ticket Failed", nowStr);
+    return false;
+  }
 }
 
 /**
@@ -3392,7 +3758,7 @@ function sendGrandFinaleTicketEmail(data) {
     '</body>' +
     '</html>';
 
-  sendEmailSafe(recipient, subject, plainText, htmlBody);
+  return sendEmailSafe(recipient, subject, plainText, htmlBody);
 }
 
 /**

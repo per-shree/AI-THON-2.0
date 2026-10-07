@@ -53,8 +53,8 @@ export default function LockedRegisterButton({
         title="Registrations are officially closed - Click for details"
       >
         <img
-          src="/btn-register-now-locked.png"
-          alt="Register Now - Closed"
+          src="/btn-register-locked.png"
+          alt="Register - Closed"
           className="h-18 sm:h-22 md:h-26 w-auto object-contain"
         />
       </Link>
@@ -70,8 +70,8 @@ export default function LockedRegisterButton({
         title="Registrations are officially closed - View details"
       >
         <img
-          src="/btn-register-now-locked.png"
-          alt="Register Now - Closed"
+          src="/btn-register-locked.png"
+          alt="Register - Closed"
           className="h-14 sm:h-16 w-auto object-contain filter drop-shadow-md"
         />
       </Link>
@@ -88,8 +88,8 @@ export default function LockedRegisterButton({
       title="Registrations are officially closed - Click for details"
     >
       <img
-        src="/btn-register-now-locked.png"
-        alt="Register Now - Registrations Closed"
+        src="/btn-register-locked.png"
+        alt="Register - Registrations Closed"
         className="h-14 xs:h-16 sm:h-18 md:h-20 w-auto object-contain translate-y-1 sm:translate-y-1.5"
       />
     </Link>
