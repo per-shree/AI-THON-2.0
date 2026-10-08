@@ -139,16 +139,13 @@ export default function HeroSection() {
 
         {/* Urgency Badge & Live Status Below Registration Button */}
         {IS_REGISTRATION_CLOSED ? (
-          <div className="w-full max-w-md mx-auto space-y-2 sm:space-y-2.5 px-1 sm:px-0 relative z-20 mb-2 sm:mb-3 flex flex-col items-center animate-fadeIn">
+          <div className="w-full max-w-md mx-auto px-1 sm:px-0 relative z-20 mb-2 flex flex-col items-center animate-fadeIn">
             <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-rose-600 text-white border border-rose-500/40 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-white animate-ping shrink-0" />
               <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-widest text-white leading-tight">
                 REGISTRATIONS ARE OFFICIALLY CLOSED
               </span>
             </div>
-            <p className="text-[11px] sm:text-xs text-slate-600 font-semibold text-center">
-              Round 1 Evaluation & Shortlisting Underway • Grand Finale: 23 Oct 2026
-            </p>
           </div>
         ) : (
           <div className="w-full max-w-md mx-auto space-y-2 sm:space-y-2.5 px-1 sm:px-0 relative z-20 mb-2 sm:mb-3 flex flex-col items-center">
@@ -160,6 +157,40 @@ export default function HeroSection() {
             </div>
             <CountdownTimer variant="hero" />
           </div>
+        )}
+
+        {/* Registration Stats */}
+        <div className="w-full max-w-md mx-auto relative z-20 mt-1.5 sm:mt-2 px-2 sm:px-0">
+          <div className="bg-white/95 rounded-2xl border border-amber-200/90 shadow-2xs py-2.5 sm:py-3 px-4 sm:px-6">
+            <div className="grid grid-cols-2 divide-x divide-slate-200 items-center">
+              
+              <div className="text-center px-2">
+                <span className="block text-2xl sm:text-3xl font-extrabold text-[#062b59] tracking-tight">
+                  1,000+
+                </span>
+                <span className="block text-xs sm:text-[13px] font-semibold text-slate-600 mt-0.5">
+                  Teams Initiated
+                </span>
+              </div>
+
+              <div className="text-center px-2">
+                <span className="block text-2xl sm:text-3xl font-extrabold text-[#ea580c] tracking-tight">
+                  700+
+                </span>
+                <span className="block text-xs sm:text-[13px] font-semibold text-slate-600 mt-0.5">
+                  Completely Registered
+                </span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* Evaluation status text placed below responses showcasing section */}
+        {IS_REGISTRATION_CLOSED && (
+          <p className="text-[11px] sm:text-xs text-slate-600 font-semibold text-center mt-2 sm:mt-2.5 px-2 relative z-20">
+            Round 1 Evaluation & Shortlisting Underway • Grand Finale: 23 Oct 2026
+          </p>
         )}
 
       </div>

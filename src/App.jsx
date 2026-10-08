@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Registration from './pages/Registration'
 import FinalePayment from './pages/FinalePayment'
+import Results from './pages/Results'
 import ScrollToHash from './components/ScrollToHash'
 
 export default function App() {
@@ -14,8 +15,11 @@ export default function App() {
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Registration />} />
+        <Route path="/results" element={<Results />} />
+        <Route path="/shortlist" element={<Results />} />
+        <Route path="/shortlisted-teams" element={<Results />} />
 
-        {/* Unlisted Finalist Payment Route (Access strictly via acceptance email) */}
+        {/* Finalist Payment Route */}
         <Route path="/finale-payment" element={<FinalePayment />} />
 
         {/* Redirect any legacy admin paths back to home */}

@@ -9,23 +9,23 @@ export const IS_REGISTRATION_CLOSED = true;
 
 export const REGISTRATION_CLOSED_DATA = {
   badge: 'REGISTRATIONS OFFICIALLY CLOSED',
-  title: 'Thank You for the Overwhelming Response!',
-  subtitle: 'Registrations for AI-THON 2.0 have reached maximum capacity and are now officially closed.',
+  title: 'Round 1 Results Announced!',
+  subtitle: 'Idea evaluation is complete. 105 shortlisted teams will compete in the Grand Finale on 23 October 2026.',
   highlights: [
     {
-      title: 'Review & Shortlisting',
-      desc: 'Our technical evaluation panel is actively reviewing all submitted idea PPTs and team abstracts.',
-      tag: 'In Progress',
+      title: 'Grand Finale Shortlist Out',
+      desc: 'Technical evaluation of all submitted idea PPTs has concluded and the official shortlist is released.',
+      tag: 'Announced',
     },
     {
-      title: 'Confirmation Emails',
-      desc: 'Selected team leads will receive official shortlisting emails & WhatsApp announcements soon.',
-      tag: 'Coming Soon',
+      title: 'Finalist Confirmation',
+      desc: 'Selected team leads can verify their Team ID in the shortlist and complete Grand Finale seat confirmation.',
+      tag: 'Action Required',
     },
     {
-      title: 'Already Registered?',
-      desc: 'Please ensure you have saved your Team ID and Registration Slip for venue verification.',
-      tag: 'Important',
+      title: 'Grand Finale Event',
+      desc: '12-Hour Non-stop offline hackathon at Amrutvahini College of Engineering (AVCOE), Sangamner on 23 Oct 2026.',
+      tag: '23 Oct 2026',
     },
   ],
 };

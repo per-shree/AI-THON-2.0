@@ -301,6 +301,28 @@ export default function FinalePayment() {
           </div>
         </section>
 
+        {/* Mandatory Fee Deadline Alert Banner for Finalists */}
+        <div className="w-full max-w-2xl mx-auto mb-6 bg-gradient-to-r from-amber-50/95 via-orange-50/80 to-rose-50/90 border-l-4 border-rose-500 border border-rose-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-5 h-5 text-rose-600" />
+            </div>
+            <div className="space-y-1 text-left flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-extrabold text-[#062b59] uppercase tracking-wider">
+                  MANDATORY INSTRUCTION FOR GRAND FINALE TEAMS
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest animate-pulse">
+                  DEADLINE: 11 OCT 2026
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                Please pay fees and confirm your workstation strictly by <strong className="text-rose-700 font-bold underline decoration-rose-400 underline-offset-2">11 October 2026</strong>. If fees are not paid by 11 Oct, your slot will be considered as <strong className="text-rose-700 font-bold">CANCELLED</strong> and will be allocated to <strong className="text-[#062b59] font-bold">waiting listed teams</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {paidInfo ? (
           /* ================================================================ */
           /* ⏱️ UNDER REVIEW VIEW: 24-HOUR MANUAL REVIEW & CONFIRMATION        */
