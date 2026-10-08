@@ -6,11 +6,13 @@ import Registration from './pages/Registration'
 import FinalePayment from './pages/FinalePayment'
 import Results from './pages/Results'
 import ScrollToHash from './components/ScrollToHash'
+import GrandFinaleNoticeModal from './components/GrandFinaleNoticeModal'
 
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToHash />
+      <GrandFinaleNoticeModal />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />

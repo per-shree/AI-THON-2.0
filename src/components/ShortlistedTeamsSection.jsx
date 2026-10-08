@@ -12,10 +12,9 @@ import {
   Building,
   ShieldCheck,
   AlertTriangle,
+  Mail,
 } from 'lucide-react'
 import { SHORTLISTED_TEAMS, SHORTLIST_METADATA } from '../data/shortlistedTeams'
-
-const CONFIRMATION_FORM_URL = 'https://forms.gle/4dNxoKjjRLjti7og7'
 
 export default function ShortlistedTeamsSection({ id = "results" }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -89,23 +88,23 @@ export default function ShortlistedTeamsSection({ id = "results" }) {
           </div>
         </div>
 
-        {/* Mandatory Fee Deadline Alert Banner for Finalists */}
-        <div className="w-full max-w-5xl mb-6 bg-gradient-to-r from-amber-50/95 via-orange-50/80 to-rose-50/90 border-l-4 border-rose-500 border border-rose-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
+        {/* Official Confirmation Mail Alert Banner for Finalists */}
+        <div className="w-full max-w-5xl mb-6 bg-gradient-to-r from-blue-50/95 via-sky-50/80 to-indigo-50/90 border-l-4 border-[#2563eb] border border-blue-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
           <div className="flex items-start gap-3 sm:gap-4">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
-              <AlertTriangle className="w-5 h-5 text-rose-600" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-500/15 text-[#2563eb] flex items-center justify-center shrink-0 mt-0.5">
+              <Mail className="w-5 h-5 text-[#2563eb]" />
             </div>
             <div className="space-y-1.5 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-xs sm:text-sm font-extrabold text-[#062b59] uppercase tracking-wider">
-                  MANDATORY INSTRUCTION FOR GRAND FINALE TEAMS
+                  GRAND FINALE CONFIRMATION & INSTRUCTIONS
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest animate-pulse">
-                  STRICT DEADLINE: 11 OCT 2026
+                <span className="px-2.5 py-0.5 rounded-full bg-[#2563eb] text-white text-[10px] font-black uppercase tracking-widest">
+                  OFFICIAL NOTICE
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                All shortlisted teams must complete seat confirmation and pay the Grand Finale fees strictly by <strong className="text-rose-700 font-bold underline decoration-rose-400 underline-offset-2">11 October 2026</strong>. If not paid by 11 Oct, your slot will be considered as <strong className="text-rose-700 font-bold">CANCELLED</strong> and will be allotted to <strong className="text-[#062b59] font-bold">waiting listed teams</strong>.
+                Official Grand Finale confirmation details, venue guidelines, and reporting schedules will be sent directly to the <strong className="text-[#062b59] font-bold">Team Leader&apos;s registered email address</strong>. All team leads are requested to check their email inbox (and spam/promotions folder).
               </p>
             </div>
           </div>
@@ -204,15 +203,6 @@ export default function ShortlistedTeamsSection({ id = "results" }) {
                       <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-bold shrink-0">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Shortlisted
                       </span>
-                      <a
-                        href={CONFIRMATION_FORM_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-2xs hover:shadow-xs active:scale-95"
-                      >
-                        <span>Confirm Seat</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </a>
                     </div>
                   </div>
                 )
@@ -257,22 +247,13 @@ export default function ShortlistedTeamsSection({ id = "results" }) {
             <span>Important Next Steps for Finalist Teams</span>
           </h3>
           <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs sm:text-[13px] text-slate-700">
-            <li className="bg-white/90 p-3.5 rounded-xl border border-rose-200 shadow-2xs">
-              <strong className="text-rose-700 block mb-1">1. Pay Fees & Confirm Seat (Deadline: 11 Oct)</strong>
-              Pay the Grand Finale fee and submit seat confirmation by <strong className="text-rose-600">11 Oct 2026</strong>. If not paid by 11 Oct, your slot will be considered as cancelled and moved to waiting listed teams. Click{' '}
-              <a
-                href={CONFIRMATION_FORM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-700 font-bold underline hover:text-emerald-800"
-              >
-                Confirm Seat
-              </a>{' '}
-              to proceed.
+            <li className="bg-white/90 p-3.5 rounded-xl border border-blue-200 shadow-2xs">
+              <strong className="text-[#062b59] block mb-1">1. Confirmation Mail to Team Leader</strong>
+              Official Grand Finale confirmation letters, reporting schedules, and workstation guidelines are sent directly to the team leader&apos;s registered email. Please check your inbox and spam folder.
             </li>
             <li className="bg-white/80 p-3 rounded-xl border border-blue-100">
-              <strong className="text-[#062b59] block mb-1">2. Check Email & WhatsApp Group</strong>
-              The team leader must check their email for reporting guidelines, schedule, and join the finalists' official communication group.
+              <strong className="text-[#062b59] block mb-1">2. Check Email & WhatsApp Community</strong>
+              The team leader must check their email for reporting guidelines, schedule, and join the finalists&apos; official communication group.
             </li>
             <li className="bg-white/80 p-3 rounded-xl border border-blue-100">
               <strong className="text-[#062b59] block mb-1">3. Venue Reporting (23 Oct 2026)</strong>
