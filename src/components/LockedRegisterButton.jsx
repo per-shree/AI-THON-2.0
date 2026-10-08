@@ -21,7 +21,7 @@ export default function LockedRegisterButton({
         <img
           src="/btn-register-locked.png"
           alt="See the Result"
-          className="h-8 sm:h-8.5 xl:h-9 w-auto object-contain"
+          className="h-7 xs:h-8 sm:h-8.5 xl:h-9 w-auto max-w-full object-contain"
         />
       </Link>
     )
@@ -38,7 +38,7 @@ export default function LockedRegisterButton({
         <img
           src="/btn-register-locked.png"
           alt="See the Result"
-          className="h-9 sm:h-10 w-auto object-contain filter drop-shadow-sm"
+          className="h-8 xs:h-9 sm:h-10 w-auto max-w-full object-contain filter drop-shadow-sm"
         />
       </Link>
     )
@@ -55,7 +55,7 @@ export default function LockedRegisterButton({
         <img
           src="/btn-register-locked.png"
           alt="See the Result"
-          className="h-12 sm:h-13 md:h-14 w-auto object-contain"
+          className="h-10 xs:h-11 sm:h-12 md:h-13 lg:h-14 w-auto max-w-full object-contain"
         />
       </Link>
     )
@@ -72,14 +72,14 @@ export default function LockedRegisterButton({
         <img
           src="/btn-register-locked.png"
           alt="See the Result"
-          className="h-11 sm:h-12 w-auto object-contain filter drop-shadow-md"
+          className="h-9 xs:h-10 sm:h-11 md:h-12 w-auto max-w-full object-contain filter drop-shadow-md"
         />
       </Link>
     )
   }
 
   // Default: 'hero' variant
-  // Proportioned to match EXPLORE AITHON height (h-11 to h-14) without offset
+  // Proportioned to match EXPLORE AITHON height without overflow on mobile
   return (
     <Link
       to="/shortlisted-teams"
@@ -90,7 +90,7 @@ export default function LockedRegisterButton({
       <img
         src="/btn-register-locked.png"
         alt="See the Result"
-        className="h-11 xs:h-12 sm:h-13 md:h-14 w-auto object-contain"
+        className="h-10 xs:h-11 sm:h-12 md:h-13 lg:h-14 w-auto max-w-full object-contain"
       />
     </Link>
   )

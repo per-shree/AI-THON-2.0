@@ -275,7 +275,7 @@ export default function FinalePayment() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-2xl sm:text-4xl font-black text-[#062b59] tracking-tight uppercase">
+          <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-black text-[#062b59] tracking-tight uppercase break-words">
             Grand Finale Registration
           </h1>
 
@@ -656,8 +656,8 @@ export default function FinalePayment() {
                     </div>
                     <div className="text-xs">
                       <span className="text-slate-400 font-bold text-[10px] uppercase block">Official UPI ID</span>
-                      <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-blue-200 text-xs font-mono font-bold text-[#062b59]">
-                        <span>{OFFICIAL_UPI_ID}</span>
+                      <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-blue-200 text-xs font-mono font-bold text-[#062b59] max-w-full">
+                        <span className="break-all">{OFFICIAL_UPI_ID}</span>
                         <button
                           type="button"
                           onClick={handleCopyUpi}

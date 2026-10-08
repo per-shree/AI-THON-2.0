@@ -117,13 +117,13 @@ export default function HeroSection() {
         </div>
 
         {/* Action Buttons - Distinctly positioned and mobile responsive */}
-        <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 md:gap-5 w-full sm:w-auto relative z-20 mb-3 sm:mb-4 px-2 sm:px-0">
+        <div className="flex flex-col xs:flex-row items-center justify-center gap-2.5 xs:gap-3 sm:gap-4 md:gap-5 w-full sm:w-auto relative z-20 mb-3 sm:mb-4 px-3 sm:px-0">
           {IS_REGISTRATION_CLOSED ? (
             <LockedRegisterButton variant="hero" />
           ) : (
             <Link
               to="/register"
-              className="flex-1 sm:flex-none px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-3.5 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+              className="w-full xs:w-auto px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-3.5 bg-[#062b59] hover:bg-[#2563eb] text-white font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-sm text-center rounded-xl hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
             >
               REGISTER NOW
             </Link>
@@ -131,7 +131,7 @@ export default function HeroSection() {
 
           <a
             href="#about"
-            className="flex-1 sm:flex-none inline-flex items-center justify-center h-11 xs:h-12 sm:h-13 md:h-14 px-5 xs:px-6 sm:px-8 md:px-10 bg-white hover:bg-[#faf9f6] text-[#062b59] border-2 border-[#062b59] font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 text-center shadow-xs rounded-xl hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+            className="w-full max-w-[280px] xs:max-w-none xs:w-auto inline-flex items-center justify-center h-10 xs:h-11 sm:h-12 md:h-13 lg:h-14 px-5 xs:px-6 sm:px-8 md:px-10 bg-white hover:bg-[#faf9f6] text-[#062b59] border-2 border-[#062b59] font-bold text-[10.5px] xs:text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 text-center shadow-xs rounded-xl hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
           >
             EXPLORE AITHON
           </a>

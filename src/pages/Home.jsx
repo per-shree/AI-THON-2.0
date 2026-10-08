@@ -1,7 +1,6 @@
 import Navbar from '../components/Navbar'
 import AnnouncementTicker from '../components/AnnouncementTicker'
 import HeroSection from '../components/HeroSection'
-import ShortlistedTeamsSection from '../components/ShortlistedTeamsSection'
 import OurSponsors from '../components/OurSponsors'
 import ChiefGuestSection from '../components/ChiefGuestSection'
 import AboutSection from '../components/AboutSection'
@@ -28,12 +27,6 @@ export default function Home() {
           {/* 3. Announcement Marquee Ticker */}
           <AnnouncementTicker />
           <HeroSection />
-        </div>
-
-        {/* 01.5 RESULTS & SHORTLISTED TEAMS FOR GRAND FINALE */}
-        <div id="results" className="scroll-mt-16 sm:scroll-mt-20">
-          <ShortlistedTeamsSection />
-          <WaveTransition colorClass="text-[#faf9f6]" bgClass="bg-white" />
         </div>
 
         {/* 02 OUR SPONSORS (Static Cards with Info right after Home) */}

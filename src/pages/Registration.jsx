@@ -35,6 +35,7 @@ import {
   Check,
   ShieldCheck,
   Sparkles,
+  Trophy,
   ArrowRight,
   ArrowLeft,
   Users,
@@ -1206,7 +1207,15 @@ export default function Registration() {
               </div>
 
               {/* Action Buttons & Quick Controls */}
-              <div className="mt-8 pt-6 border-t border-[#edebe6] flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 relative z-10">
+              <div className="mt-8 pt-6 border-t border-[#edebe6] flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-4 relative z-10">
+                <Link
+                  to="/shortlisted-teams"
+                  className="w-full sm:w-auto px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                >
+                  <Trophy className="w-4 h-4 text-amber-300" />
+                  <span>View Shortlisted Teams</span>
+                </Link>
+
                 <Link
                   to="/"
                   className="w-full sm:w-auto px-6 py-3 bg-[#062b59] hover:bg-[#1e3a8a] text-white text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"

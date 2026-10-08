@@ -9,8 +9,9 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const location = useLocation()
 
-  const getHref = (hash) => {
-    return location.pathname === '/' ? hash : `/${hash}`
+  const getHref = (target) => {
+    if (target.startsWith('/')) return target
+    return location.pathname === '/' ? target : `/${target}`
   }
 
   useEffect(() => {
@@ -66,13 +67,13 @@ export default function Navbar() {
           
           {/* Brand Logos */}
           <div className="flex items-center shrink-0">
-            <Link to="/" className="flex items-center gap-2 xs:gap-2.5 sm:gap-3 group focus:outline-none py-0.5 shrink-0">
+            <Link to="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 group focus:outline-none py-0.5 shrink-0">
               <img
                 src="/amrutvahini_university_logo.png"
                 alt="Amrutvahini University"
                 width="140"
                 height="44"
-                className="h-6 xs:h-7 sm:h-9 md:h-11 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-6 xs:h-7 sm:h-8.5 md:h-10 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 shrink-0" />
               <img
@@ -80,7 +81,7 @@ export default function Navbar() {
                 alt="Amrutvahini College of Engineering"
                 width="52"
                 height="52"
-                className="h-8 xs:h-9 sm:h-11 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-7 xs:h-8 sm:h-10 md:h-12 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 hidden xs:block shrink-0" />
               <img
@@ -88,7 +89,7 @@ export default function Navbar() {
                 alt="ISTE"
                 width="52"
                 height="52"
-                className="h-8 xs:h-9 sm:h-11 md:h-13 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-7 xs:h-8 sm:h-10 md:h-12 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="h-5 sm:h-7 md:h-8 w-px bg-slate-200 hidden sm:block shrink-0" />
               <img
@@ -96,20 +97,20 @@ export default function Navbar() {
                 alt="AIESA"
                 width="105"
                 height="42"
-                className="h-5 xs:h-6 sm:h-7 md:h-8.5 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+                className="h-5 xs:h-6 sm:h-7 md:h-8 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
               />
             </Link>
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-3 xl:gap-5 shrink-0">
-            <div className="flex items-center gap-2 xl:gap-3.5">
+          <div className="hidden xl:flex items-center gap-2.5 2xl:gap-4 shrink-0">
+            <div className="flex items-center gap-2 2xl:gap-3">
               {navLinks.map((link) => (
                 <a 
                   key={link.label}
                   href={getHref(link.href)}
                   onClick={(e) => handleNavClick(e, link.href)}
-                  className="text-[11px] xl:text-[13px] font-bold text-slate-700 hover:text-[#2563eb] transition-colors uppercase tracking-wider whitespace-nowrap py-1"
+                  className="text-[11px] 2xl:text-[12.5px] font-bold text-slate-700 hover:text-[#2563eb] transition-colors uppercase tracking-wider whitespace-nowrap py-1"
                 >
                   {link.label}
                 </a>
@@ -133,41 +134,43 @@ export default function Navbar() {
             type="button"
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
-            className="lg:hidden text-[#062b59] p-1.5 focus:outline-none focus:ring-2 focus:ring-[#2563eb] rounded-lg"
+            className="xl:hidden text-[#062b59] p-1.5 focus:outline-none focus:ring-2 focus:ring-[#2563eb] rounded-lg cursor-pointer"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Nav Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 w-full bg-white border-t border-[#edebe6] shadow-lg py-4 px-6 flex flex-col gap-4">
+        <div className="xl:hidden absolute top-full left-0 w-full bg-white border-t border-[#edebe6] shadow-xl py-4 px-5 sm:px-6 flex flex-col gap-2.5 max-h-[85vh] overflow-y-auto">
           {navLinks.map((link) => (
             <a 
               key={link.label}
               href={getHref(link.href)}
-              className="text-sm font-bold text-slate-700 uppercase tracking-wider py-2 border-b border-slate-50"
+              className="text-xs sm:text-sm font-bold text-slate-700 uppercase tracking-wider py-2 border-b border-slate-50 flex items-center justify-between"
               onClick={(e) => handleMobileNavClick(e, link.href)}
             >
-              {link.label}
+              <span>{link.label}</span>
             </a>
           ))}
-          {IS_REGISTRATION_CLOSED ? (
-            <LockedRegisterButton 
-              variant="nav-mobile" 
-              onClick={() => setMobileMenuOpen(false)} 
-            />
-          ) : (
-            <Link 
-              to="/register"
-              className="w-full mt-2 px-6 py-3 bg-[#062b59] text-white text-center text-xs font-bold uppercase tracking-widest rounded-lg shadow-xs"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              REGISTER
-            </Link>
-          )}
+          <div className="pt-2">
+            {IS_REGISTRATION_CLOSED ? (
+              <LockedRegisterButton 
+                variant="nav-mobile" 
+                onClick={() => setMobileMenuOpen(false)} 
+              />
+            ) : (
+              <Link 
+                to="/register"
+                className="w-full mt-2 px-6 py-3 bg-[#062b59] text-white text-center text-xs font-bold uppercase tracking-widest rounded-lg shadow-xs block"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                REGISTER
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </nav>
